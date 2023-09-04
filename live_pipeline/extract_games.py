@@ -8,11 +8,12 @@ from urllib.request import urlopen
 RELEASE_WEBSITE = "https://store.steampowered.com/search/?sort_by=Released_DESC&category1=998&supportedlang=english&ndl=1"
 
 
-def get_html(url):
+def get_html(url: str) -> object:
     """function to open the url and get the information"""
     page = urlopen(url)
     html_bytes = page.read()
     html = html_bytes.decode("utf_8")
+    print(type(html))
     return html
 
 
