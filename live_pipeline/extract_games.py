@@ -1,5 +1,4 @@
 from urllib.request import urlopen
-import pandas as pd
 from bs4 import BeautifulSoup
 
 
@@ -42,12 +41,21 @@ def parse_game_bs(html) -> list[str]:
     return game_tags
 
 
-def parse_price_bs(html):
+def parse_price_bs(html) -> dict:
     """function to find application price"""
-
+    prices = {}
     soup = BeautifulSoup(html, "html.parser")
-    tag = soup.find("div", class_="game_purchase_price price")
-    return tag.string.strip()
+    try:
+        tag = soup.find("div", class_="game_purchase_price price")
+        prices["full price"] = tag.string.strip()
+        prices["sale price"] = tag.string.strip()
+    except:
+        full_tag = soup.find("div", "discount_original_price")
+        prices["full price"] = full_tag.string.strip()
+        discount_tag = soup.find("div", "discount_final_price")
+        prices["sale price"] = discount_tag.string.strip()
+
+    return prices
 
 
 if __name__ == "__main__":
@@ -55,7 +63,6 @@ if __name__ == "__main__":
     website = get_html(
         "https://store.steampowered.com/search/?sort_by=Released_DESC&category1=998&supportedlang=english&ndl=1")
     all_recent_games = parse_app_id_bs(website)
-    # print(all_recent_games)
 
     for game in all_recent_games:
         game_webpage = get_html(
@@ -63,6 +70,6 @@ if __name__ == "__main__":
         tags_for_game = parse_game_bs(game_webpage)
         game["tags"] = tags_for_game
         price_of_game = parse_price_bs(game_webpage)
-        game["price"] = price_of_game
-        print(game)
-        break
+        game.update(price_of_game)
+
+    print(all_recent_games)
