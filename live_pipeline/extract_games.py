@@ -90,6 +90,31 @@ def get_publisher_name(data) -> list:
     return publishers
 
 
+def update_game_information(game_id: int):
+    """update game dictionary with information from API"""
+
+    game_webpage = get_html(
+        f"https://store.steampowered.com/app/{game_id}")
+    soup = BeautifulSoup(game_webpage, "html.parser")
+    tags_for_game = parse_game_bs(soup)
+    game["user_tags"] = tags_for_game
+    price_of_game = parse_price_bs(soup)
+    game.update(price_of_game)
+
+    request = requests.get(
+        f"""https://store.steampowered.com/api/appdetails?appids={game_id}""")
+
+    response = request.json()[game_id]['data']
+    compatible_systems = system_requirements(response)
+    game.update(compatible_systems)
+    steam_genres = get_genre_from_steam(response)
+    game['genres'] = steam_genres
+    developer = get_developer_name(response)
+    game['developers'] = developer
+    publisher = get_publisher_name(response)
+    game['publishers'] = publisher
+
+
 if __name__ == "__main__":
 
     website = get_html(
@@ -97,26 +122,7 @@ if __name__ == "__main__":
     all_recent_games = parse_app_id_bs(website)
 
     for game in all_recent_games:
-        game_webpage = get_html(
-            f"https://store.steampowered.com/app/{game['app_id']}")
-        soup = BeautifulSoup(game_webpage, "html.parser")
-        tags_for_game = parse_game_bs(soup)
-        game["user_tags"] = tags_for_game
-        price_of_game = parse_price_bs(soup)
-        game.update(price_of_game)
-
-        request = requests.get(
-            f"""https://store.steampowered.com/api/appdetails?appids={game['app_id']}""")
-
-        response = request.json()[game['app_id']]['data']
-        compatible_systems = system_requirements(response)
-        game.update(compatible_systems)
-        steam_genres = get_genre_from_steam(response)
-        game['genres'] = steam_genres
-        developer = get_developer_name(response)
-        game['developers'] = developer
-        publisher = get_publisher_name(response)
-        game['publishers'] = publisher
+        update_game_information(game["app_id"])
 
     data_frame = pd.DataFrame(all_recent_games)
     data_frame.to_csv('test.csv')
