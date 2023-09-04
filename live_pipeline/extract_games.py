@@ -1,5 +1,7 @@
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
+import pandas as pd
+import requests
 
 
 def get_html(url):
@@ -12,7 +14,6 @@ def get_html(url):
 
 def parse_app_id_bs(html) -> list[dict]:
     """function to find the app id from the url"""
-
     soup = BeautifulSoup(html, "html.parser")
     tags = soup.find_all(
         "a", class_="search_result_row ds_collapse_flag")
@@ -29,10 +30,8 @@ def parse_app_id_bs(html) -> list[dict]:
     return all_games
 
 
-def parse_game_bs(html) -> list[str]:
+def parse_game_bs(soup) -> list[str]:
     """function to find application's tags"""
-
-    soup = BeautifulSoup(html, "html.parser")
     tags = soup.find_all("a", class_="app_tag")
     game_tags = []
     for each in tags:
@@ -41,21 +40,54 @@ def parse_game_bs(html) -> list[str]:
     return game_tags
 
 
-def parse_price_bs(html) -> dict:
+def parse_price_bs(soup) -> dict:
     """function to find application price"""
     prices = {}
-    soup = BeautifulSoup(html, "html.parser")
     try:
         tag = soup.find("div", class_="game_purchase_price price")
         prices["full price"] = tag.string.strip()
         prices["sale price"] = tag.string.strip()
     except:
-        full_tag = soup.find("div", "discount_original_price")
+        full_tag = soup.find("div", class_="discount_original_price")
         prices["full price"] = full_tag.string.strip()
-        discount_tag = soup.find("div", "discount_final_price")
+        discount_tag = soup.find("div", class_="discount_final_price")
         prices["sale price"] = discount_tag.string.strip()
 
     return prices
+
+
+def system_requirements(data) -> dict:
+    """function to find compatible systems"""
+    response = data['platforms']
+    return response
+
+
+def get_genre_from_steam(data) -> list:
+    """function to find steam generate genre"""
+    genres = []
+    response = data['genres']
+    for genre in response:
+        genres.append(genre['description'])
+    return genres
+
+
+def get_developer_name(data) -> list:
+    """function to get developer names"""
+    developers = []
+    response = data['developers']
+    for developer in response:
+        developers.append(developer)
+
+    return developers
+
+
+def get_publisher_name(data) -> list:
+    """function to get publisher names"""
+    publishers = []
+    response = data['publishers']
+    for publisher in response:
+        publishers.append(publisher)
+    return publishers
 
 
 if __name__ == "__main__":
@@ -67,9 +99,24 @@ if __name__ == "__main__":
     for game in all_recent_games:
         game_webpage = get_html(
             f"https://store.steampowered.com/app/{game['app_id']}")
-        tags_for_game = parse_game_bs(game_webpage)
-        game["tags"] = tags_for_game
-        price_of_game = parse_price_bs(game_webpage)
+        soup = BeautifulSoup(game_webpage, "html.parser")
+        tags_for_game = parse_game_bs(soup)
+        game["user_tags"] = tags_for_game
+        price_of_game = parse_price_bs(soup)
         game.update(price_of_game)
 
-    print(all_recent_games)
+        request = requests.get(
+            f"""https://store.steampowered.com/api/appdetails?appids={game['app_id']}""")
+
+        response = request.json()[game['app_id']]['data']
+        compatible_systems = system_requirements(response)
+        game.update(compatible_systems)
+        steam_genres = get_genre_from_steam(response)
+        game['genres'] = steam_genres
+        developer = get_developer_name(response)
+        game['developers'] = developer
+        publisher = get_publisher_name(response)
+        game['publishers'] = publisher
+
+    data_frame = pd.DataFrame(all_recent_games)
+    data_frame.to_csv('test.csv')
