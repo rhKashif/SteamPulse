@@ -1,4 +1,6 @@
 """Script to get information from Steam website and API"""
+import csv
+
 from bs4 import BeautifulSoup
 import pandas as pd
 import requests
@@ -99,7 +101,7 @@ def update_game_information(all_recent_games: list):
     """Update game dictionary with information from the API"""
     for game in all_recent_games:
         game_webpage = get_html(
-            f"https://store.steampowered.com/app/{game_id}")
+            f"""https://store.steampowered.com/app/{game["app_id"]}""")
         soup = BeautifulSoup(game_webpage, "html.parser")
         tags_for_game = parse_game_bs(soup)
         game["user_tags"] = tags_for_game
@@ -107,9 +109,9 @@ def update_game_information(all_recent_games: list):
         game.update(price_of_game)
 
         request = requests.get(
-            f"""https://store.steampowered.com/api/appdetails?appids={game_id}""")
+            f"""https://store.steampowered.com/api/appdetails?appids={game["app_id"]}""")
 
-        response = request.json()[game_id]['data']
+        response = request.json()[game["app_id"]]['data']
         compatible_systems = system_requirements(response)
         game.update(compatible_systems)
         steam_genres = get_genre_from_steam(response)
@@ -119,7 +121,16 @@ def update_game_information(all_recent_games: list):
         publisher = get_publisher_name(response)
         game['publishers'] = publisher
 
-        return all_recent_games
+    return all_recent_games
+
+
+def convert_to_csv(files: list[dict]) -> None:
+    """Convert file to CSV"""
+    keys = files[0].keys()
+    with open('games.csv', 'w', newline='') as output_file:
+        dict_writer = csv.DictWriter(output_file, keys)
+        dict_writer.writeheader()
+        dict_writer.writerows(files)
 
 
 if __name__ == "__main__":
@@ -128,6 +139,4 @@ if __name__ == "__main__":
     all_recent_games = parse_app_id_bs(website)
 
     updated_games = update_game_information(all_recent_games)
-
-    data_frame = pd.DataFrame(updated_games)
-    data_frame.to_csv('test.csv')
+    convert_to_csv(updated_games)
