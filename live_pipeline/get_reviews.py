@@ -1,10 +1,10 @@
 """Retrieves reviews for a game from game IDs"""
 
-from urllib.parse import quote_plus
 from datetime import datetime
+from urllib.parse import quote_plus
 
-import requests
 import pandas as pd
+import requests
 
 
 def get_review_info_for_game(game_id: int) -> dict:
@@ -16,7 +16,7 @@ def get_review_info_for_game(game_id: int) -> dict:
             "number_of_negative_reviews": reviews_info["query_summary"]["total_negative"]}
 
 
-def get_reviews_for_game(game_id: int, cursor: str) -> (str,list[dict]):
+def get_reviews_for_game(game_id: int, cursor: str) -> dict:
     """Retrieves all reviews from a given review page (cursor)
     for a chosen game by its ID"""
     cursor = quote_plus(cursor)
@@ -35,33 +35,41 @@ def get_reviews_for_game(game_id: int, cursor: str) -> (str,list[dict]):
         review_dict["playtime_at_review"] = review["author"]["playtime_at_review"]
         review_dict["full_playtime"] = review["author"]["playtime_forever"]
         page_reviews.append(review_dict)
-    return next_cursor, page_reviews
+    return {"next_cursor": next_cursor, "reviews": page_reviews}
 
 
 def get_all_reviews(game_ids: list[int]) -> None:
     """Creates a csv file for all review info and
     reviews for each game csv file"""
-    review_info = []
+    reviews_info = []
 
     for game in game_ids:
-        review_info.append(get_review_info_for_game(game))
-        if review_info[-1]["number_of_total_reviews"] == 0:
+        reviews_info.append(get_review_info_for_game(game))
+        if reviews_info[-1]["number_of_total_reviews"] == 0:
             continue
 
         cursor_list = ["*"]
         all_reviews = []
 
-        for page in range(int(review_info[-1]["number_of_total_reviews"]/100)+2):
-            cursor, page_reviews = get_reviews_for_game(game, cursor_list[page])
+        for page in range(int(reviews_info[-1]["number_of_total_reviews"]/100)+2):
+            api_response = get_reviews_for_game(game, cursor_list[page])
+            cursor = api_response["next_cursor"]
+            page_reviews = api_response["reviews"]
             if not page_reviews or cursor in cursor_list:
                 break
             if not cursor in cursor_list:
                 cursor_list.append(cursor)
             all_reviews.extend(page_reviews)
+    get_csv_files(all_reviews, reviews_info)
+
+
+def get_csv_files(all_reviews: list[dict], reviews_info: list[dict]) -> None:
+    """Makes data-frames from lists and creates
+    csv files from both"""
     pd.DataFrame(all_reviews).to_csv("reviews.csv")
-    pd.DataFrame(review_info).to_csv("review_info.csv")
+    pd.DataFrame(reviews_info).to_csv("review_info.csv")
 
 
 if __name__ == "__main__":
-    game_ids = get_game_ids() # TODO connect to script with list of game IDs
+    game_ids = [10] # TODO connect to script with list of game IDs
     get_all_reviews(game_ids)
