@@ -1,7 +1,11 @@
-from urllib.request import urlopen
+"""Script to get information from Steam website and API"""
 from bs4 import BeautifulSoup
 import pandas as pd
 import requests
+from urllib.request import urlopen
+
+
+RELEASE_WEBSITE = "https://store.steampowered.com/search/?sort_by=Released_DESC&category1=998&supportedlang=english&ndl=1"
 
 
 def get_html(url):
@@ -117,8 +121,7 @@ def update_game_information(game_id: int):
 
 if __name__ == "__main__":
 
-    website = get_html(
-        "https://store.steampowered.com/search/?sort_by=Released_DESC&category1=998&supportedlang=english&ndl=1")
+    website = get_html(RELEASE_WEBSITE)
     all_recent_games = parse_app_id_bs(website)
 
     for game in all_recent_games:
