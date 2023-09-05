@@ -1,13 +1,8 @@
 """Script to get information from Steam website and API"""
 import csv
-
 from bs4 import BeautifulSoup
-import pandas as pd
 import requests
 from urllib.request import urlopen
-
-
-RELEASE_WEBSITE = "https://store.steampowered.com/search/?sort_by=Released_DESC&category1=998&supportedlang=english&ndl=1"
 
 
 def get_html(url: str) -> str:
@@ -19,7 +14,7 @@ def get_html(url: str) -> str:
     return html
 
 
-def parse_app_id_bs(html) -> list[dict]:
+def parse_app_id_bs(html: str) -> list[dict]:
     """Find the app id, title and release date from the url."""
     soup = BeautifulSoup(html, "html.parser")
     tags = soup.find_all(
@@ -63,13 +58,13 @@ def parse_price_bs(soup) -> dict:
     return prices
 
 
-def system_requirements(data) -> dict:
+def system_requirements(data: dict) -> dict:
     """Find the platforms that the game is compatible with."""
     response = data['platforms']
     return response
 
 
-def get_genre_from_steam(data) -> list:
+def get_genre_from_steam(data: dict) -> list:
     """Find the genres associated with the game"""
     genres = []
     response = data['genres']
@@ -78,7 +73,7 @@ def get_genre_from_steam(data) -> list:
     return genres
 
 
-def get_developer_name(data) -> list:
+def get_developer_name(data: dict) -> list:
     """Find the game developer"""
     developers = []
     response = data['developers']
@@ -88,7 +83,7 @@ def get_developer_name(data) -> list:
     return developers
 
 
-def get_publisher_name(data) -> list:
+def get_publisher_name(data: dict) -> list:
     """Find publisher name"""
     publishers = []
     response = data['publishers']
@@ -113,6 +108,7 @@ def update_game_information(all_recent_games: list):
 
         response = request.json()[game["app_id"]]['data']
         compatible_systems = system_requirements(response)
+
         game.update(compatible_systems)
         steam_genres = get_genre_from_steam(response)
         game['genres'] = steam_genres
@@ -134,6 +130,8 @@ def convert_to_csv(files: list[dict]) -> None:
 
 
 if __name__ == "__main__":
+
+    RELEASE_WEBSITE = "https://store.steampowered.com/search/?sort_by=Released_DESC&category1=998&supportedlang=english&ndl=1"
 
     website = get_html(RELEASE_WEBSITE)
     all_recent_games = parse_app_id_bs(website)
