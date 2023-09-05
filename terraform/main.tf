@@ -91,14 +91,47 @@ resource "aws_security_group" "steampulse_pipeline_ecs_sg" {
 
 #unfinished below
 
-resource "aws_iam_role" "name" {
-  
+resource "aws_iam_role" "steampulse_pipeline_ecs_task_execution_role" {
+  name = "steampulse_pipeline_ecs_task_execution_role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "ecs.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role" "steampulse_pipeline_ecs_task_role_policy" {
+  name = "steampulse_pipeline_ecs_task_role_policy"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        "Action" : "sts:AssumeRole",
+        "Principal" : {
+          "Service" : "ecs-tasks.amazonaws.com"
+        },
+        Effect = "Allow",
+        Sid    = ""
+      }
+    ]
+  })
 }
 
 
-resource "aws_iam_role_policy_attachment" "name" {
-  
+resource "aws_iam_role_policy_attachment" "steampulse_pipeline_ecs_task_execution_role_policy_attachment" {
+  role       = aws_iam_role.steampulse_pipeline_ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
+
 
 resource "aws_ecs_task_definition" "steampulse_pipeline_task_definition" {
   family                   = "steampulse_pipeline_task_definition"
@@ -106,8 +139,8 @@ resource "aws_ecs_task_definition" "steampulse_pipeline_task_definition" {
   network_mode             = "awsvpc"
   cpu                      = 1024
   memory                   = 2048
-   task_role_arn            = aws_iam_role.ecs-task-role-policy.arn
-  execution_role_arn       = aws_iam_role.ecs-task-execution-role.arn
+   task_role_arn            = aws_iam_role.steampulse_pipeline_ecs_task_role_policy.arn
+  execution_role_arn       = aws_iam_role.steampulse_pipeline_ecs-task_execution_role.arn
 
 container_definitions = jsonencode([
     {
@@ -140,15 +173,15 @@ container_definitions = jsonencode([
 }
 
 
-resource "aws_ecs_task_definition" "name" {
+# resource "aws_ecs_task_definition" "name" {
   
-}
+# }
 
 
-resource "aws_ecs_service" "name" {
+# resource "aws_ecs_service" "name" {
   
-}
+# }
 
-resource "aws_scheduler_schedule" "name" {
+# resource "aws_scheduler_schedule" "name" {
   
-}
+# }
