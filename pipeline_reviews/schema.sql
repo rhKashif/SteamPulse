@@ -45,7 +45,7 @@ CREATE TABLE game(
     release_date DATE NOT NULL,
     price FLOAT NOT NULL,
     sale_price FLOAT NOT NULL,
-    developer_id SMALLINT, 
+    developer_id SMALLINT,
     publisher_id SMALLINT,
     platform_id SMALLINT,
     PRIMARY KEY (game_id),
