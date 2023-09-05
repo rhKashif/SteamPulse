@@ -11,14 +11,14 @@ DROP TABLE IF EXISTS platform;
 
 CREATE TABLE developer(
     developer_id INT GENERATED ALWAYS AS IDENTITY,
-    developer_name TEXT NOT NULL,
+    developer_name TEXT NOT NULL UNIQUE,
     PRIMARY KEY (developer_id)
 
 );
 
 CREATE TABLE publisher(
     publisher_id INT GENERATED ALWAYS AS IDENTITY,
-    publisher_name TEXT NOT NULL,
+    publisher_name TEXT NOT NULL UNIQUE,
     PRIMARY KEY (publisher_id)
 
 );
@@ -37,7 +37,7 @@ CREATE TABLE platform(
 
 CREATE TABLE game(
     game_id INT GENERATED ALWAYS AS IDENTITY,
-    app_id INT NOT NULL,
+    app_id INT NOT NULL UNIQUE,
     title TEXT NOT NULL,
     release_date DATE NOT NULL,
     price FLOAT NOT NULL,
