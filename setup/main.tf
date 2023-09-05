@@ -89,7 +89,7 @@ resource "aws_security_group" "steampulse_pipeline_ecs_sg" {
 }
 
 
-#unfinished
+#unfinished below
 
 resource "aws_iam_role" "name" {
   
@@ -100,8 +100,43 @@ resource "aws_iam_role_policy_attachment" "name" {
   
 }
 
-resource "aws_ecs_task_definition" "name" {
-  
+resource "aws_ecs_task_definition" "steampulse_pipeline_task_definition" {
+  family                   = "steampulse_pipeline_task_definition"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = 1024
+  memory                   = 2048
+   task_role_arn            = aws_iam_role.ecs-task-role-policy.arn
+  execution_role_arn       = aws_iam_role.ecs-task-execution-role.arn
+
+container_definitions = jsonencode([
+    {
+      name      = "first"
+      image     = "service-first"
+      cpu       = 10
+      memory    = 512
+      essential = true
+      portMappings = [
+        {
+          containerPort = 80
+          hostPort      = 80
+        }
+      ]
+    },
+    {
+      name      = "second"
+      image     = "service-second"
+      cpu       = 10
+      memory    = 256
+      essential = true
+      portMappings = [
+        {
+          containerPort = 443
+          hostPort      = 443
+        }
+      ]
+    }
+  ])
 }
 
 
