@@ -28,24 +28,26 @@ def drop_unnecessary_columns(data: pd.DataFrame, column_name: str) -> pd.DataFra
     return data
 
 
-def convert_date_to_datetime(date: str):
+def convert_date_to_datetime(date: str) -> pd._libs.tslibs.timestamps.Timestamp | None:
     """Validates date if appropriate"""
     try:
         new_date = pd.to_datetime(date, format="%d %b, %Y")
     except AttributeError:
-        new_date = 'invalid'
+        new_date = None
 
     return new_date
 
 
-def convert_price_to_float(price: str) -> float:
+def convert_price_to_float(price: str | float) -> float:
     """Changes all prices to floats"""
-    if str(price)[0] == '£':
-        return float(price[1:])
+    price = str(price)
+    if '£' in price:
+        new_price = price.replace('£', '')
+        return float(new_price)
     return 0.00
 
 
-def explode_column_to_individual_rows(data: pd.DataFrame, column_name: str):
+def explode_column_to_individual_rows(data: pd.DataFrame, column_name: str) -> pd.DataFrame:
     """Make unique rows for each unique element in column"""
     data[column_name] = data[column_name].str.split(',')
     data = data.explode(column_name)
