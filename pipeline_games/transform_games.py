@@ -1,5 +1,6 @@
 """Script for transforming games data"""
 import pandas as pd
+from pandas._libs.tslibs.timestamps import Timestamp
 import numpy as np
 
 
@@ -28,7 +29,7 @@ def drop_unnecessary_columns(data: pd.DataFrame, column_name: str) -> pd.DataFra
     return data
 
 
-def convert_date_to_datetime(date: str) -> pd._libs.tslibs.timestamps.Timestamp | None:
+def convert_date_to_datetime(date: str) -> Timestamp | None:
     """Validates date, if appropriate"""
     try:
         new_date = pd.to_datetime(date, format="%d %b, %Y")
