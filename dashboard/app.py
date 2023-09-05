@@ -61,37 +61,37 @@ def dashboard_header() -> None:
     """
 
     st.title("SteamPulse")
-    st.markdown("Community Insights and Engagement for New Releases on Steam")
+    st.markdown("Community Insights for New Releases on Steam")
 
 
-def build_sidebar_plants() -> list:
-    """
-    Build sidebar with dropdown menu options
+# def build_sidebar_plants() -> list:
+#     """
+#     Build sidebar with dropdown menu options
 
-    Args:
-        None
+#     Args:
+#         None
 
-    Returns:
-        list: A list with values corresponding to plant names for which readings exist in the data base
-    """
-    selected_plants = st.sidebar.multiselect(
-        "Plant", options=sorted(plant_df["plant_name"].unique()))
-    return selected_plants
+#     Returns:
+#         list: A list with values corresponding to plant names for which readings exist in the data base
+#     """
+#     selected_plants = st.sidebar.multiselect(
+#         "Plant", options=sorted(plant_df["plant_name"].unique()))
+#     return selected_plants
 
 
-def build_sidebar_dates() -> list:
-    """
-    Build sidebar with dropdown menu options
+# def build_sidebar_dates() -> list:
+#     """
+#     Build sidebar with dropdown menu options
 
-    Args:
-        None
+#     Args:
+#         None
 
-    Returns:
-        list: A list with values corresponding to dates for which readings exist in the data base
-    """
-    selected_dates = st.sidebar.multiselect(
-        "Reading Time", options=plant_df["reading_time"].dt.date.unique())
-    return selected_dates
+#     Returns:
+#         list: A list with values corresponding to dates for which readings exist in the data base
+#     """
+#     selected_dates = st.sidebar.multiselect(
+#         "Reading Time", options=plant_df["reading_time"].dt.date.unique())
+#     return selected_dates
 
 
 # def headline_figures(df: DataFrame, plants: list[int], dates: list[datetime]) -> None:
@@ -186,18 +186,18 @@ if __name__ == "__main__":
 
     # conn = get_db_connection(config)
 
-    # plant_df = get_database(conn, config["SCHEMA"])
+    # game_df = get_database(conn)
 
     dashboard_header()
 
-    # selected_plants = build_sidebar_plants()
+    # selected_games = build_sidebar_games()
 
     # selected_dates = build_sidebar_dates()
 
-    # headline_figures(plant_df, selected_plants, selected_dates)
+    # headline_figures(plant_df, selected_games, selected_dates)
 
-    # plot_average_temperatures(plant_df, selected_plants, selected_dates)
-    # plot_average_soil_moisture(plant_df, selected_plants, selected_dates)
-    # plot_readings_per_plant(plant_df, selected_plants, selected_dates)
+    # plot_average_temperatures(plant_df, selected_games, selected_dates)
+    # plot_average_soil_moisture(plant_df, selected_games, selected_dates)
+    # plot_readings_per_plant(plant_df, selected_games, selected_dates)
 
     # print(plant_df.groupby('plant_name')['soil_moisture'].mean().reset_index())
