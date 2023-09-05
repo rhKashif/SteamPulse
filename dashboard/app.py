@@ -64,34 +64,49 @@ def dashboard_header() -> None:
     st.markdown("Community Insights for New Releases on Steam")
 
 
-# def build_sidebar_plants() -> list:
-#     """
-#     Build sidebar with dropdown menu options
+def build_sidebar_title(df: DataFrame) -> list:
+    """
+    Build sidebar with dropdown menu options
 
-#     Args:
-#         None
+    Args:
+        df (DataFrame): A pandas DataFrame containing all relevant game data
 
-#     Returns:
-#         list: A list with values corresponding to plant names for which readings exist in the data base
-#     """
-#     selected_plants = st.sidebar.multiselect(
-#         "Plant", options=sorted(plant_df["plant_name"].unique()))
-#     return selected_plants
+    Returns:
+        list: A list with values corresponding to game title in the data base
+    """
+    titles = st.sidebar.multiselect(
+        "Game Title", options=sorted(df["title"].unique()))
+    return titles
 
 
-# def build_sidebar_dates() -> list:
-#     """
-#     Build sidebar with dropdown menu options
+def build_sidebar_release_date(df: DataFrame) -> list:
+    """
+    Build sidebar with dropdown menu options to select game names
 
-#     Args:
-#         None
+    Args:
+        df (DataFrame): A pandas DataFrame containing all relevant game data
 
-#     Returns:
-#         list: A list with values corresponding to dates for which readings exist in the data base
-#     """
-#     selected_dates = st.sidebar.multiselect(
-#         "Reading Time", options=plant_df["reading_time"].dt.date.unique())
-#     return selected_dates
+    Returns:
+        list: A list with values corresponding to dates for which games were released
+    """
+    dates = st.sidebar.multiselect(
+        "Release Date", options=df["release_date"].dt.date.unique())
+    return dates
+
+
+def build_sidebar_review_date(df: DataFrame) -> list:
+    """
+    Build sidebar with dropdown menu options to select game names
+
+    Args:
+        df (DataFrame): A pandas DataFrame containing all relevant game data
+
+    Returns:
+        list: A list with values corresponding to dates for which reviews exist in the data base
+    """
+    dates = st.sidebar.multiselect(
+        "Review Date", options=df["review_date"].dt.date.unique())
+    return dates
 
 
 # def headline_figures(df: DataFrame, plants: list[int], dates: list[datetime]) -> None:
@@ -188,11 +203,21 @@ if __name__ == "__main__":
 
     # game_df = get_database(conn)
 
+    game_df = pd.read_csv("mock_data.csv")
+    game_df["release_date"] = pd.to_datetime(
+        game_df['release_date'], format='%d/%m/%Y')
+    game_df["review_date"] = pd.to_datetime(
+        game_df['review_date'], format='%d/%m/%Y')
+
+    print(game_df)
+
     dashboard_header()
 
-    # selected_games = build_sidebar_games()
+    selected_games = build_sidebar_title(game_df)
 
-    # selected_dates = build_sidebar_dates()
+    selected_release_dates = build_sidebar_release_date(game_df)
+
+    slected_review_dates = build_sidebar_review_date(game_df)
 
     # headline_figures(plant_df, selected_games, selected_dates)
 
