@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import datetime as datetime
 
 
 def identify_unique_tags(data: pd.DataFrame) -> pd.DataFrame:
@@ -27,6 +28,24 @@ def drop_unnecessary_columns(data: pd.DataFrame, column_name: str) -> pd.DataFra
     return data
 
 
+def convert_date_to_datetime(date: str):
+    """Validates date if appropriate"""
+    try:
+        new_date = pd.to_datetime(date, format="%d %b, %Y")
+    except:
+        new_date = 'invalid'
+
+    return new_date
+
+
+def convert_price_to_float(price: str) -> float:
+    """Changes all prices to floats"""
+    if str(price)[0] == '£':
+        return float(price[1:])
+    elif price == "Free To Play":
+        return 0.00
+
+
 if __name__ == "__main__":
 
     data_frame = pd.read_csv('games.csv')
@@ -37,3 +56,14 @@ if __name__ == "__main__":
         user_generated_df, 'genres')
     data_with_unique_tags_only = drop_unnecessary_columns(
         data_frame_no_genres, 'user_tags')
+
+    data_with_unique_tags_only['release_date'] = data_with_unique_tags_only['release_date'].apply(
+        lambda x: convert_date_to_datetime(x))
+
+    data_with_unique_tags_only['full price'] = data_with_unique_tags_only['full price'].apply(
+        lambda x: convert_price_to_float(x))
+
+    data_with_unique_tags_only['sale price'] = data_with_unique_tags_only['sale price'].apply(
+        lambda x: convert_price_to_float(x))
+
+    data_with_unique_tags_only.to_csv('hi.csv')
