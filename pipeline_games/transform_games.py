@@ -29,7 +29,7 @@ def drop_unnecessary_columns(data: pd.DataFrame, column_name: str) -> pd.DataFra
 
 
 def convert_date_to_datetime(date: str) -> pd._libs.tslibs.timestamps.Timestamp | None:
-    """Validates date if appropriate"""
+    """Validates date, if appropriate"""
     try:
         new_date = pd.to_datetime(date, format="%d %b, %Y")
     except AttributeError:
