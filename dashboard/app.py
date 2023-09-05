@@ -1,5 +1,5 @@
 """Python Script: Build a dashboard for data visualization"""
-
+import altair as alt
 from os import environ, _Environ
 from dotenv import load_dotenv
 from datetime import datetime
@@ -8,6 +8,8 @@ from pandas import DataFrame
 import streamlit as st
 from psycopg2 import connect
 from psycopg2.extensions import connection
+
+st.set_page_config(layout="wide")
 
 
 def get_db_connection(config_file: _Environ) -> connection:
@@ -72,126 +74,314 @@ def build_sidebar_title(df: DataFrame) -> list:
         df (DataFrame): A pandas DataFrame containing all relevant game data
 
     Returns:
-        list: A list with values corresponding to game title in the data base
+        list:  A list with game titles that the user selected
     """
     titles = st.sidebar.multiselect(
-        "Game Title", options=sorted(df["title"].unique()))
+        "Game Title:", options=sorted(df["title"].unique()))
     return titles
 
 
 def build_sidebar_release_date(df: DataFrame) -> list:
     """
-    Build sidebar with dropdown menu options to select game names
+    Build sidebar with dropdown menu options to select release dates
 
     Args:
         df (DataFrame): A pandas DataFrame containing all relevant game data
 
     Returns:
-        list: A list with values corresponding to dates for which games were released
+        list: A list with release dates that the user selected
     """
-    dates = st.sidebar.multiselect(
-        "Release Date", options=df["release_date"].dt.date.unique())
-    return dates
+    release_dates = st.sidebar.multiselect(
+        "Release Date:", options=df["release_date"].dt.date.unique())
+    return release_dates
 
 
 def build_sidebar_review_date(df: DataFrame) -> list:
     """
-    Build sidebar with dropdown menu options to select game names
+    Build sidebar with dropdown menu options to select review dates
 
     Args:
         df (DataFrame): A pandas DataFrame containing all relevant game data
 
     Returns:
-        list: A list with values corresponding to dates for which reviews exist in the data base
+        list: A list with review dates that the user selected
     """
     dates = st.sidebar.multiselect(
-        "Review Date", options=df["review_date"].dt.date.unique())
+        "Review Date:", options=df["review_date"].dt.date.unique())
     return dates
 
 
-# def headline_figures(df: DataFrame, plants: list[int], dates: list[datetime]) -> None:
-#     """Build headline for dashboard to present key figures for quick view of overall data"""
+def build_sidebar_genre(df: DataFrame) -> list:
+    """
+    Build sidebar with dropdown menu options to select game genre
 
-#     cols = st.columns(4)
+    Args:
+        df (DataFrame): A pandas DataFrame containing all relevant game data
 
-#     if len(plants) != 0:
-#         df = df[df["plant_name"].isin(plants)]
-
-#     if len(dates) != 0:
-#         df = df[df["reading_time"].dt.floor("D").isin(dates)]
-
-#     total_active_days = df.groupby(
-#         pd.Grouper(key='reading_time', freq="1D")).size().count()
-
-#     with cols[0]:
-#         st.metric("Total Plants:", df["plant_name"].nunique())
-#     with cols[1]:
-#         st.metric("Total Days Active:",
-#                   total_active_days)
-#     with cols[2]:
-#         st.metric("Total Readings:",
-#                   df.shape[0])
-#     with cols[3]:
-#         st.metric("Number of Botanists :",
-#                   df["botanist_name"].nunique())
+    Returns:
+        list: A list with game genres that the user selected
+    """
+    dates = st.sidebar.multiselect(
+        "Genre:", options=df["genre"].unique())
+    return dates
 
 
-# def create_chart_title(chart_title: str) -> None:
-#     """Creates chart chart_title"""
+def build_sidebar_platforms() -> list:
+    """
+    Build sidebar with platform selection options
 
-#     st.markdown(f"### {chart_title.title()}")
-
-
-# def plot_readings_per_plant(dataframe: DataFrame, plants: list[int], dates: list[datetime]) -> None:
-#     """Create a bar chart for the readings logged per plant"""
-#     if len(plants) != 0:
-#         dataframe = dataframe[dataframe["plant_name"].isin(plants)]
-#     if len(dates) != 0:
-#         dataframe = dataframe[dataframe["reading_time"].dt.floor(
-#             "D").isin(dates)]
-
-#     readings_per_plant = dataframe.groupby(
-#         "plant_name").size().reset_index()
-#     readings_per_plant.columns = ["Plant Name", "Number of readings"]
-
-#     st.title("Number of Readings per Plant")
-#     st.bar_chart(data=readings_per_plant,
-#                  x="Plant Name", y="Number of readings")
+    Returns:
+        list: A list with selected platforms
+    """
+    platforms = ["mac", "windows", "linux"]
+    selected_platforms = st.sidebar.multiselect(
+        "Compatible Platforms:", options=platforms, default=platforms)
+    return selected_platforms
 
 
-# def plot_average_temperatures(df: DataFrame, plants: list[int], dates: list[datetime]):
-#     """Plots the average temperature of each plant"""
+def build_sidebar_sentiment(df: DataFrame) -> tuple:
+    """
+    Build sidebar with slider option to select range for review sentiment
 
-#     if len(plants) != 0:
-#         df = df[df["plant_name"].isin(plants)]
-#     if len(dates) != 0:
-#         df = df[df["reading_time"].dt.floor(
-#             "D").isin(dates)]
+    Args:
+        df (DataFrame): A pandas DataFrame containing all relevant game data
 
-#     average_temperatures = df.groupby(
-#         'plant_name')['temperature'].mean().reset_index()
-#     average_temperatures.columns = ["Plant Name", "Average Temperature (°C)"]
-
-#     st.title("Average Temperature per Plant")
-#     st.bar_chart(data=average_temperatures,
-#                  x="Plant Name", y="Average Temperature (°C)")
+    Returns:
+        list: A tuple with minimum and maximum sentiment that the user has selected
+    """
+    sentiment = st.sidebar.slider(
+        "Sentiment:", min_value=0.0, max_value=5.0, value=(0.0, 5.0), step=0.1)
+    return sentiment
 
 
-# def plot_average_soil_moisture(df: DataFrame, plants: list[int], dates: list[datetime]):
-#     """Plots the average soil moisture for each plant"""
-#     if len(plants) != 0:
-#         df = df[df["plant_name"].isin(plants)]
-#     if len(dates) != 0:
-#         df = df[df["reading_time"].dt.floor(
-#             "D").isin(dates)]
+def headline_figures(df: DataFrame, titles: list[str], release_dates: list[datetime], review_dates: list[datetime], genres: list[str], platforms: list[str], minimum_sentiment: float, maximum_sentiment: float) -> None:
+    """
+    Build headline for dashboard to present key figures for quick view of overall data
 
-#     avg_soil_moisture = df.groupby('plant_name')[
-#         'soil_moisture'].mean().reset_index()
-#     avg_soil_moisture.columns = ["Plant Name", "Average Soil Moisture"]
+    Args:
+        df (DataFrame): A pandas DataFrame containing all relevant game data
 
-#     st.title("Average Soil Moisture per Plant")
-#     st.bar_chart(data=avg_soil_moisture,
-#                  x="Plant Name", y="Average Soil Moisture")
+        titles (list[str]):  A list with game titles that the user selected
+
+        release_dates (list[datetime]): A list with release dates that the user selected
+
+        review_dates (list[datetime]): A list with review dates that the user selected
+
+        genres (list[str]): A list with game genres that the user selected
+
+        platforms (list[str]): A list with selected platforms
+
+    Returns:
+        None
+    """
+    if len(titles) != 0:
+        df = df[df["title"].isin(titles)]
+    if len(release_dates) != 0:
+        df = df[df["release_date"].dt.floor("D").isin(release_dates)]
+    if len(review_dates) != 0:
+        df = df[df["release_date"].dt.floor("D").isin(review_dates)]
+    if len(genres) != 0:
+        df = df[df["genre"].isin(genres)]
+    df = df[df[platforms].any(axis=1)]
+    df = df[(df['sentiment'] >= min_sentiment) &
+            (df['sentiment'] <= max_sentiment)]
+
+    cols = st.columns(3)
+
+    with cols[0]:
+        st.metric("Total Games:", df["title"].nunique())
+    with cols[1]:
+        st.metric("Total Reviews:",
+                  df.shape[0])
+    with cols[2]:
+        st.metric("Average Sentiment:", df["sentiment"].mean())
+
+
+def plot_reviews_per_game(df: DataFrame, titles: list[str], release_dates: list[datetime], review_dates: list[datetime], genres: list[str], platforms: list[str], minimum_sentiment: float, maximum_sentiment: float) -> None:
+    """
+    Create a bar chart for the number of reviews per game
+
+    Args:
+        df (DataFrame): A pandas DataFrame containing all relevant game data
+
+        titles (list[str]):  A list with game titles that the user selected
+
+        release_dates (list[datetime]): A list with release dates that the user selected
+
+        review_dates (list[datetime]): A list with review dates that the user selected
+
+        genres (list[str]): A list with game genres that the user selected
+
+        platforms (list[str]): A list with selected platforms
+
+    Returns:
+        None
+    """
+    if len(titles) != 0:
+        df = df[df["title"].isin(titles)]
+    if len(release_dates) != 0:
+        df = df[df["release_date"].dt.floor("D").isin(release_dates)]
+    if len(review_dates) != 0:
+        df = df[df["release_date"].dt.floor("D").isin(review_dates)]
+    if len(genres) != 0:
+        df = df[df["genre"].isin(genres)]
+    df = df[df[platforms].any(axis=1)]
+    df = df[(df['sentiment'] >= min_sentiment) &
+            (df['sentiment'] <= max_sentiment)]
+
+    df = df.groupby(
+        "title").size().reset_index()
+    df.columns = ["title", "num_of_reviews"]
+
+    chart = alt.Chart(df).mark_bar().encode(
+        x=alt.X("title", title="Game Title", sort="-x"),
+        y=alt.Y("num_of_reviews", title="Number of reviews"),
+    ).properties(
+        title="Number of Reviews per Game",
+        width=800,
+        height=400
+    )
+
+    # chart = alt.Chart(df).mark_bar().encode(
+    #     x=alt.X("num_of_reviews", title="Number of reviews"),
+    #     y=alt.Y("title", title="Game Title", sort="-x")
+    # ).properties(
+    #     title="Number of Reviews per Game",
+    #     width=800,
+    #     height=400
+    # )
+
+    st.altair_chart(chart, use_container_width=True)
+
+
+def plot_games_release_frequency(df: DataFrame, titles: list[str], release_dates: list[datetime], review_dates: list[datetime], genres: list[str], platforms: list[str], minimum_sentiment: float, maximum_sentiment: float) -> None:
+    """
+    Create a line chart for the number of games released per day
+
+    Args:
+        df (DataFrame): A pandas DataFrame containing all relevant game data
+
+        titles (list[str]):  A list with game titles that the user selected
+
+        release_dates (list[datetime]): A list with release dates that the user selected
+
+        review_dates (list[datetime]): A list with review dates that the user selected
+
+        genres (list[str]): A list with game genres that the user selected
+
+        platforms (list[str]): A list with selected platforms
+
+    Returns:
+        None   
+    """
+    if len(titles) != 0:
+        df = df[df["title"].isin(titles)]
+    if len(release_dates) != 0:
+        df = df[df["release_date"].dt.floor("D").isin(release_dates)]
+    if len(review_dates) != 0:
+        df = df[df["release_date"].dt.floor("D").isin(review_dates)]
+    if len(genres) != 0:
+        df = df[df["genre"].isin(genres)]
+    df = df[df[platforms].any(axis=1)]
+    df = df[(df['sentiment'] >= min_sentiment) &
+            (df['sentiment'] <= max_sentiment)]
+
+    df = game_df.groupby("release_date")["title"].nunique().reset_index()
+    df.columns = ["release_date", "count"]
+
+    chart = alt.Chart(df).mark_line().encode(
+        x=alt.X("release_date:O", title="Release Date",
+                timeUnit="yearmonthdate"),
+        y=alt.Y("count", title="Number of games"),
+    ).properties(
+        title="Games Released per Day"
+    )
+
+    st.altair_chart(chart, use_container_width=True)
+
+
+def plot_games_review_frequency(df: DataFrame, titles: list[str], release_dates: list[datetime], review_dates: list[datetime], genres: list[str], platforms: list[str], minimum_sentiment: float, maximum_sentiment: float) -> None:
+    """
+    Create a line chart for the number of games released per day
+
+    Args:
+        df (DataFrame): A pandas DataFrame containing all relevant game data
+
+        titles (list[str]):  A list with game titles that the user selected
+
+        release_dates (list[datetime]): A list with release dates that the user selected
+
+        review_dates (list[datetime]): A list with review dates that the user selected
+
+        genres (list[str]): A list with game genres that the user selected
+
+        platforms (list[str]): A list with selected platforms
+
+    Returns:
+        None   
+    """
+    if len(titles) != 0:
+        df = df[df["title"].isin(titles)]
+    if len(release_dates) != 0:
+        df = df[df["release_date"].dt.floor("D").isin(release_dates)]
+    if len(review_dates) != 0:
+        df = df[df["release_date"].dt.floor("D").isin(review_dates)]
+    if len(genres) != 0:
+        df = df[df["genre"].isin(genres)]
+    df = df[df[platforms].any(axis=1)]
+    df = df[(df['sentiment'] >= min_sentiment) &
+            (df['sentiment'] <= max_sentiment)]
+
+    df = df.groupby(
+        "release_date").size().reset_index()
+    df.columns = ["release_date", "num_of_reviews"]
+    chart = alt.Chart(df).mark_bar().encode(
+        x=alt.X("release_date:O", title="Release Date",
+                timeUnit="yearmonthdate"),
+        y=alt.Y("num_of_reviews", title="Number of reviews"),
+    ).properties(
+        title="Games Reviews per Day"
+    )
+
+    st.altair_chart(chart, use_container_width=True)
+
+
+def plot_platform_compatibility(df: DataFrame, titles: list[str], release_dates: list[datetime], review_dates: list[datetime], genres: list[str], platforms: list[str], minimum_sentiment: float, maximum_sentiment: float) -> None:
+    """
+    Create a bar chart for the platform compatibility of games
+
+    Args:
+        df (DataFrame): A pandas DataFrame containing all relevant game data
+
+        titles (list[str]):  A list with game titles that the user selected
+
+        release_dates (list[datetime]): A list with release dates that the user selected
+
+        review_dates (list[datetime]): A list with review dates that the user selected
+
+        genres (list[str]): A list with game genres that the user selected
+
+        platforms (list[str]): A list with selected platforms
+
+    Returns:
+        None   
+    """
+    if len(titles) != 0:
+        df = df[df["title"].isin(titles)]
+    if len(release_dates) != 0:
+        df = df[df["release_date"].dt.floor("D").isin(release_dates)]
+    if len(review_dates) != 0:
+        df = df[df["release_date"].dt.floor("D").isin(review_dates)]
+    if len(genres) != 0:
+        df = df[df["genre"].isin(genres)]
+    df = df[df[platforms].any(axis=1)]
+    df = df[(df['sentiment'] >= min_sentiment) &
+            (df['sentiment'] <= max_sentiment)]
+
+    mac = game_df.groupby("mac")['title'].nunique().reset_index()
+    windows = game_df.groupby("windows")['title'].nunique().reset_index()
+    linux = game_df.groupby("windows")['title'].nunique().reset_index()
+    print(mac)
 
 
 if __name__ == "__main__":
@@ -208,21 +398,26 @@ if __name__ == "__main__":
         game_df['release_date'], format='%d/%m/%Y')
     game_df["review_date"] = pd.to_datetime(
         game_df['review_date'], format='%d/%m/%Y')
-
-    print(game_df)
-
     dashboard_header()
 
     selected_games = build_sidebar_title(game_df)
-
     selected_release_dates = build_sidebar_release_date(game_df)
+    selected_review_dates = build_sidebar_review_date(game_df)
+    selected_genre = build_sidebar_genre(game_df)
+    selected_platform = build_sidebar_platforms()
+    min_sentiment, max_sentiment = build_sidebar_sentiment(game_df)
 
-    slected_review_dates = build_sidebar_review_date(game_df)
+    headline_figures(game_df, selected_games, selected_release_dates,
+                     selected_review_dates, selected_genre, selected_platform, min_sentiment, max_sentiment)
 
-    # headline_figures(plant_df, selected_games, selected_dates)
+    plot_reviews_per_game(game_df, selected_games, selected_release_dates,
+                          selected_review_dates, selected_genre, selected_platform, min_sentiment, max_sentiment)
 
-    # plot_average_temperatures(plant_df, selected_games, selected_dates)
-    # plot_average_soil_moisture(plant_df, selected_games, selected_dates)
-    # plot_readings_per_plant(plant_df, selected_games, selected_dates)
+    plot_games_release_frequency(game_df, selected_games, selected_release_dates,
+                                 selected_review_dates, selected_genre, selected_platform, min_sentiment, max_sentiment)
 
-    # print(plant_df.groupby('plant_name')['soil_moisture'].mean().reset_index())
+    plot_games_review_frequency(game_df, selected_games, selected_release_dates,
+                                selected_review_dates, selected_genre, selected_platform, min_sentiment, max_sentiment)
+
+    plot_platform_compatibility(game_df, selected_games, selected_release_dates,
+                                selected_review_dates, selected_genre, selected_platform, min_sentiment, max_sentiment)
