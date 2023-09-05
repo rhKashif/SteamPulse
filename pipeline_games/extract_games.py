@@ -1,6 +1,7 @@
 """Script to get information from Steam website and API"""
 import csv
 from urllib.request import urlopen
+import pandas as pd
 from bs4 import BeautifulSoup
 import requests
 
@@ -34,11 +35,11 @@ def parse_app_id_bs(html: str) -> list[dict]:
 def parse_game_bs(soup) -> list[str]:
     """Find the user tags for each game."""
     tags = soup.find_all("a", class_="app_tag")
-    game_tags = []
+    game_tags = ''
     for each_tag in tags:
-        game_tags.append(each_tag.string.strip())
+        game_tags += each_tag.string.strip() + ','
 
-    return game_tags
+    return game_tags[:-1]
 
 
 def parse_price_bs(soup) -> dict:
@@ -68,34 +69,33 @@ def system_requirements(data: dict) -> dict:
 
 def get_genre_from_steam(data: dict) -> list:
     """Find the genres associated with the game"""
-    genres = []
+    genres = ""
     if 'genres' in data.keys():
         response = data['genres']
         for genre in response:
-            genres.append(genre['description'])
-    return genres
+            genres += genre['description'] + ','
+    return genres[:-1]
 
 
 def get_developer_name(data: dict) -> list:
     """Find the game developer"""
-    developers = []
+    developers = ''
     if 'developers' in data.keys():
         response = data['developers']
         for developer in response:
-            developers.append(developer)
-
-    return developers
+            developers += developer + ','
+    return developers[:-1]
 
 
 def get_publisher_name(data: dict) -> list:
     """Find publisher name"""
-    publishers = []
+    publishers = ''
     if 'publishers' in data.keys():
         response = data['publishers']
         for publisher in response:
-            publishers.append(publisher)
+            publishers += publisher + ','
 
-    return publishers
+    return publishers[:-1]
 
 
 def update_game_information(all_recent_games: list):

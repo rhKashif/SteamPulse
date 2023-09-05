@@ -167,3 +167,4 @@ terraform.*
 
 # Big files
 *.csv
+*.ipynb
