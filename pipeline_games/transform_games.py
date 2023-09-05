@@ -1,6 +1,6 @@
+"""Script for transforming games data"""
 import pandas as pd
 import numpy as np
-import datetime as datetime
 
 
 def identify_unique_tags(data: pd.DataFrame) -> pd.DataFrame:
@@ -32,7 +32,7 @@ def convert_date_to_datetime(date: str):
     """Validates date if appropriate"""
     try:
         new_date = pd.to_datetime(date, format="%d %b, %Y")
-    except:
+    except AttributeError:
         new_date = 'invalid'
 
     return new_date
@@ -42,8 +42,15 @@ def convert_price_to_float(price: str) -> float:
     """Changes all prices to floats"""
     if str(price)[0] == '£':
         return float(price[1:])
-    elif price == "Free To Play":
-        return 0.00
+    return 0.00
+
+
+def explode_column_to_individual_rows(data: pd.DataFrame, column_name: str):
+    """Make unique rows for each unique element in column"""
+    data[column_name] = data[column_name].str.split(',')
+    data = data.explode(column_name)
+
+    return data
 
 
 if __name__ == "__main__":
@@ -58,12 +65,17 @@ if __name__ == "__main__":
         data_frame_no_genres, 'user_tags')
 
     data_with_unique_tags_only['release_date'] = data_with_unique_tags_only['release_date'].apply(
-        lambda x: convert_date_to_datetime(x))
+        convert_date_to_datetime)
 
     data_with_unique_tags_only['full price'] = data_with_unique_tags_only['full price'].apply(
-        lambda x: convert_price_to_float(x))
+        convert_price_to_float)
 
     data_with_unique_tags_only['sale price'] = data_with_unique_tags_only['sale price'].apply(
-        lambda x: convert_price_to_float(x))
+        convert_price_to_float)
 
-    data_with_unique_tags_only.to_csv('hi.csv')
+    unique_developers = explode_column_to_individual_rows(
+        data_with_unique_tags_only, 'developers')
+    final_df = explode_column_to_individual_rows(
+        unique_developers, 'publishers')
+
+    final_df.to_csv('transformed_data.csv')

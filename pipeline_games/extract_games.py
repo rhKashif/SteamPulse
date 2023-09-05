@@ -79,24 +79,23 @@ def get_genre_from_steam(data: dict) -> list:
 
 def get_developer_name(data: dict) -> list:
     """Find the game developer"""
-    developers = []
+    developers = ''
     if 'developers' in data.keys():
         response = data['developers']
         for developer in response:
-            developers.append(developer)
-
-    return developers
+            developers += developer + ','
+    return developers[:-1]
 
 
 def get_publisher_name(data: dict) -> list:
     """Find publisher name"""
-    publishers = []
+    publishers = ''
     if 'publishers' in data.keys():
         response = data['publishers']
         for publisher in response:
-            publishers.append(publisher)
+            publishers += publisher + ','
 
-    return publishers
+    return publishers[:-1]
 
 
 def update_game_information(all_recent_games: list):
