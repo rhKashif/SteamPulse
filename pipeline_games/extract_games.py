@@ -1,8 +1,8 @@
 """Script to get information from Steam website and API"""
 import csv
+from urllib.request import urlopen
 from bs4 import BeautifulSoup
 import requests
-from urllib.request import urlopen
 
 
 def get_html(url: str) -> str:
@@ -19,16 +19,16 @@ def parse_app_id_bs(html: str) -> list[dict]:
     soup = BeautifulSoup(html, "html.parser")
     tags = soup.find_all(
         "a", class_="search_result_row ds_collapse_flag")
-    all_games = []
+    games = []
     for game in tags:
         application = {}
         application["app_id"] = game.attrs['data-ds-appid']
         application["title"] = game.find('span', class_='title').text
         application["release_date"] = game.find(
             'div', class_="col search_released responsive_secondrow").text
-        all_games.append(application)
+        games.append(application)
 
-    return all_games
+    return games
 
 
 def parse_game_bs(soup) -> list[str]:
@@ -48,7 +48,7 @@ def parse_price_bs(soup) -> dict:
         tag = soup.find("div", class_="game_purchase_price price")
         prices["full price"] = tag.string.strip()
         prices["sale price"] = tag.string.strip()
-    except:
+    except AttributeError:
         full_tag = soup.find("div", class_="discount_original_price")
         prices["full price"] = full_tag.string.strip()
         discount_tag = soup.find("div", class_="discount_final_price")
@@ -110,7 +110,8 @@ def update_game_information(all_recent_games: list):
         game.update(price_of_game)
 
         request = requests.get(
-            f"""https://store.steampowered.com/api/appdetails?appids={game["app_id"]}""")
+            f"""https://store.steampowered.com/api/appdetails?appids={game["app_id"]}""",
+            timeout=10)
 
         response = request.json()[game["app_id"]]['data']
         compatible_systems = system_requirements(response)
@@ -129,7 +130,7 @@ def update_game_information(all_recent_games: list):
 def convert_to_csv(files: list[dict], filename: str) -> None:
     """Convert file to CSV"""
     keys = files[0].keys()
-    with open(filename, 'w', newline='') as output_file:
+    with open(filename, 'w', newline='', encoding='utf-8') as output_file:
         dict_writer = csv.DictWriter(output_file, keys)
         dict_writer.writeheader()
         dict_writer.writerows(files)
@@ -140,7 +141,7 @@ if __name__ == "__main__":
     RELEASE_WEBSITE = "https://store.steampowered.com/search/?sort_by=Released_DESC&category1=998&supportedlang=english&ndl=1"
 
     website = get_html(RELEASE_WEBSITE)
-    all_recent_games = parse_app_id_bs(website)
+    all_games = parse_app_id_bs(website)
 
-    updated_games = update_game_information(all_recent_games)
+    updated_games = update_game_information(all_games)
     convert_to_csv(updated_games, 'games.csv')
