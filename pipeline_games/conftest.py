@@ -1,5 +1,6 @@
 """File containing necessary pytest fixtures for testing"""
 import pytest
+import pandas as pd
 
 
 @pytest.fixture
@@ -96,3 +97,9 @@ def fake_response():
             'categories': [{'id': 2, 'description': 'Single-player'}],
             'genres': [{'id': '1', 'description': 'Action'}, {'id': '25', 'description': 'Adventure'}, {'id': '28', 'description': 'Simulation'}, {'id': '2', 'description': 'Strategy'}],
             'release_date': {'coming_soon': False, 'date': '5 Sep, 2023'}}
+
+
+@pytest.fixture
+def fake_raw_data():
+    return pd.DataFrame([[2246030, "Fake: Escape", "5 Sep, 2023", "Early Access,Clicker,Strategy,Colony Sim,City Builder,Farming Sim,3D,3D Vision,Third Person,Top-Down,Controller,Base Building,Realistic,Economy,Agriculture,Survival,Building,Artificial Intelligence,Resource Management,Singleplayer",
+                         '£3.39', '£2.54', True, False, False, "Adventure,Indie,RPG,Simulation,Strategy,Early Access", "Fake", "Fake"]], columns=['app_id', 'title', 'release_date', 'user_tags', 'full price', 'sale price', 'windows', 'mac', 'linux', 'genres', 'developers', 'publishers'])
