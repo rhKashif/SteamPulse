@@ -60,7 +60,7 @@ CREATE TABLE game(
 CREATE TABLE review(
     review_id INT GENERATED ALWAYS AS IDENTITY,
     sentiment FLOAT NOT NULL DEFAULT 0,
-    review_text TEXT, 
+    review_text TEXT NOT NULL, 
     review_date DATE NOT NULL,
     game_id INT,
     PRIMARY KEY (review_id),
