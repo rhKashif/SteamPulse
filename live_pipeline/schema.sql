@@ -24,7 +24,7 @@ CREATE TABLE publisher(
 );
 
 CREATE TABLE platform(
-    platform_id TINYINT GENERATED ALWAYS AS IDENTITY,
+    platform_id SMALLINT GENERATED ALWAYS AS IDENTITY,
     mac BOOLEAN NOT NULL,
     windows BOOLEAN NOT NULL,
     linux BOOLEAN NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE game(
     sale_price FLOAT NOT NULL,
     developer_id SMALLINT,
     publisher_id SMALLINT,
-    platform_id TINYINT,
+    platform_id SMALLINT,
     PRIMARY KEY (game_id),
     FOREIGN KEY (developer_id) REFERENCES developer(developer_id),
     FOREIGN KEY (publisher_id) REFERENCES publisher(publisher_id),
