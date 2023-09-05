@@ -10,21 +10,21 @@ DROP TABLE IF EXISTS platform;
 -- tables with no foreign key
 
 CREATE TABLE developer(
-    developer_id INT GENERATED ALWAYS AS IDENTITY,
+    developer_id SMALLINT GENERATED ALWAYS AS IDENTITY,
     developer_name TEXT NOT NULL UNIQUE,
     PRIMARY KEY (developer_id)
 
 );
 
 CREATE TABLE publisher(
-    publisher_id INT GENERATED ALWAYS AS IDENTITY,
+    publisher_id SMALLINT GENERATED ALWAYS AS IDENTITY,
     publisher_name TEXT NOT NULL UNIQUE,
     PRIMARY KEY (publisher_id)
 
 );
 
 CREATE TABLE platform(
-    platform_id INT GENERATED ALWAYS AS IDENTITY,
+    platform_id TINYINT GENERATED ALWAYS AS IDENTITY,
     mac BOOLEAN NOT NULL,
     windows BOOLEAN NOT NULL,
     linux BOOLEAN NOT NULL,
@@ -34,6 +34,9 @@ CREATE TABLE platform(
 
 -- game references the three above tables
 
+-- Leaving game_id as regular int - not likely to hit the smallint cap if we're just working with new games, 
+-- but there are more games on steam than the smallint cap, so if this ran for years or we expanded to grab
+-- all games, smallint would cause issues.
 
 CREATE TABLE game(
     game_id INT GENERATED ALWAYS AS IDENTITY,
@@ -42,9 +45,9 @@ CREATE TABLE game(
     release_date DATE NOT NULL,
     price FLOAT NOT NULL,
     sale_price FLOAT NOT NULL,
-    developer_id INT,
-    publisher_id INT,
-    platform_id INT,
+    developer_id SMALLINT,
+    publisher_id SMALLINT,
+    platform_id TINYINT,
     PRIMARY KEY (game_id),
     FOREIGN KEY (developer_id) REFERENCES developer(developer_id),
     FOREIGN KEY (publisher_id) REFERENCES publisher(publisher_id),
@@ -64,13 +67,13 @@ CREATE TABLE review(
     review_date DATE NOT NULL,
     game_id INT,
     PRIMARY KEY (review_id),
-    FOREIGN KEY (game_id) REFERENCES game(game_id)
+    FOREIGN KEY (game_id) REFERENCES game(game_id) 
 
 );
 
 
 CREATE TABLE genre(
-    genre_id INT GENERATED ALWAYS AS IDENTITY,
+    genre_id SMALLINT GENERATED ALWAYS AS IDENTITY,
     genre TEXT NOT NULL,
     user_generated BOOLEAN NOT NULL,
     game_id INT,
