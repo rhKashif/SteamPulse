@@ -101,11 +101,67 @@ resource "aws_iam_role" "steampulse_pipeline_ecs_task_execution_role" {
         Effect = "Allow"
         Sid    = ""
         Principal = {
-          Service = "ecs.amazonaws.com"
+          Service = "ecs-tasks.amazonaws.com"
         }
       },
+
+      {
+        Action = "sts:AssumeRole",
+        Principal = {
+          Service = "scheduler.amazonaws.com"
+        },
+        Effect = "Allow",
+        Sid    = ""
+      }
     ]
   })
+
+  inline_policy {
+    name = "ecs-task-inline-policy"
+    policy = jsonencode({
+      Version = "2012-10-17",
+      Statement = [
+        {
+          Action   = "ecs:DescribeTaskDefinition",
+          Effect   = "Allow",
+          Resource = "*",
+          Condition = {
+            "ArnLike" : {
+              "ecs:cluster" : "arn:aws:ecs:eu-west-2:129033205317:cluster/steampulse_cluster"
+            }
+          }
+        },
+        {
+          Action   = "ecs:DescribeTasks",
+          Effect   = "Allow",
+          Resource = "*",
+          Condition = {
+            "ArnLike" : {
+              "ecs:cluster" : "arn:aws:ecs:eu-west-2:129033205317:cluster/steampulse_cluster"
+            }
+          }
+        },
+        {
+          Action   = "ecs:RunTask",
+          Effect   = "Allow",
+          Resource = "*",
+          Condition = {
+            "ArnLike" : {
+              "ecs:cluster" : "arn:aws:ecs:eu-west-2:129033205317:cluster/steampulse_cluster"
+            }
+          }
+        },
+        {
+          Action   = "iam:PassRole",
+          Effect   = "Allow",
+          Resource = "*"
+        }
+      ]
+
+      }
+    )
+
+  }
 }
 
 resource "aws_iam_role" "steampulse_pipeline_ecs_task_role_policy" {
@@ -139,49 +195,46 @@ resource "aws_ecs_task_definition" "steampulse_pipeline_task_definition" {
   network_mode             = "awsvpc"
   cpu                      = 1024
   memory                   = 2048
-   task_role_arn            = aws_iam_role.steampulse_pipeline_ecs_task_role_policy.arn
-  execution_role_arn       = aws_iam_role.steampulse_pipeline_ecs-task_execution_role.arn
+  task_role_arn            = aws_iam_role.steampulse_pipeline_ecs_task_role_policy.arn
+  execution_role_arn       = aws_iam_role.steampulse_pipeline_ecs_task_execution_role.arn
 
-container_definitions = jsonencode([
+  container_definitions = jsonencode([
     {
-      name      = "first"
-      image     = "service-first"
-      cpu       = 10
-      memory    = 512
-      essential = true
+      name   = "steampulse_pipeline_ecr"
+      image  = "129033205317.dkr.ecr.eu-west-2.amazonaws.com/steampulse_pipeline_ecr:latest"
+      cpu    = 10
+      memory = 512
       portMappings = [
         {
           containerPort = 80
           hostPort      = 80
         }
       ]
-    },
-    {
-      name      = "second"
-      image     = "service-second"
-      cpu       = 10
-      memory    = 256
-      essential = true
-      portMappings = [
-        {
-          containerPort = 443
-          hostPort      = 443
+      essential : true,
+
+      logConfiguration : {
+        "logDriver" : "awslogs",
+        "options" : {
+          "awslogs-create-group" : "true",
+          "awslogs-group" : "/ecs/",
+          "awslogs-region" : "eu-west-2",
+          "awslogs-stream-prefix" : "ecs"
         }
-      ]
+      }
     }
   ])
 }
 
 
 # resource "aws_ecs_task_definition" "name" {
-  
+
 # }
 
 
 # resource "aws_ecs_service" "name" {
-  
+
 # }
 
 # resource "aws_scheduler_schedule" "name" {
-  
+
 # }
