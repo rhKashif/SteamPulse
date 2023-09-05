@@ -22,6 +22,7 @@ resource "aws_ecs_cluster" "steampulse_cluster" {
 
 
 
+
 resource "aws_db_instance" "steampulse_database" {
   allocated_storage      = 10
   engine                 = "postgres"
@@ -59,6 +60,7 @@ resource "aws_security_group" "steampulse_rds_sg" {
   }
 
   tags = {
+
     Name = "steampulse_rds_sg"
   }
 }
