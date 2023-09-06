@@ -234,7 +234,7 @@ resource "aws_ecs_task_definition" "steampulse_pipeline_task_definition" {
 resource "aws_scheduler_schedule" "steampulse_pipeline_schedule" {
   name                = "steampulse_pipeline_schedule"
   description         = "Runs the steampulse pipeline on a cron schedule"
-  schedule_expression = "cron(10 * * * ? *)"
+  schedule_expression = "cron(45 * * * ? *)"
 
   flexible_time_window {
     mode = "OFF"
@@ -249,8 +249,8 @@ resource "aws_scheduler_schedule" "steampulse_pipeline_schedule" {
       launch_type         = "FARGATE"
 
       network_configuration {
-        assign_public_ip = "true"
-        security_groups  = [aws_security_group.steampulse_pipeline_ecs_sg.arn]
+        assign_public_ip = true
+        security_groups  = [aws_security_group.steampulse_pipeline_ecs_sg.id]
         subnets          = ["subnet-03b1a3e1075174995", "subnet-0667517a2a13e2a6b", "subnet-0cec5bdb9586ed3c4"]
       }
     }
