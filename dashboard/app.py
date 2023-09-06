@@ -43,7 +43,7 @@ def get_database(conn_postgres: connection) -> DataFrame:
         conn_postgres (connection): A connection to a Postgres database
 
     Returns:
-        DataFrame:  A pandas DataFrame containing all relevant plant data
+        DataFrame:  A pandas DataFrame containing all relevant release data
     """
     query = f""
     df = pd.read_sql_query(query, conn_postgres)
@@ -161,13 +161,13 @@ def filter_data(df: DataFrame, titles: list[str], release_dates: list[datetime],
         DataFrame: A DataFrame containing filtered data related to new releases
 
     """
-    if len(titles) != 0:
+    if titles:
         df = df[df["title"].isin(titles)]
-    if len(release_dates) != 0:
+    if release_dates:
         df = df[df["release_date"].dt.floor("D").isin(release_dates)]
-    if len(review_dates) != 0:
+    if review_dates:
         df = df[df["review_date"].dt.floor("D").isin(review_dates)]
-    if len(genres) != 0:
+    if genres:
         df = df[df["genre"].isin(genres)]
 
     df = df[df[platforms].any(axis=1)]
