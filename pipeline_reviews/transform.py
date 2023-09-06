@@ -76,10 +76,17 @@ def correct_cell_values(reviews_df: DataFrame) -> DataFrame:
     reviews_df["playtime_at_review"] = reviews_df[~reviews_df["playtime_at_review"] < 1]
 
 
+def remove_duplicate_reviews(review_df: DataFrame) -> DataFrame:
+    """Removes duplicate rows"""
+    review_df.drop_duplicates(
+        subset=["review","game_id","playtime_at_review","full_playtime"], inplace=True)
+
+
 if __name__ == "__main__":
 
     reviews = pd.read_csv("reviews.csv")
     reviews = remove_empty_rows(reviews)
     reviews = change_column_types(reviews)
     reviews = correct_cell_values(reviews)
+    reviews = remove_duplicate_reviews(reviews)
     reviews = correct_playtime(reviews)
