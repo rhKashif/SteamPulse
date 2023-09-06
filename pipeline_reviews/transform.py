@@ -26,24 +26,25 @@ def get_release_date(game_id: int, conn: connection, cache: dict) -> datetime:
         return cache[game_id]
     else:
         # TODO get data from connection
-        cache[game_id] = 3# TODO value from above
+        cache[game_id] = datetime(2013,3,3,12,3,5)# TODO value from above
         return cache[game_id]
 
 
 def correct_playtime(reviews_df: DataFrame) -> DataFrame:
     """Returns a data-frame with valid playtime recordings only"""
     release_date_cache = {}
-    conn = get_db_connection()
+    # TODO conn = get_db_connection()
+    conn = 5
     reviews_df["release_date"] = reviews_df["game_id"].apply(lambda row: get_release_date(
         row, conn, release_date_cache))
     time_now = datetime.now()
     reviews_df["maximum_playtime_since_release"] = reviews_df["release_date"].apply(
-        lambda row: (time_now - row).seconds/3600)
-    reviews_df["playtime_at_review"] = reviews_df[
+        lambda row: (time_now - row).total_seconds()/3600)
+    reviews_df = reviews_df[
         reviews_df["playtime_at_review"] <= reviews_df["maximum_playtime_since_release"]]
-    reviews_df["full_playtime"] = reviews_df[
+    reviews_df = reviews_df[
         reviews_df["full_playtime"] <= reviews_df["maximum_playtime_since_release"]]
-    reviews_df.drop(columns=["maximum_playtime_since_release","release_date"], inplace=False)
+    reviews_df.drop(columns=["maximum_playtime_since_release","release_date"], inplace=True)
     return reviews_df
 
 
@@ -70,16 +71,20 @@ def change_column_types(reviews_df: DataFrame) -> DataFrame:
 def correct_cell_values(reviews_df: DataFrame) -> DataFrame:
     """Drops rows with invalid cell values"""
     columns = ["review_score", "playtime_at_review", "full_playtime"]
+
     for column in columns:
-        reviews_df[column] = reviews_df[~reviews_df[column] < 0]
+        reviews_df = reviews_df[reviews_df[column] >= 0]
     # for reviews from players who did play the game
-    reviews_df["playtime_at_review"] = reviews_df[~reviews_df["playtime_at_review"] < 1]
+    reviews_df = reviews_df[reviews_df["playtime_at_review"] > 1]
+    reviews_df = reviews_df[reviews_df["playtime_at_review"] <= reviews_df["full_playtime"]]
+    return reviews_df
 
 
 def remove_duplicate_reviews(review_df: DataFrame) -> DataFrame:
     """Removes duplicate rows"""
     review_df.drop_duplicates(
         subset=["review","game_id","playtime_at_review","full_playtime"], inplace=True)
+    return review_df
 
 
 if __name__ == "__main__":
@@ -90,3 +95,6 @@ if __name__ == "__main__":
     reviews = correct_cell_values(reviews)
     reviews = remove_duplicate_reviews(reviews)
     reviews = correct_playtime(reviews)
+    if "Unnamed: 0" in reviews.columns:
+        reviews.drop(columns="Unnamed: 0", inplace=True)
+    reviews.to_csv("reviews2.csv") #! index=False potentially for load
