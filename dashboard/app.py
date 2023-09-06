@@ -50,21 +50,6 @@ def get_database(conn_postgres: connection) -> DataFrame:
     return df
 
 
-def dashboard_header() -> None:
-    """
-    Build header for dashboard to give it a title
-
-    Args:
-        None
-
-    Returns:
-        None
-    """
-
-    st.title("SteamPulse")
-    st.markdown("Community Insights for New Releases on Steam")
-
-
 def build_sidebar_title(df: DataFrame) -> list:
     """
     Build sidebar with dropdown menu options
@@ -426,6 +411,28 @@ def plot_genre_distribution(df: DataFrame, titles: list[str], release_dates: lis
     return chart
 
 
+def dashboard_header() -> None:
+    """
+    Build header for dashboard to give it a title
+
+    Args:
+        None
+
+    Returns:
+        None
+    """
+
+    st.title("SteamPulse")
+    st.markdown("Community Insights for New Releases on Steam")
+
+
+def sidebar_header() -> None:
+    """
+    """
+    with st.sidebar:
+        st.markdown("Filter Options\n---")
+
+
 def headline_figures(df: DataFrame, titles: list[str], release_dates: list[datetime], review_dates: list[datetime],
                      genres: list[str], platforms: list[str], minimum_sentiment: float, maximum_sentiment: float) -> None:
     """
@@ -480,6 +487,8 @@ def headline_figures(df: DataFrame, titles: list[str], release_dates: list[datet
     with cols[3]:
         st.metric("Most Reviewed Game:", df["title"].mode()[0])
 
+    st.markdown("---")
+
 
 def first_row_figures(platform_distribution_plot: Chart, release_frequency_plot: Chart, review_frequency_plot: Chart) -> None:
     """
@@ -501,6 +510,8 @@ def first_row_figures(platform_distribution_plot: Chart, release_frequency_plot:
     with cols[2]:
         st.altair_chart(platform_distribution_plot, use_container_width=True)
 
+    st.markdown("---")
+
 
 def second_row_figures(genre_distribution_plot: Chart, reviews_per_game_frequency_plot: Chart) -> None:
     """
@@ -520,6 +531,8 @@ def second_row_figures(genre_distribution_plot: Chart, reviews_per_game_frequenc
     with cols[1]:
         st.altair_chart(reviews_per_game_frequency_plot,
                         use_container_width=True)
+
+    st.markdown("---")
 
 
 if __name__ == "__main__":
@@ -542,6 +555,8 @@ if __name__ == "__main__":
     st.set_page_config(layout="wide")
 
     dashboard_header()
+
+    sidebar_header()
 
     selected_games = build_sidebar_title(game_df)
     selected_release_dates = build_sidebar_release_date(game_df)
