@@ -234,7 +234,7 @@ resource "aws_ecs_task_definition" "steampulse_pipeline_task_definition" {
 resource "aws_scheduler_schedule" "steampulse_pipeline_schedule" {
   name                = "steampulse_pipeline_schedule"
   description         = "Runs the steampulse pipeline on a cron schedule"
-  schedule_expression = "cron(10 * * * * *)"
+  schedule_expression = "cron(10 * * * ? *)"
 
   flexible_time_window {
     mode = "OFF"
