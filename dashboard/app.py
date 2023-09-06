@@ -466,7 +466,7 @@ def headline_figures(df: DataFrame, titles: list[str], release_dates: list[datet
     df = df[(df['sentiment'] >= minimum_sentiment) &
             (df['sentiment'] <= maximum_sentiment)]
 
-    cols = st.columns(4)
+    cols = st.columns(3)
     st.markdown(
         """
         <style>
@@ -484,8 +484,75 @@ def headline_figures(df: DataFrame, titles: list[str], release_dates: list[datet
                   df.shape[0])
     with cols[2]:
         st.metric("Average Sentiment:", df["sentiment"].mean())
-    with cols[3]:
+
+
+def sub_headline_figures(df: DataFrame, titles: list[str], release_dates: list[datetime], review_dates: list[datetime],
+                         genres: list[str], platforms: list[str], minimum_sentiment: float, maximum_sentiment: float) -> None:
+    """
+    Build sub-headline for dashboard to present key figures for quick view of overall data
+
+    Args:
+        df (DataFrame): A pandas DataFrame containing all relevant game data
+
+        titles (list[str]):  A list with game titles that the user selected
+
+        release_dates (list[datetime]): A list with release dates that the user selected
+
+        review_dates (list[datetime]): A list with review dates that the user selected
+
+        genres (list[str]): A list with game genres that the user selected
+
+        platforms (list[str]): A list with selected platforms
+
+    Returns:
+        None
+    """
+    if len(titles) != 0:
+        df = df[df["title"].isin(titles)]
+    if len(release_dates) != 0:
+        df = df[df["release_date"].dt.floor("D").isin(release_dates)]
+    if len(review_dates) != 0:
+        df = df[df["review_date"].dt.floor("D").isin(review_dates)]
+    if len(genres) != 0:
+        df = df[df["genre"].isin(genres)]
+    df = df[df[platforms].any(axis=1)]
+    df = df[(df['sentiment'] >= minimum_sentiment) &
+            (df['sentiment'] <= maximum_sentiment)]
+
+    try:
+        mac_compatibility = df.groupby("mac")['title'].nunique()[True]
+    except KeyError:
+        mac_compatibility = 0
+    try:
+        windows_compatibility = df.groupby("windows")['title'].nunique()[True]
+    except KeyError:
+        windows_compatibility = 0
+    try:
+        linux_compatibility = df.groupby("linux")['title'].nunique()[True]
+    except KeyError:
+        linux_compatibility = 0
+
+    compatibility_df = pd.DataFrame({"platform": ['mac', 'windows', "linux"],
+                                     "compatibility": [mac_compatibility, windows_compatibility, linux_compatibility]})
+
+    cols = st.columns(3)
+    st.markdown(
+        """
+        <style>
+            [data-testid="stMetricValue"] {
+            font-size: 25px;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    with cols[0]:
+        st.metric("Most Released Genre:", df["genre"].mode()[0])
+    with cols[1]:
         st.metric("Most Reviewed Game:", df["title"].mode()[0])
+    with cols[2]:
+        st.metric("Most Compatible Platform",
+                  compatibility_df["platform"].max().capitalize())
 
     st.markdown("---")
 
@@ -567,6 +634,9 @@ if __name__ == "__main__":
 
     headline_figures(game_df, selected_games, selected_release_dates,
                      selected_review_dates, selected_genre, selected_platform, min_sentiment, max_sentiment)
+
+    sub_headline_figures(game_df, selected_games, selected_release_dates,
+                         selected_review_dates, selected_genre, selected_platform, min_sentiment, max_sentiment)
 
     reviews_per_game_release_frequency_plot = plot_reviews_per_game_frequency(game_df, selected_games, selected_release_dates,
                                                                               selected_review_dates, selected_genre, selected_platform, min_sentiment, max_sentiment)
