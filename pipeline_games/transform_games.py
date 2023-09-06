@@ -79,4 +79,9 @@ if __name__ == "__main__":
     final_df = explode_column_to_individual_rows(
         unique_developers, 'publishers')
 
-    final_df.to_csv('transformed_data.csv')
+    final_df.to_csv('genres.csv')
+
+    games_only_df = drop_unnecessary_columns(final_df, 'tags')
+    games_df = drop_unnecessary_columns(games_only_df, 'user_generated')
+    games_df = games_df.drop_duplicates()
+    games_df.to_csv('games.csv')

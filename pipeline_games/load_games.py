@@ -58,7 +58,7 @@ def add_game_information(conn, data: list):
         developer_id = cur.fetchone()['developer_id']
         cur.execute(
             """SELECT publisher_id FROM publisher WHERE publisher_name = %s;""",
-            [data[10]])
+            [data[11]])
         publisher_id = cur.fetchone()['publisher_id']
         cur.execute(
             """SELECT platform_id FROM platform WHERE mac = %s AND windows = %s AND linux = %s;""",
@@ -92,8 +92,14 @@ if __name__ == "__main__":
     configuration = environ
     connection = get_db_connection(configuration)
 
+    # create new dataframe with unique games
+
     df = pd.read_csv("transformed_data.csv")
     for data in df.itertuples():
-        print(data[2])
+        add_developer_information(connection, data)
+        add_publisher_information(connection, data)
+        add_game_information(connection, data)
 
-        break
+    df = pd.read_csv("transformed_data.csv")
+    for data in df.itertuples():
+        add_genre_information(connection, data)
