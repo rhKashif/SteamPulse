@@ -19,6 +19,21 @@ def get_db_connection(config):
         return "Error connecting to database."
 
 
+def add_developer_information(conn, data: list):
+    """Add developer information to database"""
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute(
+            """SELECT exists (SELECT 1 FROM developer WHERE developer_name = %s LIMIT 1);""", [data[10]])
+        result = cur.fetchone()
+        if result['exists'] is True:
+            cur.close()
+        elif result['exists'] is False:
+            cur.execute(
+                """INSERT INTO developer(developer_name) VALUES (%s)""", [data[10]])
+        conn.commit()
+        cur.close()
+
+
 if __name__ == "__main__":
     load_dotenv()
     configuration = environ
@@ -26,4 +41,5 @@ if __name__ == "__main__":
 
     df = pd.read_csv("transformed_data.csv")
     for row in df.itertuples():
-        print(row)
+        print(row[10])
+        break
