@@ -20,14 +20,15 @@ def get_reviews_for_game(game_id: int, cursor: str) -> dict:
     """Retrieves all reviews from a given review page (cursor)
     for a chosen game by its ID"""
     cursor = quote_plus(cursor)
+
     try:
         request = requests.get(f"""https://store.steampowered.com/appreviews/{game_id}
                     ?json=1&num_per_page=100&cursor={cursor}""", timeout=10)
         reviews = request.json()
         next_cursor = reviews["cursor"]
+
     except requests.exceptions.Timeout:
         return {"error": "Timeout on the response!"}
-
     page_reviews = []
 
     for review in reviews["reviews"]:
