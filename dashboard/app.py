@@ -1,9 +1,10 @@
 """Python Script: Build a dashboard for data visualization"""
+from datetime import datetime
+from os import environ, _Environ
+
 import altair as alt
 from altair.vegalite.v5.api import Chart
-from os import environ, _Environ
 from dotenv import load_dotenv
-from datetime import datetime
 import pandas as pd
 from pandas import DataFrame
 import streamlit as st
@@ -138,13 +139,13 @@ def build_sidebar_sentiment(df: DataFrame) -> tuple:
     return sentiment
 
 
-def plot_games_release_frequency(df: DataFrame, titles: list[str], release_dates: list[datetime], review_dates: list[datetime],
-                                 genres: list[str], platforms: list[str], minimum_sentiment: float, maximum_sentiment: float) -> Chart:
+def filter_data(df: DataFrame, titles: list[str], release_dates: list[datetime], review_dates: list[datetime],
+                genres: list[str], platforms: list[str], minimum_sentiment: float, maximum_sentiment: float) -> DataFrame:
     """
-    Create a line chart for the number of games released per day
+    Apply live filtering according to sidebar filters to the data frame
 
     Args:
-        df (DataFrame): A pandas DataFrame containing all relevant game data
+        df (DataFrame): A DataFrame containing all data related to new releases
 
         titles (list[str]):  A list with game titles that the user selected
 
@@ -157,7 +158,8 @@ def plot_games_release_frequency(df: DataFrame, titles: list[str], release_dates
         platforms (list[str]): A list with selected platforms
 
     Returns:
-        Chart: A chart displaying plotted data
+        DataFrame: A DataFrame containing filtered data related to new releases
+
     """
     if len(titles) != 0:
         df = df[df["title"].isin(titles)]
@@ -167,10 +169,24 @@ def plot_games_release_frequency(df: DataFrame, titles: list[str], release_dates
         df = df[df["review_date"].dt.floor("D").isin(review_dates)]
     if len(genres) != 0:
         df = df[df["genre"].isin(genres)]
+
     df = df[df[platforms].any(axis=1)]
     df = df[(df['sentiment'] >= minimum_sentiment) &
             (df['sentiment'] <= maximum_sentiment)]
 
+    return df
+
+
+def plot_games_release_frequency(df: DataFrame) -> Chart:
+    """
+    Create a line chart for the number of games released per day
+
+    Args:
+        df (DataFrame): A DataFrame containing filtered data related to new releases
+
+    Returns:
+        Chart: A chart displaying plotted data
+    """
     df = df.groupby("release_date")["title"].nunique().reset_index()
     df.columns = ["release_date", "num_of_games"]
     custom_ticks = [i for i in range(
@@ -192,39 +208,16 @@ def plot_games_release_frequency(df: DataFrame, titles: list[str], release_dates
     return chart
 
 
-def plot_games_review_frequency(df: DataFrame, titles: list[str], release_dates: list[datetime], review_dates: list[datetime],
-                                genres: list[str], platforms: list[str], minimum_sentiment: float, maximum_sentiment: float) -> Chart:
+def plot_games_review_frequency(df: DataFrame) -> Chart:
     """
     Create a line chart for the number of games released per day
 
     Args:
-        df (DataFrame): A pandas DataFrame containing all relevant game data
-
-        titles (list[str]):  A list with game titles that the user selected
-
-        release_dates (list[datetime]): A list with release dates that the user selected
-
-        review_dates (list[datetime]): A list with review dates that the user selected
-
-        genres (list[str]): A list with game genres that the user selected
-
-        platforms (list[str]): A list with selected platforms
+        df (DataFrame): A DataFrame containing filtered data related to new releases
 
     Returns:
         Chart: A chart displaying plotted data
     """
-    if len(titles) != 0:
-        df = df[df["title"].isin(titles)]
-    if len(release_dates) != 0:
-        df = df[df["release_date"].dt.floor("D").isin(release_dates)]
-    if len(review_dates) != 0:
-        df = df[df["review_date"].dt.floor("D").isin(review_dates)]
-    if len(genres) != 0:
-        df = df[df["genre"].isin(genres)]
-    df = df[df[platforms].any(axis=1)]
-    df = df[(df['sentiment'] >= minimum_sentiment) &
-            (df['sentiment'] <= maximum_sentiment)]
-
     df = df.groupby(
         "release_date").size().reset_index()
     df.columns = ["release_date", "num_of_reviews"]
@@ -247,54 +240,21 @@ def plot_games_review_frequency(df: DataFrame, titles: list[str], release_dates:
     return chart
 
 
-def plot_reviews_per_game_frequency(df: DataFrame, titles: list[str], release_dates: list[datetime], review_dates: list[datetime],
-                                    genres: list[str], platforms: list[str], minimum_sentiment: float, maximum_sentiment: float) -> Chart:
+def plot_reviews_per_game_frequency(df: DataFrame) -> Chart:
     """
     Create a bar chart for the number of reviews per game
 
     Args:
-        df (DataFrame): A pandas DataFrame containing all relevant game data
-
-        titles (list[str]):  A list with game titles that the user selected
-
-        release_dates (list[datetime]): A list with release dates that the user selected
-
-        review_dates (list[datetime]): A list with review dates that the user selected
-
-
-        genres (list[str]): A list with game genres that the user selected
-
-        platforms (list[str]): A list with selected platforms
+        df (DataFrame): A DataFrame containing filtered data related to new releases
 
     Returns:
         Chart: A chart displaying plotted data
     """
-    if len(titles) != 0:
-        df = df[df["title"].isin(titles)]
-    if len(release_dates) != 0:
-        df = df[df["release_date"].dt.floor("D").isin(release_dates)]
-    if len(review_dates) != 0:
-        df = df[df["review_date"].dt.floor("D").isin(review_dates)]
-    if len(genres) != 0:
-        df = df[df["genre"].isin(genres)]
-    df = df[df[platforms].any(axis=1)]
-    df = df[(df['sentiment'] >= minimum_sentiment) &
-            (df['sentiment'] <= maximum_sentiment)]
-
     df = df.groupby(
         "title").size().reset_index()
     df.columns = ["title", "num_of_reviews"]
     custom_ticks = [i for i in range(
         0, df["num_of_reviews"].max() + 1)]
-
-    # chart = alt.Chart(df).mark_bar().encode(
-    #     x=alt.X("title", title="Release Title", sort="-x"),
-    #     y=alt.Y("num_of_reviews", title="Number of reviews"),
-    # ).properties(
-    #     title="Number of Reviews per Release",
-    #     width=800,
-    #     height=400
-    # )
 
     chart = alt.Chart(df).mark_bar(
     ).encode(
@@ -310,39 +270,16 @@ def plot_reviews_per_game_frequency(df: DataFrame, titles: list[str], release_da
     return chart
 
 
-def plot_platform_distribution(df: DataFrame, titles: list[str], release_dates: list[datetime], review_dates: list[datetime],
-                               genres: list[str], platforms: list[str], minimum_sentiment: float, maximum_sentiment: float) -> Chart:
+def plot_platform_distribution(df: DataFrame) -> Chart:
     """
     Create a bar chart for the platform compatibility of games
 
     Args:
-        df (DataFrame): A pandas DataFrame containing all relevant game data
-
-        titles (list[str]):  A list with game titles that the user selected
-
-        release_dates (list[datetime]): A list with release dates that the user selected
-
-        review_dates (list[datetime]): A list with review dates that the user selected
-
-        genres (list[str]): A list with game genres that the user selected
-
-        platforms (list[str]): A list with selected platforms
+        df (DataFrame): A DataFrame containing filtered data related to new releases
 
     Returns:
         Chart: A chart displaying plotted data
     """
-    if len(titles) != 0:
-        df = df[df["title"].isin(titles)]
-    if len(release_dates) != 0:
-        df = df[df["release_date"].dt.floor("D").isin(release_dates)]
-    if len(review_dates) != 0:
-        df = df[df["review_date"].dt.floor("D").isin(review_dates)]
-    if len(genres) != 0:
-        df = df[df["genre"].isin(genres)]
-    df = df[df[platforms].any(axis=1)]
-    df = df[(df['sentiment'] >= minimum_sentiment) &
-            (df['sentiment'] <= maximum_sentiment)]
-
     try:
         mac_compatibility = df.groupby("mac")['title'].nunique()[True]
     except KeyError:
@@ -375,39 +312,16 @@ def plot_platform_distribution(df: DataFrame, titles: list[str], release_dates: 
     return chart
 
 
-def plot_genre_distribution(df: DataFrame, titles: list[str], release_dates: list[datetime], review_dates: list[datetime],
-                            genres: list[str], platforms: list[str], minimum_sentiment: float, maximum_sentiment: float) -> Chart:
+def plot_genre_distribution(df: DataFrame) -> Chart:
     """
     Create a line chart for the number of games released per day
 
     Args:
-        df (DataFrame): A pandas DataFrame containing all relevant game data
-
-        titles (list[str]):  A list with game titles that the user selected
-
-        release_dates (list[datetime]): A list with release dates that the user selected
-
-        review_dates (list[datetime]): A list with review dates that the user selected
-
-        genres (list[str]): A list with game genres that the user selected
-
-        platforms (list[str]): A list with selected platforms
+        df (DataFrame): A DataFrame containing filtered data related to new releases
 
     Returns:
         Chart: A chart displaying plotted data
     """
-    if len(titles) != 0:
-        df = df[df["title"].isin(titles)]
-    if len(release_dates) != 0:
-        df = df[df["release_date"].dt.floor("D").isin(release_dates)]
-    if len(review_dates) != 0:
-        df = df[df["review_date"].dt.floor("D").isin(review_dates)]
-    if len(genres) != 0:
-        df = df[df["genre"].isin(genres)]
-    df = df[df[platforms].any(axis=1)]
-    df = df[(df['sentiment'] >= minimum_sentiment) &
-            (df['sentiment'] <= maximum_sentiment)]
-
     df = df.groupby(
         "genre").size().reset_index()
     df.columns = ["genre", "releases_per_genres"]
@@ -428,7 +342,7 @@ def plot_genre_distribution(df: DataFrame, titles: list[str], release_dates: lis
 
 def dashboard_header() -> None:
     """
-    Build header for dashboard to give it a title
+    Build header for dashboard to give it title text
 
     Args:
         None
@@ -443,44 +357,28 @@ def dashboard_header() -> None:
 
 def sidebar_header() -> None:
     """
+    Add text to the dashboard side bar
+
+    Args:
+        None
+
+    Returns:
+        None
     """
     with st.sidebar:
         st.markdown("Filter Options\n---")
 
 
-def headline_figures(df: DataFrame, titles: list[str], release_dates: list[datetime], review_dates: list[datetime],
-                     genres: list[str], platforms: list[str], minimum_sentiment: float, maximum_sentiment: float) -> None:
+def headline_figures(df: DataFrame) -> None:
     """
     Build headline for dashboard to present key figures for quick view of overall data
 
     Args:
-        df (DataFrame): A pandas DataFrame containing all relevant game data
-
-        titles (list[str]):  A list with game titles that the user selected
-
-        release_dates (list[datetime]): A list with release dates that the user selected
-
-        review_dates (list[datetime]): A list with review dates that the user selected
-
-        genres (list[str]): A list with game genres that the user selected
-
-        platforms (list[str]): A list with selected platforms
+        df (DataFrame): A DataFrame containing filtered data related to new releases
 
     Returns:
         None
     """
-    if len(titles) != 0:
-        df = df[df["title"].isin(titles)]
-    if len(release_dates) != 0:
-        df = df[df["release_date"].dt.floor("D").isin(release_dates)]
-    if len(review_dates) != 0:
-        df = df[df["review_date"].dt.floor("D").isin(review_dates)]
-    if len(genres) != 0:
-        df = df[df["genre"].isin(genres)]
-    df = df[df[platforms].any(axis=1)]
-    df = df[(df['sentiment'] >= minimum_sentiment) &
-            (df['sentiment'] <= maximum_sentiment)]
-
     cols = st.columns(3)
     st.markdown(
         """
@@ -501,39 +399,16 @@ def headline_figures(df: DataFrame, titles: list[str], release_dates: list[datet
         st.metric("Average Sentiment:", df["sentiment"].mean())
 
 
-def sub_headline_figures(df: DataFrame, titles: list[str], release_dates: list[datetime], review_dates: list[datetime],
-                         genres: list[str], platforms: list[str], minimum_sentiment: float, maximum_sentiment: float) -> None:
+def sub_headline_figures(df: DataFrame) -> None:
     """
     Build sub-headline for dashboard to present key figures for quick view of overall data
 
     Args:
-        df (DataFrame): A pandas DataFrame containing all relevant game data
-
-        titles (list[str]):  A list with game titles that the user selected
-
-        release_dates (list[datetime]): A list with release dates that the user selected
-
-        review_dates (list[datetime]): A list with review dates that the user selected
-
-        genres (list[str]): A list with game genres that the user selected
-
-        platforms (list[str]): A list with selected platforms
+        df (DataFrame): A DataFrame containing filtered data related to new releases
 
     Returns:
         None
     """
-    if len(titles) != 0:
-        df = df[df["title"].isin(titles)]
-    if len(release_dates) != 0:
-        df = df[df["release_date"].dt.floor("D").isin(release_dates)]
-    if len(review_dates) != 0:
-        df = df[df["review_date"].dt.floor("D").isin(review_dates)]
-    if len(genres) != 0:
-        df = df[df["genre"].isin(genres)]
-    df = df[df[platforms].any(axis=1)]
-    df = df[(df['sentiment'] >= minimum_sentiment) &
-            (df['sentiment'] <= maximum_sentiment)]
-
     try:
         mac_compatibility = df.groupby("mac")['title'].nunique()[True]
     except KeyError:
@@ -640,29 +515,26 @@ if __name__ == "__main__":
 
     sidebar_header()
 
-    selected_games = build_sidebar_title(game_df)
+    selected_releases = build_sidebar_title(game_df)
     selected_release_dates = build_sidebar_release_date(game_df)
     selected_review_dates = build_sidebar_review_date(game_df)
     selected_genre = build_sidebar_genre(game_df)
     selected_platform = build_sidebar_platforms()
     min_sentiment, max_sentiment = build_sidebar_sentiment(game_df)
 
-    headline_figures(game_df, selected_games, selected_release_dates,
-                     selected_review_dates, selected_genre, selected_platform, min_sentiment, max_sentiment)
+    filtered_df = filter_data(game_df, selected_releases, selected_release_dates, selected_review_dates,
+                              selected_genre, selected_platform, min_sentiment, max_sentiment)
 
-    sub_headline_figures(game_df, selected_games, selected_release_dates,
-                         selected_review_dates, selected_genre, selected_platform, min_sentiment, max_sentiment)
+    headline_figures(filtered_df)
 
-    reviews_per_game_release_frequency_plot = plot_reviews_per_game_frequency(game_df, selected_games, selected_release_dates,
-                                                                              selected_review_dates, selected_genre, selected_platform, min_sentiment, max_sentiment)
-    games_release_frequency_plot = plot_games_release_frequency(game_df, selected_games, selected_release_dates,
-                                                                selected_review_dates, selected_genre, selected_platform, min_sentiment, max_sentiment)
-    games_review_frequency_plot = plot_games_review_frequency(game_df, selected_games, selected_release_dates,
-                                                              selected_review_dates, selected_genre, selected_platform, min_sentiment, max_sentiment)
-    games_platform_distribution_plot = plot_platform_distribution(game_df, selected_games, selected_release_dates,
-                                                                  selected_review_dates, selected_genre, selected_platform, min_sentiment, max_sentiment)
-    games_genre_distribution_plot = plot_genre_distribution(game_df, selected_games, selected_release_dates,
-                                                            selected_review_dates, selected_genre, selected_platform, min_sentiment, max_sentiment)
+    sub_headline_figures(filtered_df)
+
+    reviews_per_game_release_frequency_plot = plot_reviews_per_game_frequency(
+        filtered_df)
+    games_release_frequency_plot = plot_games_release_frequency(filtered_df)
+    games_review_frequency_plot = plot_games_review_frequency(filtered_df)
+    games_platform_distribution_plot = plot_platform_distribution(filtered_df)
+    games_genre_distribution_plot = plot_genre_distribution(filtered_df)
 
     first_row_figures(games_platform_distribution_plot, games_release_frequency_plot,
                       games_review_frequency_plot)
