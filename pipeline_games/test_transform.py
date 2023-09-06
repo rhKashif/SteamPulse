@@ -5,11 +5,13 @@ from pandas._libs.tslibs.timestamps import Timestamp
 from transform_games import identify_unique_tags, create_user_generated_column, drop_unnecessary_columns, convert_date_to_datetime, convert_price_to_float
 
 
-def test_separate_columns_created_for_unique_tags(fake_raw_data):
+def test_separate_rows_created_for_unique_tags(fake_raw_data):
     """Tests that unique tags have a separate row"""
+    assert 'tags' not in list(fake_raw_data.columns)
     assert fake_raw_data.shape[0] == 1
     result = identify_unique_tags(fake_raw_data)
     assert result.shape[0] == 4
+    assert 'tags' in list(result.columns)
 
 
 def test_user_generated_column_created(fake_data_with_tags):
@@ -58,3 +60,6 @@ def test_prices_converted_to_float_free_fames(price_is_free):
 
     assert isinstance(result, float) is True
     assert result == 0.0
+
+
+def test_explode_column_to_individual_rows()
