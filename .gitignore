@@ -165,5 +165,6 @@ cython_debug/
 .terraform.lock.hcl
 terraform.*
 
-# Big files
+
+#Misc
 *.csv
