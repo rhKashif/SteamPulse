@@ -2,7 +2,7 @@
 import pytest
 from pandas._libs.tslibs.timestamps import Timestamp
 
-from transform_games import identify_unique_tags, create_user_generated_column, drop_unnecessary_columns, convert_date_to_datetime
+from transform_games import identify_unique_tags, create_user_generated_column, drop_unnecessary_columns, convert_date_to_datetime, convert_price_to_float
 
 
 def test_separate_columns_created_for_unique_tags(fake_raw_data):
