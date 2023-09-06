@@ -21,8 +21,6 @@ resource "aws_ecs_cluster" "steampulse_cluster" {
 }
 
 
-
-
 resource "aws_db_instance" "steampulse_database" {
   allocated_storage      = 10
   engine                 = "postgres"
@@ -240,3 +238,4 @@ resource "aws_ecs_task_definition" "steampulse_pipeline_task_definition" {
 # resource "aws_scheduler_schedule" "name" {
 
 # }
+
