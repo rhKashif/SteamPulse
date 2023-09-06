@@ -58,7 +58,6 @@ resource "aws_security_group" "steampulse_rds_sg" {
   }
 
   tags = {
-
     Name = "steampulse_rds_sg"
   }
 }
@@ -74,6 +73,7 @@ resource "aws_security_group" "steampulse_pipeline_ecs_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   egress {
     from_port        = 0
     to_port          = 0
@@ -82,17 +82,17 @@ resource "aws_security_group" "steampulse_pipeline_ecs_sg" {
     ipv6_cidr_blocks = ["::/0"]
   }
 
-
   tags = {
     Name = "steampulse_pipeline_ecs_sg"
   }
 }
 
 
-#unfinished below
+
 
 resource "aws_iam_role" "steampulse_pipeline_ecs_task_execution_role" {
   name = "steampulse_pipeline_ecs_task_execution_role"
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -118,8 +118,10 @@ resource "aws_iam_role" "steampulse_pipeline_ecs_task_execution_role" {
 
   inline_policy {
     name = "ecs-task-inline-policy"
+
     policy = jsonencode({
       Version = "2012-10-17",
+
       Statement = [
         {
           Action   = "ecs:DescribeTaskDefinition",
@@ -127,7 +129,7 @@ resource "aws_iam_role" "steampulse_pipeline_ecs_task_execution_role" {
           Resource = "*",
           Condition = {
             "ArnLike" : {
-              "ecs:cluster" : "arn:aws:ecs:eu-west-2:129033205317:cluster/steampulse_cluster"
+              "ecs:cluster" : aws_ecs_cluster.steampulse_cluster.arn
             }
           }
         },
@@ -137,7 +139,7 @@ resource "aws_iam_role" "steampulse_pipeline_ecs_task_execution_role" {
           Resource = "*",
           Condition = {
             "ArnLike" : {
-              "ecs:cluster" : "arn:aws:ecs:eu-west-2:129033205317:cluster/steampulse_cluster"
+              "ecs:cluster" : aws_ecs_cluster.steampulse_cluster.arn
             }
           }
         },
@@ -147,7 +149,7 @@ resource "aws_iam_role" "steampulse_pipeline_ecs_task_execution_role" {
           Resource = "*",
           Condition = {
             "ArnLike" : {
-              "ecs:cluster" : "arn:aws:ecs:eu-west-2:129033205317:cluster/steampulse_cluster"
+              "ecs:cluster" : aws_ecs_cluster.steampulse_cluster.arn
             }
           }
         },
@@ -157,10 +159,8 @@ resource "aws_iam_role" "steampulse_pipeline_ecs_task_execution_role" {
           Resource = "*"
         }
       ]
-
       }
     )
-
   }
 }
 
@@ -175,6 +175,7 @@ resource "aws_iam_role" "steampulse_pipeline_ecs_task_role_policy" {
         "Principal" : {
           "Service" : "ecs-tasks.amazonaws.com"
         },
+
         Effect = "Allow",
         Sid    = ""
       }
@@ -204,12 +205,14 @@ resource "aws_ecs_task_definition" "steampulse_pipeline_task_definition" {
       image  = "129033205317.dkr.ecr.eu-west-2.amazonaws.com/steampulse_pipeline_ecr:latest"
       cpu    = 10
       memory = 512
+
       portMappings = [
         {
           containerPort = 80
           hostPort      = 80
         }
       ]
+
       essential : true,
 
       logConfiguration : {
@@ -226,10 +229,34 @@ resource "aws_ecs_task_definition" "steampulse_pipeline_task_definition" {
 }
 
 
-# resource "aws_ecs_task_definition" "name" {
+resource "aws_scheduler_schedule" "steampulse_pipeline_schedule" {
+  name                = "steampulse_pipeline_schedule"
+  description         = "Runs the steampulse pipeline on a cron schedule"
+  schedule_expression = "cron(45 * * * ? *)"
 
-# }
+  flexible_time_window {
+    mode = "OFF"
+  }
 
+  target {
+    arn      = aws_ecs_cluster.steampulse_cluster.arn
+    role_arn = aws_iam_role.steampulse_pipeline_ecs_task_execution_role.arn
+
+    ecs_parameters {
+      task_definition_arn = aws_ecs_task_definition.steampulse_pipeline_task_definition.arn
+      launch_type         = "FARGATE"
+
+      network_configuration {
+        assign_public_ip = true
+        security_groups  = [aws_security_group.steampulse_pipeline_ecs_sg.id]
+        subnets          = ["subnet-03b1a3e1075174995", "subnet-0667517a2a13e2a6b", "subnet-0cec5bdb9586ed3c4"]
+      }
+    }
+  }
+}
+
+
+#unfinished below
 
 # resource "aws_ecs_service" "name" {
 
