@@ -1,10 +1,9 @@
 -- cleanup
-
 DROP TABLE IF EXISTS review;
 DROP TABLE IF EXISTS genre;
-DROP TABLE IF EXISTS game;
 DROP TABLE IF EXISTS developer;
 DROP TABLE IF EXISTS publisher;
+DROP TABLE IF EXISTS game;
 DROP TABLE IF EXISTS platform;
 
 -- tables with no foreign key
@@ -19,12 +18,13 @@ CREATE TABLE platform(
 
 );
 
--- game references the three above tables
+
+-- Game references platform
+
 
 -- Leaving game_id as regular int - not likely to hit the smallint cap if we're just working with new games, 
 -- but there are more games on steam than the smallint cap, so if this ran for years or we expanded to grab
 -- all games, smallint would cause issues.
-
 CREATE TABLE game(
     game_id INT GENERATED ALWAYS AS IDENTITY,
     app_id INT NOT NULL UNIQUE,
