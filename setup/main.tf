@@ -129,7 +129,7 @@ resource "aws_iam_role" "steampulse_pipeline_ecs_task_execution_role" {
           Resource = "*",
           Condition = {
             "ArnLike" : {
-              "ecs:cluster" : "arn:aws:ecs:eu-west-2:129033205317:cluster/steampulse_cluster"
+              "ecs:cluster" : aws_ecs_cluster.steampulse_cluster.arn
             }
           }
         },
@@ -139,7 +139,7 @@ resource "aws_iam_role" "steampulse_pipeline_ecs_task_execution_role" {
           Resource = "*",
           Condition = {
             "ArnLike" : {
-              "ecs:cluster" : "arn:aws:ecs:eu-west-2:129033205317:cluster/steampulse_cluster"
+              "ecs:cluster" : aws_ecs_cluster.steampulse_cluster.arn
             }
           }
         },
@@ -149,7 +149,7 @@ resource "aws_iam_role" "steampulse_pipeline_ecs_task_execution_role" {
           Resource = "*",
           Condition = {
             "ArnLike" : {
-              "ecs:cluster" : "arn:aws:ecs:eu-west-2:129033205317:cluster/steampulse_cluster"
+              "ecs:cluster" : aws_ecs_cluster.steampulse_cluster.arn
             }
           }
         },
@@ -229,18 +229,28 @@ resource "aws_ecs_task_definition" "steampulse_pipeline_task_definition" {
 
 
 resource "aws_scheduler_schedule" "steampulse_pipeline_schedule" {
-  name       = "steampulse_pipeline_schedule"
-  group_name = "default"
+  name        = "steampulse_pipeline_schedule"
+  description = "Runs the steampulse pipeline on a cron schedule"
+  schedule_expression = "cron(10 * * * * *)"
 
   flexible_time_window {
     mode = "OFF"
   }
 
-  schedule_expression = "cron(10 * * * * *)"
-
   target {
-    arn      = 
-    role_arn = 
+    arn      = aws_ecs_cluster.steampulse_cluster.arn
+    role_arn = aws_iam_role.steampulse_pipeline_ecs_task_execution_role.arn
+
+    ecs_parameters {
+      task_definition_arn = aws_ecs_task_definition.steampulse_pipeline_task_definition.arn
+      launch_type         = "FARGATE"
+
+      network_configuration {
+        assign_public_ip = "true"
+        security_groups  = [aws_security_group.steampulse_pipeline_ecs_sg.arn]
+        subnets          = ["subnet-03b1a3e1075174995", "subnet-0667517a2a13e2a6b", "subnet-0cec5bdb9586ed3c4"]
+      }
+    }
   }
 }
 
