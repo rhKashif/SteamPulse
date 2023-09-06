@@ -2,8 +2,8 @@
 from os import environ
 from dotenv import load_dotenv
 import pandas as pd
-from psycopg2 import connect
-from psycopg2.extras import RealDictCursor
+from psycopg2 import connect, DatabaseError
+from psycopg2.extras import RealDictCursor, execute_batch
 
 
 def get_db_connection(config):
@@ -19,55 +19,22 @@ def get_db_connection(config):
         return "Error connecting to database."
 
 
-def execute_batch(conn, data_frame, table, page_size=100):
-    """
-    Using psycopg2.extras.execute_batch() to insert the dataframe
-    """
-
+def execute_batch_columns(conn, data_frame: pd.DataFrame, table: str, column: str, page_size=100):
+    """Using psycopg2.extras.execute_batch() to insert the dataframe"""
     tuples = list(zip(data_frame['developers'].unique()))
-    cols = ','.join(list(data_frame.columns))
-    query = "INSERT INTO %s(%s) VALUES(%%s,%%s,%%s)" % (table, cols)
+    cols = column
+    query = "INSERT INTO %s(%s) VALUES(%%s)" % (table, cols)
     cursor = conn.cursor()
     try:
-        extras.execute_batch(cursor, query, tuples, page_size)
+        execute_batch(cursor, query, tuples, page_size)
         conn.commit()
-    except (Exception, psycopg2.DatabaseError) as error:
+    except (Exception, DatabaseError) as error:
         print("Error: %s" % error)
         conn.rollback()
         cursor.close()
         return 1
     print("execute_batch() done")
     cursor.close()
-
-
-def add_developer_information(conn, data: list):
-    """Add developer information to database"""
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
-        cur.execute(
-            """SELECT exists (SELECT 1 FROM developer WHERE developer_name = %s LIMIT 1);""", [data[10]])
-        result = cur.fetchone()
-        if result['exists'] is True:
-            cur.close()
-        elif result['exists'] is False:
-            cur.execute(
-                """INSERT INTO developer(developer_name) VALUES (%s);""", [data[10]])
-        conn.commit()
-        cur.close()
-
-
-def add_publisher_information(conn, data: list):
-    """Add publisher information to database"""
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
-        cur.execute(
-            """SELECT exists (SELECT 1 FROM publisher WHERE publisher_name = %s LIMIT 1);""", [data[11]])
-        result = cur.fetchone()
-        if result['exists'] is True:
-            cur.close()
-        elif result['exists'] is False:
-            cur.execute(
-                """INSERT INTO publisher(publisher_name) VALUES (%s);""", [data[11]])
-        conn.commit()
-        cur.close()
 
 
 def add_game_information(conn, data: list):
@@ -108,20 +75,35 @@ def add_genre_information(conn, data: list):
         cur.close()
 
 
+def get_existing_data(table_name: str, value: str, conn: connect, cache: dict):
+    """Retrieves the existing data for a game with a provided value and table"""
+    if value in cache.keys():
+        return cache[value]
+    else:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        try: 
+            cur.execute(
+                """SELECT developer_id FROM developer WHERE developer_name = %s;""", [value])
+            id_value = cur.fetchone()['developer_id']
+        cache[value] = id_value
+        except:
+            ## add in the value if it does not exist and then return the cache
+        return cache[value]
+
+
 if __name__ == "__main__":
     load_dotenv()
     configuration = environ
-    # connection = get_db_connection(configuration)
-
-    """    df = pd.read_csv("final_games.csv")
-    for data in df.itertuples():
-        add_game_information(connection, data)"""
+    connection = get_db_connection(configuration)
 
     data_frame = pd.read_csv("genres.csv")
 
-    """for data in df.itertuples():
-        add_developer_information(connection, data)
-        add_publisher_information(connection, data)
-        add_genre_information(connection, data)"""
+    developers_cache = {}
+    data_frame["developers"] = data_frame["developers"].apply(lambda row: get_release_date("developers",
+                                                                                           row, connection, developers_cache))
 
-    execute_batch(conn, data_frame, developers, page_size=100)
+    print(developers_cache)
+
+    # execute_batch_columns(connection, data_frame,'developer', 'developer_name', page_size=100)
+
+    # execute_batch_columns(connection, data_frame,'publisher', 'publisher_name', page_size=100)
