@@ -67,10 +67,10 @@ def get_all_reviews(game_ids: list[int]) -> None:
             if not cursor in cursor_list:
                 cursor_list.append(cursor)
             all_reviews.extend(page_reviews)
-    get_csv_files(all_reviews, reviews_info)
+    make_csv_files(all_reviews, reviews_info)
 
 
-def get_csv_files(all_reviews: list[dict], reviews_info: list[dict]) -> None:
+def make_csv_files(all_reviews: list[dict], reviews_info: list[dict]) -> None:
     """Makes data-frames from lists and creates
     csv files from both"""
     pd.DataFrame(all_reviews).to_csv("reviews.csv")
