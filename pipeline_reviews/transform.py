@@ -16,7 +16,6 @@ def get_db_connection() -> connection:
     load_dotenv()
     return connect(dbname=environ["DATABASE_NAME"],
                     user=environ["DATABASE_USERNAME"],
-                    host=environ["DATABASE_ENDPOINT"],
                     password=environ["DATABASE_PASSWORD"],
                     cursor_factory=RealDictCursor)
 
@@ -27,7 +26,7 @@ def get_release_date(game_id: int, conn: connection, cache: dict) -> datetime:
         return cache[game_id]
     else:
         # TODO get data from connection
-        cache[game_id] = # TODO value from above
+        cache[game_id] = 3# TODO value from above
         return cache[game_id]
 
 
@@ -58,12 +57,26 @@ def remove_empty_rows(reviews_df: DataFrame) -> DataFrame:
 
 def change_column_types(reviews_df: DataFrame) -> DataFrame:
     """Returns a data-frame with correct data types"""
-    # TODO
+    columns_to_numeric = ["review_score","playtime_at_review","full_playtime"]
+
+    for column in columns_to_numeric:
+        reviews_df[column] = pd.to_numeric(reviews_df[column], errors="coerce")
+        reviews_df = reviews_df.dropna(subset=[column])
+    reviews_df["last_timestamp"] = reviews_df["last_timestamp"].apply(lambda row:
+                    datetime.strptime(row, "%Y-%m-%d %H:%M:%S"))
+    return reviews_df
+
+
+def correct_cell_values(reviews_df: DataFrame) -> DataFrame:
+    """Drops rows with invalid cell values"""
+
 
 
 if __name__ == "__main__":
 
     reviews = pd.read_csv("reviews.csv")
+    print(reviews.dtypes)
     reviews = remove_empty_rows(reviews)
     reviews = change_column_types(reviews)
+    reviews = correct_cell_values(reviews)
     reviews = correct_playtime(reviews)
