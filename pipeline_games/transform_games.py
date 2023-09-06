@@ -33,7 +33,7 @@ def convert_date_to_datetime(date: str) -> Timestamp | None:
     """Validates date, if appropriate"""
     try:
         new_date = pd.to_datetime(date, format="%d %b, %Y")
-    except AttributeError:
+    except ValueError:
         new_date = None
 
     return new_date

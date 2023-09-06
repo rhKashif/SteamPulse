@@ -101,5 +101,25 @@ def fake_response():
 
 @pytest.fixture
 def fake_raw_data():
-    return pd.DataFrame([[2246030, "Fake: Escape", "5 Sep, 2023", "Early Access,Clicker,Strategy,Colony Sim,City Builder,Farming Sim,3D,3D Vision,Third Person,Top-Down,Controller,Base Building,Realistic,Economy,Agriculture,Survival,Building,Artificial Intelligence,Resource Management,Singleplayer",
-                         '£3.39', '£2.54', True, False, False, "Adventure,Indie,RPG,Simulation,Strategy,Early Access", "Fake", "Fake"]], columns=['app_id', 'title', 'release_date', 'user_tags', 'full price', 'sale price', 'windows', 'mac', 'linux', 'genres', 'developers', 'publishers'])
+    return pd.DataFrame([[2246030, "Fake: Escape", "5 Sep, 2023", "Early Access,Clicker,Strategy", '£3.39', '£2.54',
+                          True, False, False, "Adventure,Early Access", "Fake", "Fake"]], columns=['app_id', 'title',
+                        'release_date', 'user_tags', 'full price', 'sale price', 'windows', 'mac', 'linux', 'genres',
+                                                                                                   'developers', 'publishers'])
+
+
+@pytest.fixture
+def fake_data_with_tags():
+    return pd.DataFrame([[2246030, "Fake: Escape", "5 Sep, 2023", "Early Access,Clicker,Strategy", '£3.39', '£2.54',
+                          True, False, False, "Adventure,Early Access", "Fake", "Fake", "Early Access"]], columns=['app_id', 'title',
+                        'release_date', 'user_tags', 'full price', 'sale price', 'windows', 'mac', 'linux', 'genres',
+                                                                                                                   'developers', 'publishers', 'tags'])
+
+
+@pytest.fixture
+def fake_date():
+    return "5 Sep, 2023"
+
+
+@pytest.fixture
+def fake_invalid_date():
+    return "30 Feb, 2023"
