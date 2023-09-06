@@ -92,14 +92,12 @@ if __name__ == "__main__":
     configuration = environ
     connection = get_db_connection(configuration)
 
-    # create new dataframe with unique games
-
-    df = pd.read_csv("transformed_data.csv")
+    df = pd.read_csv("games.csv")
     for data in df.itertuples():
         add_developer_information(connection, data)
         add_publisher_information(connection, data)
         add_game_information(connection, data)
 
-    df = pd.read_csv("transformed_data.csv")
+    df = pd.read_csv("genres.csv")
     for data in df.itertuples():
         add_genre_information(connection, data)
