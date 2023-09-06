@@ -60,7 +60,6 @@ resource "aws_security_group" "steampulse_rds_sg" {
   }
 
   tags = {
-
     Name = "steampulse_rds_sg"
   }
 }
@@ -76,6 +75,7 @@ resource "aws_security_group" "steampulse_pipeline_ecs_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   egress {
     from_port        = 0
     to_port          = 0
@@ -84,17 +84,17 @@ resource "aws_security_group" "steampulse_pipeline_ecs_sg" {
     ipv6_cidr_blocks = ["::/0"]
   }
 
-
   tags = {
     Name = "steampulse_pipeline_ecs_sg"
   }
 }
 
 
-#unfinished below
+
 
 resource "aws_iam_role" "steampulse_pipeline_ecs_task_execution_role" {
   name = "steampulse_pipeline_ecs_task_execution_role"
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -120,8 +120,10 @@ resource "aws_iam_role" "steampulse_pipeline_ecs_task_execution_role" {
 
   inline_policy {
     name = "ecs-task-inline-policy"
+
     policy = jsonencode({
       Version = "2012-10-17",
+
       Statement = [
         {
           Action   = "ecs:DescribeTaskDefinition",
@@ -159,10 +161,8 @@ resource "aws_iam_role" "steampulse_pipeline_ecs_task_execution_role" {
           Resource = "*"
         }
       ]
-
       }
     )
-
   }
 }
 
@@ -177,6 +177,7 @@ resource "aws_iam_role" "steampulse_pipeline_ecs_task_role_policy" {
         "Principal" : {
           "Service" : "ecs-tasks.amazonaws.com"
         },
+
         Effect = "Allow",
         Sid    = ""
       }
@@ -206,12 +207,14 @@ resource "aws_ecs_task_definition" "steampulse_pipeline_task_definition" {
       image  = "129033205317.dkr.ecr.eu-west-2.amazonaws.com/steampulse_pipeline_ecr:latest"
       cpu    = 10
       memory = 512
+
       portMappings = [
         {
           containerPort = 80
           hostPort      = 80
         }
       ]
+
       essential : true,
 
       logConfiguration : {
@@ -229,8 +232,8 @@ resource "aws_ecs_task_definition" "steampulse_pipeline_task_definition" {
 
 
 resource "aws_scheduler_schedule" "steampulse_pipeline_schedule" {
-  name        = "steampulse_pipeline_schedule"
-  description = "Runs the steampulse pipeline on a cron schedule"
+  name                = "steampulse_pipeline_schedule"
+  description         = "Runs the steampulse pipeline on a cron schedule"
   schedule_expression = "cron(10 * * * * *)"
 
   flexible_time_window {
@@ -253,6 +256,9 @@ resource "aws_scheduler_schedule" "steampulse_pipeline_schedule" {
     }
   }
 }
+
+
+#unfinished below
 
 # resource "aws_ecs_service" "name" {
 
