@@ -164,3 +164,7 @@ cython_debug/
 *.terraform
 .terraform.lock.hcl
 terraform.*
+
+# Big files
+*.csv
+*.ipynb
