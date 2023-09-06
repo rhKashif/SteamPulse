@@ -1,14 +1,24 @@
 """Validates received review inputs"""
 
 from datetime import datetime
+from os import environ
 
 import pandas as pd
 from pandas import DataFrame
+from dotenv import load_dotenv
+from psycopg2.extras import RealDictCursor
+from psycopg2 import connect
+from psycopg2.extensions import connection
 
 
 def get_db_connection() -> connection:
     """Returns PSQL database connection"""
-    return # TODO connection here
+    load_dotenv()
+    return connect(dbname=environ["DATABASE_NAME"],
+                    user=environ["DATABASE_USERNAME"],
+                    host=environ["DATABASE_ENDPOINT"],
+                    password=environ["DATABASE_PASSWORD"],
+                    cursor_factory=RealDictCursor)
 
 
 def get_release_date(game_id: int, conn: connection, cache: dict) -> datetime:
