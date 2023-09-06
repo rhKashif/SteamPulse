@@ -19,7 +19,6 @@ def parse_app_id_bs(html: str) -> list[dict]:
     soup = BeautifulSoup(html, "html.parser")
     tags = soup.find_all(
         "a", class_="search_result_row ds_collapse_flag")
-
     all_games = []
     for game in tags:
         application = {}
@@ -36,8 +35,8 @@ def parse_game_bs(soup) -> list[str]:
     """Find the user tags for each game."""
     tags = soup.find_all("a", class_="app_tag")
     game_tags = []
-    for each in tags:
-        game_tags.append(each.string.strip())
+    for each_tag in tags:
+        game_tags.append(each_tag.string.strip())
 
     return game_tags
 
@@ -60,25 +59,30 @@ def parse_price_bs(soup) -> dict:
 
 def system_requirements(data: dict) -> dict:
     """Find the platforms that the game is compatible with."""
-    response = data['platforms']
+    if 'platforms' in data.keys():
+        response = data['platforms']
+    else:
+        response = {'linux': False, 'mac': False, 'windows': False}
     return response
 
 
 def get_genre_from_steam(data: dict) -> list:
     """Find the genres associated with the game"""
     genres = []
-    response = data['genres']
-    for genre in response:
-        genres.append(genre['description'])
+    if 'genres' in data.keys():
+        response = data['genres']
+        for genre in response:
+            genres.append(genre['description'])
     return genres
 
 
 def get_developer_name(data: dict) -> list:
     """Find the game developer"""
     developers = []
-    response = data['developers']
-    for developer in response:
-        developers.append(developer)
+    if 'developers' in data.keys():
+        response = data['developers']
+        for developer in response:
+            developers.append(developer)
 
     return developers
 
@@ -86,9 +90,11 @@ def get_developer_name(data: dict) -> list:
 def get_publisher_name(data: dict) -> list:
     """Find publisher name"""
     publishers = []
-    response = data['publishers']
-    for publisher in response:
-        publishers.append(publisher)
+    if 'publishers' in data.keys():
+        response = data['publishers']
+        for publisher in response:
+            publishers.append(publisher)
+
     return publishers
 
 
@@ -120,10 +126,10 @@ def update_game_information(all_recent_games: list):
     return all_recent_games
 
 
-def convert_to_csv(files: list[dict]) -> None:
+def convert_to_csv(files: list[dict], filename: str) -> None:
     """Convert file to CSV"""
     keys = files[0].keys()
-    with open('games.csv', 'w', newline='') as output_file:
+    with open(filename, 'w', newline='') as output_file:
         dict_writer = csv.DictWriter(output_file, keys)
         dict_writer.writeheader()
         dict_writer.writerows(files)
@@ -137,4 +143,4 @@ if __name__ == "__main__":
     all_recent_games = parse_app_id_bs(website)
 
     updated_games = update_game_information(all_recent_games)
-    convert_to_csv(updated_games)
+    convert_to_csv(updated_games, 'games.csv')
