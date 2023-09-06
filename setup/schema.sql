@@ -9,19 +9,6 @@ DROP TABLE IF EXISTS platform;
 
 -- tables with no foreign key
 
-CREATE TABLE developer(
-    developer_id SMALLINT GENERATED ALWAYS AS IDENTITY,
-    developer_name TEXT NOT NULL UNIQUE,
-    PRIMARY KEY (developer_id)
-
-);
-
-CREATE TABLE publisher(
-    publisher_id SMALLINT GENERATED ALWAYS AS IDENTITY,
-    publisher_name TEXT NOT NULL UNIQUE,
-    PRIMARY KEY (publisher_id)
-
-);
 
 CREATE TABLE platform(
     platform_id SMALLINT GENERATED ALWAYS AS IDENTITY,
@@ -45,20 +32,16 @@ CREATE TABLE game(
     release_date DATE NOT NULL,
     price FLOAT NOT NULL,
     sale_price FLOAT NOT NULL,
-    developer_id SMALLINT,
-    publisher_id SMALLINT,
     platform_id SMALLINT,
     PRIMARY KEY (game_id),
-    FOREIGN KEY (developer_id) REFERENCES developer(developer_id),
-    FOREIGN KEY (publisher_id) REFERENCES publisher(publisher_id),
     FOREIGN KEY (platform_id) REFERENCES platform(platform_id)
 
 );
 
 
--- review and genre reference game
+-- review, developer, publisher, and genre reference game
 
--- default 0 might make sentiment analysis loading easier, but it's easy to take out if we don't use it
+
 
 CREATE TABLE review(
     review_id INT GENERATED ALWAYS AS IDENTITY,
@@ -80,6 +63,27 @@ CREATE TABLE genre(
     PRIMARY KEY (genre_id),
     FOREIGN KEY (game_id) REFERENCES game(game_id)
 );
+
+
+CREATE TABLE developer(
+    developer_id SMALLINT GENERATED ALWAYS AS IDENTITY,
+    developer_name TEXT NOT NULL UNIQUE,
+    game_id INT,
+    PRIMARY KEY (developer_id),
+    FOREIGN KEY (game_id) REFERENCES game(game_id)
+
+);
+
+
+CREATE TABLE publisher(
+    publisher_id SMALLINT GENERATED ALWAYS AS IDENTITY,
+    publisher_name TEXT NOT NULL UNIQUE,
+    game_id INT,
+    PRIMARY KEY (publisher_id),
+    FOREIGN KEY (game_id) REFERENCES game(game_id)
+
+);
+
 
 -- Seeding 
 
