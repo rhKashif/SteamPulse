@@ -40,9 +40,9 @@ def correct_playtime(reviews_df: DataFrame) -> DataFrame:
     reviews_df["maximum_playtime_since_release"] = reviews_df["release_date"].apply(
         lambda row: (time_now - row).seconds/3600)
     reviews_df["playtime_at_review"] = reviews_df[
-        reviews_df["playtime_at_review"] < reviews_df["maximum_playtime_since_release"]]
+        reviews_df["playtime_at_review"] <= reviews_df["maximum_playtime_since_release"]]
     reviews_df["full_playtime"] = reviews_df[
-        reviews_df["full_playtime"] < reviews_df["maximum_playtime_since_release"]]
+        reviews_df["full_playtime"] <= reviews_df["maximum_playtime_since_release"]]
     reviews_df.drop(columns=["maximum_playtime_since_release","release_date"], inplace=False)
     return reviews_df
 
@@ -69,13 +69,16 @@ def change_column_types(reviews_df: DataFrame) -> DataFrame:
 
 def correct_cell_values(reviews_df: DataFrame) -> DataFrame:
     """Drops rows with invalid cell values"""
-
+    columns = ["review_score", "playtime_at_review", "full_playtime"]
+    for column in columns:
+        reviews_df[column] = reviews_df[~reviews_df[column] < 0]
+    # for reviews from players who did play the game
+    reviews_df["playtime_at_review"] = reviews_df[~reviews_df["playtime_at_review"] < 1]
 
 
 if __name__ == "__main__":
 
     reviews = pd.read_csv("reviews.csv")
-    print(reviews.dtypes)
     reviews = remove_empty_rows(reviews)
     reviews = change_column_types(reviews)
     reviews = correct_cell_values(reviews)
