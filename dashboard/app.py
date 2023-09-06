@@ -138,69 +138,6 @@ def build_sidebar_sentiment(df: DataFrame) -> tuple:
     return sentiment
 
 
-def plot_reviews_per_game_frequency(df: DataFrame, titles: list[str], release_dates: list[datetime], review_dates: list[datetime],
-                                    genres: list[str], platforms: list[str], minimum_sentiment: float, maximum_sentiment: float) -> Chart:
-    """
-    Create a bar chart for the number of reviews per game
-
-    Args:
-        df (DataFrame): A pandas DataFrame containing all relevant game data
-
-        titles (list[str]):  A list with game titles that the user selected
-
-        release_dates (list[datetime]): A list with release dates that the user selected
-
-        review_dates (list[datetime]): A list with review dates that the user selected
-
-
-        genres (list[str]): A list with game genres that the user selected
-
-        platforms (list[str]): A list with selected platforms
-
-    Returns:
-        Chart: A chart displaying plotted data
-    """
-    if len(titles) != 0:
-        df = df[df["title"].isin(titles)]
-    if len(release_dates) != 0:
-        df = df[df["release_date"].dt.floor("D").isin(release_dates)]
-    if len(review_dates) != 0:
-        df = df[df["review_date"].dt.floor("D").isin(review_dates)]
-    if len(genres) != 0:
-        df = df[df["genre"].isin(genres)]
-    df = df[df[platforms].any(axis=1)]
-    df = df[(df['sentiment'] >= minimum_sentiment) &
-            (df['sentiment'] <= maximum_sentiment)]
-
-    df = df.groupby(
-        "title").size().reset_index()
-    df.columns = ["title", "num_of_reviews"]
-    custom_ticks = [i for i in range(
-        0, df["num_of_reviews"].max() + 1)]
-
-    # chart = alt.Chart(df).mark_bar().encode(
-    #     x=alt.X("title", title="Game Title", sort="-x"),
-    #     y=alt.Y("num_of_reviews", title="Number of reviews"),
-    # ).properties(
-    #     title="Number of Reviews per Game",
-    #     width=800,
-    #     height=400
-    # )
-
-    chart = alt.Chart(df).mark_bar(
-    ).encode(
-        x=alt.X("num_of_reviews", title="Number of reviews",
-                axis=alt.Axis(values=custom_ticks, tickMinStep=1, titlePadding=10)),
-        y=alt.Y("title", title="Game Title", sort="-x")
-    ).properties(
-        title="Number of Reviews per Game",
-        width=800,
-        height=400
-    )
-
-    return chart
-
-
 def plot_games_release_frequency(df: DataFrame, titles: list[str], release_dates: list[datetime], review_dates: list[datetime],
                                  genres: list[str], platforms: list[str], minimum_sentiment: float, maximum_sentiment: float) -> Chart:
     """
@@ -244,7 +181,7 @@ def plot_games_release_frequency(df: DataFrame, titles: list[str], release_dates
     ).encode(
         x=alt.X("release_date:O", title="Release Date",
                 timeUnit="yearmonthdate"),
-        y=alt.Y("num_of_games", title="Number of Games",
+        y=alt.Y("num_of_games:Q", title="Number of Games",
                 axis=alt.Axis(values=custom_ticks, tickMinStep=1, titlePadding=10))
     ).properties(
         title="New Releases per Day",
@@ -299,10 +236,73 @@ def plot_games_review_frequency(df: DataFrame, titles: list[str], release_dates:
     ).encode(
         x=alt.X("release_date:O", title="Release Date",
                 timeUnit="yearmonthdate"),
-        y=alt.Y("num_of_reviews", title="Number of reviews", axis=alt.Axis(
+        y=alt.Y("num_of_reviews:Q", title="Number of Reviews", axis=alt.Axis(
             values=custom_ticks, tickMinStep=1, titlePadding=10)),
     ).properties(
         title="New Reviews per Day",
+        width=800,
+        height=400
+    )
+
+    return chart
+
+
+def plot_reviews_per_game_frequency(df: DataFrame, titles: list[str], release_dates: list[datetime], review_dates: list[datetime],
+                                    genres: list[str], platforms: list[str], minimum_sentiment: float, maximum_sentiment: float) -> Chart:
+    """
+    Create a bar chart for the number of reviews per game
+
+    Args:
+        df (DataFrame): A pandas DataFrame containing all relevant game data
+
+        titles (list[str]):  A list with game titles that the user selected
+
+        release_dates (list[datetime]): A list with release dates that the user selected
+
+        review_dates (list[datetime]): A list with review dates that the user selected
+
+
+        genres (list[str]): A list with game genres that the user selected
+
+        platforms (list[str]): A list with selected platforms
+
+    Returns:
+        Chart: A chart displaying plotted data
+    """
+    if len(titles) != 0:
+        df = df[df["title"].isin(titles)]
+    if len(release_dates) != 0:
+        df = df[df["release_date"].dt.floor("D").isin(release_dates)]
+    if len(review_dates) != 0:
+        df = df[df["review_date"].dt.floor("D").isin(review_dates)]
+    if len(genres) != 0:
+        df = df[df["genre"].isin(genres)]
+    df = df[df[platforms].any(axis=1)]
+    df = df[(df['sentiment'] >= minimum_sentiment) &
+            (df['sentiment'] <= maximum_sentiment)]
+
+    df = df.groupby(
+        "title").size().reset_index()
+    df.columns = ["title", "num_of_reviews"]
+    custom_ticks = [i for i in range(
+        0, df["num_of_reviews"].max() + 1)]
+
+    # chart = alt.Chart(df).mark_bar().encode(
+    #     x=alt.X("title", title="Release Title", sort="-x"),
+    #     y=alt.Y("num_of_reviews", title="Number of reviews"),
+    # ).properties(
+    #     title="Number of Reviews per Release",
+    #     width=800,
+    #     height=400
+    # )
+
+    chart = alt.Chart(df).mark_bar(
+    ).encode(
+        x=alt.X("num_of_reviews", title="Number of Reviews",
+                axis=alt.Axis(values=custom_ticks, tickMinStep=1, titlePadding=10)),
+        y=alt.Y("title", title="Release Title", sort="-x")
+    ).properties(
+        title="Number of Reviews per Release",
         width=800,
         height=400
     )
@@ -564,7 +564,7 @@ def sub_headline_figures(df: DataFrame, titles: list[str], release_dates: list[d
     with cols[0]:
         st.metric("Most Released Genre:", df["genre"].mode()[0])
     with cols[1]:
-        st.metric("Most Reviewed Game:", df["title"].mode()[0])
+        st.metric("Most Reviewed Release:", df["title"].mode()[0])
     with cols[2]:
         st.metric("Most Compatible Platform",
                   compatibility_df["platform"].max().capitalize())
