@@ -46,68 +46,68 @@ def get_database(conn_postgres: connection) -> DataFrame:
         DataFrame:  A pandas DataFrame containing all relevant release data
     """
     query = f""
-    df = pd.read_sql_query(query, conn_postgres)
+    df_releases = pd.read_sql_query(query, conn_postgres)
 
-    return df
+    return df_releases
 
 
-def build_sidebar_title(df: DataFrame) -> list:
+def build_sidebar_title(df_releases: DataFrame) -> list:
     """
     Build sidebar with dropdown menu options
 
     Args:
-        df (DataFrame): A pandas DataFrame containing all relevant game data
+        df_releases (DataFrame): A pandas DataFrame containing all relevant game data
 
     Returns:
         list:  A list with game titles that the user selected
     """
     titles = st.sidebar.multiselect(
-        "Release Title:", options=sorted(df["title"].unique()))
+        "Release Title:", options=sorted(df_releases["title"].unique()))
     return titles
 
 
-def build_sidebar_release_date(df: DataFrame) -> list:
+def build_sidebar_release_date(df_releases: DataFrame) -> list:
     """
     Build sidebar with dropdown menu options to select release dates
 
     Args:
-        df (DataFrame): A pandas DataFrame containing all relevant game data
+        df_releases (DataFrame): A pandas DataFrame containing all relevant game data
 
     Returns:
         list: A list with release dates that the user selected
     """
     release_dates = st.sidebar.multiselect(
-        "Release Date:", options=df["release_date"].dt.date.unique())
+        "Release Date:", options=df_releases["release_date"].dt.date.unique())
     return release_dates
 
 
-def build_sidebar_review_date(df: DataFrame) -> list:
+def build_sidebar_review_date(df_releases: DataFrame) -> list:
     """
     Build sidebar with dropdown menu options to select review dates
 
     Args:
-        df (DataFrame): A pandas DataFrame containing all relevant game data
+        df_releases (DataFrame): A pandas DataFrame containing all relevant game data
 
     Returns:
         list: A list with review dates that the user selected
     """
     dates = st.sidebar.multiselect(
-        "Review Date:", options=df["review_date"].dt.date.unique())
+        "Review Date:", options=df_releases["review_date"].dt.date.unique())
     return dates
 
 
-def build_sidebar_genre(df: DataFrame) -> list:
+def build_sidebar_genre(df_releases: DataFrame) -> list:
     """
     Build sidebar with dropdown menu options to select game genre
 
     Args:
-        df (DataFrame): A pandas DataFrame containing all relevant game data
+        df_releases (DataFrame): A pandas DataFrame containing all relevant game data
 
     Returns:
         list: A list with game genres that the user selected
     """
     dates = st.sidebar.multiselect(
-        "Genre:", options=df["genre"].unique())
+        "Genre:", options=df_releases["genre"].unique())
     return dates
 
 
@@ -124,12 +124,12 @@ def build_sidebar_platforms() -> list:
     return selected_platforms
 
 
-def build_sidebar_sentiment(df: DataFrame) -> tuple:
+def build_sidebar_sentiment(df_releases: DataFrame) -> tuple:
     """
     Build sidebar with slider option to select range for review sentiment
 
     Args:
-        df (DataFrame): A pandas DataFrame containing all relevant game data
+        df_releases (DataFrame): A pandas DataFrame containing all relevant game data
 
     Returns:
         list: A tuple with minimum and maximum sentiment that the user has selected
@@ -139,13 +139,13 @@ def build_sidebar_sentiment(df: DataFrame) -> tuple:
     return sentiment
 
 
-def filter_data(df: DataFrame, titles: list[str], release_dates: list[datetime], review_dates: list[datetime],
+def filter_data(df_releases: DataFrame, titles: list[str], release_dates: list[datetime], review_dates: list[datetime],
                 genres: list[str], platforms: list[str], minimum_sentiment: float, maximum_sentiment: float) -> DataFrame:
     """
     Apply live filtering according to sidebar filters to the data frame
 
     Args:
-        df (DataFrame): A DataFrame containing all data related to new releases
+        df_releases (DataFrame): A DataFrame containing all data related to new releases
 
         titles (list[str]):  A list with game titles that the user selected
 
@@ -162,37 +162,40 @@ def filter_data(df: DataFrame, titles: list[str], release_dates: list[datetime],
 
     """
     if titles:
-        df = df[df["title"].isin(titles)]
+        df_releases = df_releases[df_releases["title"].isin(titles)]
     if release_dates:
-        df = df[df["release_date"].dt.floor("D").isin(release_dates)]
+        df_releases = df_releases[df_releases["release_date"].dt.floor(
+            "D").isin(release_dates)]
     if review_dates:
-        df = df[df["review_date"].dt.floor("D").isin(review_dates)]
+        df_releases = df_releases[df_releases["review_date"].dt.floor(
+            "D").isin(review_dates)]
     if genres:
-        df = df[df["genre"].isin(genres)]
+        df_releases = df_releases[df_releases["genre"].isin(genres)]
 
-    df = df[df[platforms].any(axis=1)]
-    df = df[(df['sentiment'] >= minimum_sentiment) &
-            (df['sentiment'] <= maximum_sentiment)]
+    df_releases = df_releases[df_releases[platforms].any(axis=1)]
+    df_releases = df_releases[(df_releases['sentiment'] >= minimum_sentiment) &
+                              (df_releases['sentiment'] <= maximum_sentiment)]
 
-    return df
+    return df_releases
 
 
-def plot_games_release_frequency(df: DataFrame) -> Chart:
+def plot_games_release_frequency(df_releases: DataFrame) -> Chart:
     """
     Create a line chart for the number of games released per day
 
     Args:
-        df (DataFrame): A DataFrame containing filtered data related to new releases
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
 
     Returns:
         Chart: A chart displaying plotted data
     """
-    df = df.groupby("release_date")["title"].nunique().reset_index()
-    df.columns = ["release_date", "num_of_games"]
+    df_releases = df_releases.groupby("release_date")[
+        "title"].nunique().reset_index()
+    df_releases.columns = ["release_date", "num_of_games"]
     custom_ticks = [i for i in range(
-        0, df["num_of_games"].max() + 1)]
+        0, df_releases["num_of_games"].max() + 1)]
 
-    chart = alt.Chart(df).mark_line(
+    chart = alt.Chart(df_releases).mark_line(
         color="#44bd4f"
     ).encode(
         x=alt.X("release_date:O", title="Release Date",
@@ -208,23 +211,23 @@ def plot_games_release_frequency(df: DataFrame) -> Chart:
     return chart
 
 
-def plot_games_review_frequency(df: DataFrame) -> Chart:
+def plot_games_review_frequency(df_releases: DataFrame) -> Chart:
     """
     Create a line chart for the number of games released per day
 
     Args:
-        df (DataFrame): A DataFrame containing filtered data related to new releases
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
 
     Returns:
         Chart: A chart displaying plotted data
     """
-    df = df.groupby(
+    df_releases = df_releases.groupby(
         "release_date").size().reset_index()
-    df.columns = ["release_date", "num_of_reviews"]
+    df_releases.columns = ["release_date", "num_of_reviews"]
     custom_ticks = [i for i in range(
-        0, df["num_of_reviews"].max() + 1)]
+        0, df_releases["num_of_reviews"].max() + 1)]
 
-    chart = alt.Chart(df).mark_line(
+    chart = alt.Chart(df_releases).mark_line(
         color="#44bd4f"
     ).encode(
         x=alt.X("release_date:O", title="Release Date",
@@ -240,23 +243,23 @@ def plot_games_review_frequency(df: DataFrame) -> Chart:
     return chart
 
 
-def plot_reviews_per_game_frequency(df: DataFrame) -> Chart:
+def plot_reviews_per_game_frequency(df_releases: DataFrame) -> Chart:
     """
     Create a bar chart for the number of reviews per game
 
     Args:
-        df (DataFrame): A DataFrame containing filtered data related to new releases
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
 
     Returns:
         Chart: A chart displaying plotted data
     """
-    df = df.groupby(
+    df_releases = df_releases.groupby(
         "title").size().reset_index()
-    df.columns = ["title", "num_of_reviews"]
+    df_releases.columns = ["title", "num_of_reviews"]
     custom_ticks = [i for i in range(
-        0, df["num_of_reviews"].max() + 1)]
+        0, df_releases["num_of_reviews"].max() + 1)]
 
-    chart = alt.Chart(df).mark_bar(
+    chart = alt.Chart(df_releases).mark_bar(
     ).encode(
         x=alt.X("num_of_reviews", title="Number of Reviews",
                 axis=alt.Axis(values=custom_ticks, tickMinStep=1, titlePadding=10)),
@@ -270,26 +273,28 @@ def plot_reviews_per_game_frequency(df: DataFrame) -> Chart:
     return chart
 
 
-def plot_platform_distribution(df: DataFrame) -> Chart:
+def plot_platform_distribution(df_releases: DataFrame) -> Chart:
     """
     Create a bar chart for the platform compatibility of games
 
     Args:
-        df (DataFrame): A DataFrame containing filtered data related to new releases
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
 
     Returns:
         Chart: A chart displaying plotted data
     """
     try:
-        mac_compatibility = df.groupby("mac")['title'].nunique()[True]
+        mac_compatibility = df_releases.groupby("mac")['title'].nunique()[True]
     except KeyError:
         mac_compatibility = 0
     try:
-        windows_compatibility = df.groupby("windows")['title'].nunique()[True]
+        windows_compatibility = df_releases.groupby(
+            "windows")['title'].nunique()[True]
     except KeyError:
         windows_compatibility = 0
     try:
-        linux_compatibility = df.groupby("linux")['title'].nunique()[True]
+        linux_compatibility = df_releases.groupby(
+            "linux")['title'].nunique()[True]
     except KeyError:
         linux_compatibility = 0
 
@@ -312,22 +317,23 @@ def plot_platform_distribution(df: DataFrame) -> Chart:
     return chart
 
 
-def plot_genre_distribution(df: DataFrame) -> Chart:
+def plot_genre_distribution(df_releases: DataFrame) -> Chart:
     """
     Create a line chart for the number of games released per day
 
     Args:
-        df (DataFrame): A DataFrame containing filtered data related to new releases
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
 
     Returns:
         Chart: A chart displaying plotted data
     """
-    df = df.groupby(
+    df_releases = df_releases.groupby(
         "genre").size().reset_index()
-    df.columns = ["genre", "releases_per_genres"]
-    custom_ticks = [i for i in range(0, df["releases_per_genres"].max() + 1)]
+    df_releases.columns = ["genre", "releases_per_genres"]
+    custom_ticks = [i for i in range(
+        0, df_releases["releases_per_genres"].max() + 1)]
 
-    chart = alt.Chart(df).mark_bar().encode(
+    chart = alt.Chart(df_releases).mark_bar().encode(
         x=alt.X("releases_per_genres", title="Number of Releases",
                 axis=alt.Axis(values=custom_ticks, tickMinStep=1, titlePadding=10)),
         y=alt.Y("genre:N", title="Genre")
@@ -369,12 +375,12 @@ def sidebar_header() -> None:
         st.markdown("Filter Options\n---")
 
 
-def headline_figures(df: DataFrame) -> None:
+def headline_figures(df_releases: DataFrame) -> None:
     """
     Build headline for dashboard to present key figures for quick view of overall data
 
     Args:
-        df (DataFrame): A DataFrame containing filtered data related to new releases
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
 
     Returns:
         None
@@ -391,34 +397,36 @@ def headline_figures(df: DataFrame) -> None:
         unsafe_allow_html=True,
     )
     with cols[0]:
-        st.metric("Total Releases:", df["title"].nunique())
+        st.metric("Total Releases:", df_releases["title"].nunique())
     with cols[1]:
         st.metric("Total Reviews:",
-                  df.shape[0])
+                  df_releases.shape[0])
     with cols[2]:
-        st.metric("Average Sentiment:", df["sentiment"].mean())
+        st.metric("Average Sentiment:", df_releases["sentiment"].mean())
 
 
-def sub_headline_figures(df: DataFrame) -> None:
+def sub_headline_figures(df_releases: DataFrame) -> None:
     """
     Build sub-headline for dashboard to present key figures for quick view of overall data
 
     Args:
-        df (DataFrame): A DataFrame containing filtered data related to new releases
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
 
     Returns:
         None
     """
     try:
-        mac_compatibility = df.groupby("mac")['title'].nunique()[True]
+        mac_compatibility = df_releases.groupby("mac")['title'].nunique()[True]
     except KeyError:
         mac_compatibility = 0
     try:
-        windows_compatibility = df.groupby("windows")['title'].nunique()[True]
+        windows_compatibility = df_releases.groupby(
+            "windows")['title'].nunique()[True]
     except KeyError:
         windows_compatibility = 0
     try:
-        linux_compatibility = df.groupby("linux")['title'].nunique()[True]
+        linux_compatibility = df_releases.groupby(
+            "linux")['title'].nunique()[True]
     except KeyError:
         linux_compatibility = 0
 
@@ -437,9 +445,9 @@ def sub_headline_figures(df: DataFrame) -> None:
         unsafe_allow_html=True,
     )
     with cols[0]:
-        st.metric("Most Released Genre:", df["genre"].mode()[0])
+        st.metric("Most Released Genre:", df_releases["genre"].mode()[0])
     with cols[1]:
-        st.metric("Most Reviewed Release:", df["title"].mode()[0])
+        st.metric("Most Reviewed Release:", df_releases["title"].mode()[0])
     with cols[2]:
         st.metric("Most Compatible Platform",
                   compatibility_df["platform"].max().capitalize())
