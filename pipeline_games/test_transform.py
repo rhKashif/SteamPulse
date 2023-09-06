@@ -1,5 +1,4 @@
 """Testing file for transform script"""
-import pytest
 from pandas._libs.tslibs.timestamps import Timestamp
 
 from transform_games import identify_unique_tags, create_user_generated_column, drop_unnecessary_columns, convert_date_to_datetime, convert_price_to_float, explode_column_to_individual_rows
@@ -40,7 +39,7 @@ def test_date_converted_if_valid(fake_date):
 def test_date_converted_to_none(fake_invalid_date):
     """Test None is returned"""
     result = convert_date_to_datetime(fake_invalid_date)
-    assert str(result) == "None"
+    assert result is None
 
 
 def test_prices_converted_to_float(fake_price):
