@@ -94,10 +94,10 @@ def get_db_connection() -> connection:
 
 
 def get_game_ids(conn: connection) -> list[int]:
-    """Returns game IDs from the past """
+    """Returns game IDs from the past 2 weeks"""
     with conn.cursor() as cur:
-        cur.execute("""SELECT app_id FROM game WHERE
-                    week(reviewed_at) = week(now()) - 2""") #past 2 weeks
+        cur.execute("""SELECT app_id FROM game WHERE release_date
+    BETWEEN NOW() - INTERVAL '2 WEEKS' AND NOW()""")
         game_ids = cur.fetchall()
     return [game_id["app_id"] for game_id in game_ids]
 
