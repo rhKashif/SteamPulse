@@ -19,6 +19,27 @@ def get_db_connection(config):
         return "Error connecting to database."
 
 
+def execute_batch(conn, data_frame, table, page_size=100):
+    """
+    Using psycopg2.extras.execute_batch() to insert the dataframe
+    """
+
+    tuples = list(zip(data_frame['developers'].unique()))
+    cols = ','.join(list(data_frame.columns))
+    query = "INSERT INTO %s(%s) VALUES(%%s,%%s,%%s)" % (table, cols)
+    cursor = conn.cursor()
+    try:
+        extras.execute_batch(cursor, query, tuples, page_size)
+        conn.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print("Error: %s" % error)
+        conn.rollback()
+        cursor.close()
+        return 1
+    print("execute_batch() done")
+    cursor.close()
+
+
 def add_developer_information(conn, data: list):
     """Add developer information to database"""
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
@@ -90,14 +111,17 @@ def add_genre_information(conn, data: list):
 if __name__ == "__main__":
     load_dotenv()
     configuration = environ
-    connection = get_db_connection(configuration)
+    # connection = get_db_connection(configuration)
 
-    df = pd.read_csv("games.csv")
+    """    df = pd.read_csv("final_games.csv")
     for data in df.itertuples():
+        add_game_information(connection, data)"""
+
+    data_frame = pd.read_csv("genres.csv")
+
+    """for data in df.itertuples():
         add_developer_information(connection, data)
         add_publisher_information(connection, data)
-        add_game_information(connection, data)
+        add_genre_information(connection, data)"""
 
-    df = pd.read_csv("genres.csv")
-    for data in df.itertuples():
-        add_genre_information(connection, data)
+    execute_batch(conn, data_frame, developers, page_size=100)

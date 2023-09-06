@@ -83,5 +83,7 @@ if __name__ == "__main__":
 
     games_only_df = drop_unnecessary_columns(final_df, 'tags')
     games_df = drop_unnecessary_columns(games_only_df, 'user_generated')
+    games_df = drop_unnecessary_columns(games_df, 'developers')
+    games_df = drop_unnecessary_columns(games_df, 'publishers')
     games_df = games_df.drop_duplicates()
-    games_df.to_csv('games.csv')
+    games_df.to_csv('final_games.csv')
