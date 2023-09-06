@@ -11,7 +11,7 @@ def get_review_info_for_game(game_id: int) -> dict:
     """Retrieves information about all reviews from a given game ID"""
     request = requests.get(f"https://store.steampowered.com/appreviews/{game_id}?json=1")
     reviews_info = request.json()
-    return {"number_of_total_reviews": reviews_info["query_summary"]["total_reviews"],
+    return {"game_id": game_id, "number_of_total_reviews": reviews_info["query_summary"]["total_reviews"],
             "number_of_positive_reviews": reviews_info["query_summary"]["total_positive"],
             "number_of_negative_reviews": reviews_info["query_summary"]["total_negative"]}
 
@@ -45,8 +45,8 @@ def get_reviews_for_game(game_id: int, cursor: str) -> dict:
 
 
 def get_all_reviews(game_ids: list[int]) -> None:
-    """Creates a csv file for all review info and
-    reviews for each game csv file"""
+    """Combines all reviews together and all review
+    information together to be set in a data-frame"""
     reviews_info = []
 
     for game in game_ids:
@@ -79,5 +79,5 @@ def make_csv_files(all_reviews: list[dict], reviews_info: list[dict]) -> None:
 
 
 if __name__ == "__main__":
-    game_ids = [10] # TODO connect to script with list of game IDs
+    game_ids = [10, 666000, 15, 223056] # TODO connect to script with list of game IDs
     get_all_reviews(game_ids)
