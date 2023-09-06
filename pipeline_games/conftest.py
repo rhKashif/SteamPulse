@@ -111,23 +111,3 @@ def fake_data_with_tags():
     return pd.DataFrame([[2246030, "Fake: Escape", "5 Sep, 2023", "Early Access,Clicker,Strategy", '£3.39', '£2.54',
                           True, False, False, "Adventure,Early Access", "Fake", "Fake", "Early Access"]], columns=['app_id', 'title',
                         'release_date', 'user_tags', 'full price', 'sale price', 'windows', 'mac', 'linux', 'genres', 'developers', 'publishers', 'tags'])
-
-
-@pytest.fixture
-def fake_date():
-    return "5 Sep, 2023"
-
-
-@pytest.fixture
-def fake_invalid_date():
-    return "30 Feb, 2023"
-
-
-@pytest.fixture
-def fake_price():
-    return "£5.30"
-
-
-@pytest.fixture
-def price_is_free():
-    return "Free to play"

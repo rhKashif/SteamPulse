@@ -29,29 +29,29 @@ def test_columns_dropped(fake_data_with_tags):
     assert 'user_tags' not in list(result.columns)
 
 
-def test_date_converted_if_valid(fake_date):
+def test_date_converted_if_valid():
     """Test valid date is returned"""
-    result = convert_date_to_datetime(fake_date)
+    result = convert_date_to_datetime("5 Sep, 2023")
     assert str(result) == "2023-09-05 00:00:00"
     assert isinstance(result, Timestamp) is True
 
 
-def test_date_converted_to_none(fake_invalid_date):
+def test_date_converted_to_none():
     """Test None is returned"""
-    result = convert_date_to_datetime(fake_invalid_date)
+    result = convert_date_to_datetime("30 Feb, 2023")
     assert result is None
 
 
-def test_prices_converted_to_float(fake_price):
+def test_prices_converted_to_float():
     """Test float returned when price passed in"""
-    result = convert_price_to_float(fake_price)
+    result = convert_price_to_float("£5.30")
     assert isinstance(result, float) is True
     assert result == 5.30
 
 
-def test_prices_converted_to_float_free_fames(price_is_free):
+def test_prices_converted_to_float_free_fames():
     """Test float returned when price passed in"""
-    result = convert_price_to_float(price_is_free)
+    result = convert_price_to_float("Free to play")
     assert isinstance(result, float) is True
     assert result == 0.0
 
