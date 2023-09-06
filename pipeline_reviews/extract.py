@@ -1,9 +1,14 @@
 """Retrieves reviews for a game from game IDs"""
 
 from datetime import datetime
+from os import environ
 from urllib.parse import quote_plus
 
 import pandas as pd
+from dotenv import load_dotenv
+from psycopg2 import connect
+from psycopg2.extensions import connection
+from psycopg2.extras import RealDictCursor
 import requests
 
 
@@ -78,6 +83,25 @@ def make_csv_files(all_reviews: list[dict], reviews_info: list[dict]) -> None:
     pd.DataFrame(reviews_info).to_csv("review_info.csv")
 
 
+def get_db_connection() -> connection:
+    """Returns PSQL database connection"""
+    load_dotenv()
+    return connect(dbname=environ["DATABASE_NAME"],
+                    user=environ["DATABASE_USERNAME"],
+                    host=environ["DATABASE_ENDPOINT"],
+                    password=environ["DATABASE_PASSWORD"],
+                    cursor_factory=RealDictCursor)
+
+
+def get_game_ids(conn: connection) -> list[int]:
+    """Returns game IDs from the past """
+    with conn.cursor() as cur:
+        cur.execute("""SELECT app_id FROM game WHERE
+                    week(reviewed_at) = week(now()) - 2""") #past 2 weeks
+        game_ids = cur.fetchall()
+    return [game_id["app_id"] for game_id in game_ids]
+
+
 if __name__ == "__main__":
-    game_ids = [10, 666000, 15, 223056] # TODO connect to script with list of game IDs
+    game_ids = get_game_ids(get_db_connection())
     get_all_reviews(game_ids)
