@@ -16,6 +16,7 @@ def get_db_connection() -> connection:
     load_dotenv()
     return connect(dbname=environ["DATABASE_NAME"],
                     user=environ["DATABASE_USERNAME"],
+                    host=environ["DATABASE_ENDPOINT"],
                     password=environ["DATABASE_PASSWORD"],
                     cursor_factory=RealDictCursor)
 
@@ -25,8 +26,10 @@ def get_release_date(game_id: int, conn: connection, cache: dict) -> datetime:
     if game_id in cache.keys():
         return cache[game_id]
     else:
-        # TODO get data from connection
-        cache[game_id] = datetime(2013,3,3,12,3,5)# TODO value from above
+        with conn.cursor() as cur:
+            cur.execute("SELECT release_date FROM game WHERE app_id = %s;", [game_id])
+            release_date = cur.fetchone()["release_date"]
+        cache[game_id] = release_date
         return cache[game_id]
 
 
@@ -34,8 +37,7 @@ def correct_playtime(reviews_df: DataFrame) -> DataFrame:
     """Returns a data-frame with valid playtime recordings only"""
     try:
         release_date_cache = {}
-        # TODO conn = get_db_connection()
-        conn = 5
+        conn = get_db_connection()
         reviews_df["release_date"] = reviews_df["game_id"].apply(lambda row: get_release_date(
             row, conn, release_date_cache))
         time_now = datetime.now()
