@@ -175,6 +175,8 @@ def plot_reviews_per_game_frequency(df: DataFrame, titles: list[str], release_da
     df = df.groupby(
         "title").size().reset_index()
     df.columns = ["title", "num_of_reviews"]
+    custom_ticks = [i for i in range(
+        0, df["num_of_reviews"].max() + 1)]
 
     # chart = alt.Chart(df).mark_bar().encode(
     #     x=alt.X("title", title="Game Title", sort="-x"),
@@ -185,8 +187,10 @@ def plot_reviews_per_game_frequency(df: DataFrame, titles: list[str], release_da
     #     height=400
     # )
 
-    chart = alt.Chart(df).mark_bar().encode(
-        x=alt.X("num_of_reviews", title="Number of reviews"),
+    chart = alt.Chart(df).mark_bar(
+    ).encode(
+        x=alt.X("num_of_reviews", title="Number of reviews",
+                axis=alt.Axis(values=custom_ticks, tickMinStep=1, titlePadding=10)),
         y=alt.Y("title", title="Game Title", sort="-x")
     ).properties(
         title="Number of Reviews per Game",
@@ -231,12 +235,17 @@ def plot_games_release_frequency(df: DataFrame, titles: list[str], release_dates
             (df['sentiment'] <= maximum_sentiment)]
 
     df = df.groupby("release_date")["title"].nunique().reset_index()
-    df.columns = ["release_date", "count"]
+    df.columns = ["release_date", "num_of_games"]
+    custom_ticks = [i for i in range(
+        0, df["num_of_games"].max() + 1)]
 
-    chart = alt.Chart(df).mark_line().encode(
+    chart = alt.Chart(df).mark_line(
+        color="#44bd4f"
+    ).encode(
         x=alt.X("release_date:O", title="Release Date",
                 timeUnit="yearmonthdate"),
-        y=alt.Y("count", title="Number of games"),
+        y=alt.Y("num_of_games", title="Number of Games",
+                axis=alt.Axis(values=custom_ticks, tickMinStep=1, titlePadding=10))
     ).properties(
         title="New Releases per Day",
         width=800,
@@ -282,10 +291,16 @@ def plot_games_review_frequency(df: DataFrame, titles: list[str], release_dates:
     df = df.groupby(
         "release_date").size().reset_index()
     df.columns = ["release_date", "num_of_reviews"]
-    chart = alt.Chart(df).mark_line().encode(
+    custom_ticks = [i for i in range(
+        0, df["num_of_reviews"].max() + 1)]
+
+    chart = alt.Chart(df).mark_line(
+        color="#44bd4f"
+    ).encode(
         x=alt.X("release_date:O", title="Release Date",
                 timeUnit="yearmonthdate"),
-        y=alt.Y("num_of_reviews", title="Number of reviews"),
+        y=alt.Y("num_of_reviews", title="Number of reviews", axis=alt.Axis(
+            values=custom_ticks, tickMinStep=1, titlePadding=10)),
     ).properties(
         title="New Reviews per Day",
         width=800,
