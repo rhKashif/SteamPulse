@@ -42,3 +42,19 @@ def test_date_converted_to_none(fake_invalid_date):
     result = convert_date_to_datetime(fake_invalid_date)
 
     assert str(result) == "None"
+
+
+def test_prices_converted_to_float(fake_price):
+    """Test float returned when price passed in"""
+    result = convert_price_to_float(fake_price)
+
+    assert isinstance(result, float) is True
+    assert result == 5.30
+
+
+def test_prices_converted_to_float_free_fames(price_is_free):
+    """Test float returned when price passed in"""
+    result = convert_price_to_float(price_is_free)
+
+    assert isinstance(result, float) is True
+    assert result == 0.0
