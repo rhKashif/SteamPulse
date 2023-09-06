@@ -7,9 +7,7 @@ import numpy as np
 def identify_unique_tags(data: pd.DataFrame) -> pd.DataFrame:
     """Generates a tags column from user_tags and genres"""
     data['tags'] = data['user_tags'].astype(str) + "," + data["genres"]
-    data['tags'] = data['tags'].str.split(',')
-    data = data.explode('tags')
-
+    data = explode_column_to_individual_rows(data, 'tags')
     data = data.drop_duplicates()
     return data
 
@@ -33,7 +31,7 @@ def convert_date_to_datetime(date: str) -> Timestamp | None:
     """Validates date, if appropriate"""
     try:
         new_date = pd.to_datetime(date, format="%d %b, %Y")
-    except AttributeError:
+    except ValueError:
         new_date = None
 
     return new_date
