@@ -191,14 +191,14 @@ def plot_reviews_per_game_frequency(df: DataFrame, titles: list[str], release_da
         "title").size().reset_index()
     df.columns = ["title", "num_of_reviews"]
 
-    chart = alt.Chart(df).mark_bar().encode(
-        x=alt.X("title", title="Game Title", sort="-x"),
-        y=alt.Y("num_of_reviews", title="Number of reviews"),
-    ).properties(
-        title="Number of Reviews per Game",
-        width=800,
-        height=400
-    )
+    # chart = alt.Chart(df).mark_bar().encode(
+    #     x=alt.X("title", title="Game Title", sort="-x"),
+    #     y=alt.Y("num_of_reviews", title="Number of reviews"),
+    # ).properties(
+    #     title="Number of Reviews per Game",
+    #     width=800,
+    #     height=400
+    # )
 
     chart = alt.Chart(df).mark_bar().encode(
         x=alt.X("num_of_reviews", title="Number of reviews"),
@@ -247,13 +247,15 @@ def plot_games_release_frequency(df: DataFrame, titles: list[str], release_dates
 
     df = df.groupby("release_date")["title"].nunique().reset_index()
     df.columns = ["release_date", "count"]
-    print(df.dtypes)
+
     chart = alt.Chart(df).mark_line().encode(
         x=alt.X("release_date:O", title="Release Date",
                 timeUnit="yearmonthdate"),
         y=alt.Y("count", title="Number of games"),
     ).properties(
-        title="New Releases per Day"
+        title="New Releases per Day",
+        width=800,
+        height=400
     )
 
     return chart
@@ -300,7 +302,9 @@ def plot_games_review_frequency(df: DataFrame, titles: list[str], release_dates:
                 timeUnit="yearmonthdate"),
         y=alt.Y("num_of_reviews", title="Number of reviews"),
     ).properties(
-        title="New Reviews per Day"
+        title="New Reviews per Day",
+        width=800,
+        height=400
     )
 
     return chart
@@ -363,7 +367,9 @@ def plot_platform_distribution(df: DataFrame, titles: list[str], release_dates: 
         y=alt.Y("compatibility", title="Compatible Games",
                 axis=alt.Axis(values=custom_ticks, tickMinStep=1, titlePadding=10)),
     ).properties(
-        title="Releases Compatibility per Platform"
+        title="Releases Compatibility per Platform",
+        width=800,
+        height=400
     )
 
     return chart
@@ -412,7 +418,9 @@ def plot_genre_distribution(df: DataFrame, titles: list[str], release_dates: lis
                 axis=alt.Axis(values=custom_ticks, tickMinStep=1, titlePadding=10)),
         y=alt.Y("genre:N", title="Genre")
     ).properties(
-        title="Releases per Genre"
+        title="Releases per Genre",
+        width=800,
+        height=400
     )
 
     return chart
@@ -451,8 +459,17 @@ def headline_figures(df: DataFrame, titles: list[str], release_dates: list[datet
     df = df[(df['sentiment'] >= minimum_sentiment) &
             (df['sentiment'] <= maximum_sentiment)]
 
-    cols = st.columns(3)
-
+    cols = st.columns(4)
+    st.markdown(
+        """
+        <style>
+            [data-testid="stMetricValue"] {
+            font-size: 25px;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
     with cols[0]:
         st.metric("Total Releases:", df["title"].nunique())
     with cols[1]:
@@ -460,6 +477,8 @@ def headline_figures(df: DataFrame, titles: list[str], release_dates: list[datet
                   df.shape[0])
     with cols[2]:
         st.metric("Average Sentiment:", df["sentiment"].mean())
+    with cols[3]:
+        st.metric("Most Reviewed Game:", df["title"].mode()[0])
 
 
 def first_row_figures(platform_distribution_plot: Chart, release_frequency_plot: Chart, review_frequency_plot: Chart) -> None:
@@ -549,5 +568,3 @@ if __name__ == "__main__":
                       games_review_frequency_plot)
     second_row_figures(
         games_genre_distribution_plot,  reviews_per_game_release_frequency_plot)
-
-    # print(game_df.dtypes)
