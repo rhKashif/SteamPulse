@@ -102,7 +102,7 @@ def fake_response():
 @pytest.fixture
 def fake_raw_data():
     return pd.DataFrame([[2246030, "Fake: Escape", "5 Sep, 2023", "Early Access,Clicker,Strategy", '£3.39', '£2.54',
-                          True, False, False, "Adventure,Early Access", "Fake", "Fake"]], columns=['app_id', 'title',
+                          True, False, False, "Adventure,Early Access", "Fake, Fake2", "Fake"]], columns=['app_id', 'title',
                         'release_date', 'user_tags', 'full price', 'sale price', 'windows', 'mac', 'linux', 'genres', 'developers', 'publishers'])
 
 

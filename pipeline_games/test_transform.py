@@ -2,7 +2,7 @@
 import pytest
 from pandas._libs.tslibs.timestamps import Timestamp
 
-from transform_games import identify_unique_tags, create_user_generated_column, drop_unnecessary_columns, convert_date_to_datetime, convert_price_to_float
+from transform_games import identify_unique_tags, create_user_generated_column, drop_unnecessary_columns, convert_date_to_datetime, convert_price_to_float, explode_column_to_individual_rows
 
 
 def test_separate_rows_created_for_unique_tags(fake_raw_data):
@@ -62,4 +62,8 @@ def test_prices_converted_to_float_free_fames(price_is_free):
     assert result == 0.0
 
 
-def test_explode_column_to_individual_rows()
+def test_explode_columns(fake_raw_data):
+    """Test atomic rows created for rows with more than one value for specified column"""
+    assert fake_raw_data.shape[0] == 1
+    result = explode_column_to_individual_rows(fake_raw_data, 'developers')
+    assert result.shape[0] == 2
