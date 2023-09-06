@@ -228,10 +228,21 @@ resource "aws_ecs_task_definition" "steampulse_pipeline_task_definition" {
 }
 
 
-# resource "aws_ecs_task_definition" "name" {
+resource "aws_scheduler_schedule" "steampulse_pipeline_schedule" {
+  name       = "steampulse_pipeline_schedule"
+  group_name = "default"
 
-# }
+  flexible_time_window {
+    mode = "OFF"
+  }
 
+  schedule_expression = "cron(10 * * * * *)"
+
+  target {
+    arn      = 
+    role_arn = 
+  }
+}
 
 # resource "aws_ecs_service" "name" {
 
