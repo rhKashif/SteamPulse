@@ -3,12 +3,18 @@ provider "aws" {
 }
 
 
-resource "aws_ecr_repository" "steampulse_pipeline_ecr" {
-  name         = "steampulse_pipeline_ecr"
+resource "aws_ecr_repository" "steampulse_game_pipeline_ecr" {
+  name         = "steampulse_game_pipeline_ecr"
   force_delete = true
 
 }
 
+
+resource "aws_ecr_repository" "steampulse_review_pipeline_ecr" {
+  name         = "steampulse_review_pipeline_ecr"
+  force_delete = true
+
+}
 
 resource "aws_ecr_repository" "steampulse_dashboard_ecr" {
   name         = "steampulse_dashboard_ecr"
@@ -190,8 +196,8 @@ resource "aws_iam_role_policy_attachment" "steampulse_pipeline_ecs_task_executio
 }
 
 
-resource "aws_ecs_task_definition" "steampulse_pipeline_task_definition" {
-  family                   = "steampulse_pipeline_task_definition"
+resource "aws_ecs_task_definition" "steampulse_review_pipeline_task_definition" {
+  family                   = "steampulse_review_pipeline_task_definition"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   cpu                      = 1024
@@ -201,8 +207,46 @@ resource "aws_ecs_task_definition" "steampulse_pipeline_task_definition" {
 
   container_definitions = jsonencode([
     {
-      name   = "steampulse_pipeline_ecr"
-      image  = "129033205317.dkr.ecr.eu-west-2.amazonaws.com/steampulse_pipeline_ecr:latest"
+      name   = "steampulse_review_pipeline_ecr"
+      image  = "na"
+      cpu    = 10
+      memory = 512
+
+      portMappings = [
+        {
+          containerPort = 80
+          hostPort      = 80
+        }
+      ]
+
+      essential : true,
+
+      logConfiguration : {
+        "logDriver" : "awslogs",
+        "options" : {
+          "awslogs-create-group" : "true",
+          "awslogs-group" : "/ecs/",
+          "awslogs-region" : "eu-west-2",
+          "awslogs-stream-prefix" : "ecs"
+        }
+      }
+    }
+  ])
+}
+
+resource "aws_ecs_task_definition" "steampulse_game_pipeline_task_definition" {
+  family                   = "steampulse_game_pipeline_task_definition"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = 1024
+  memory                   = 2048
+  task_role_arn            = aws_iam_role.steampulse_pipeline_ecs_task_role_policy.arn
+  execution_role_arn       = aws_iam_role.steampulse_pipeline_ecs_task_execution_role.arn
+
+  container_definitions = jsonencode([
+    {
+      name   = "steampulse_game_pipeline_ecr"
+      image  = "na"
       cpu    = 10
       memory = 512
 
@@ -229,10 +273,11 @@ resource "aws_ecs_task_definition" "steampulse_pipeline_task_definition" {
 }
 
 
-resource "aws_scheduler_schedule" "steampulse_pipeline_schedule" {
-  name                = "steampulse_pipeline_schedule"
-  description         = "Runs the steampulse pipeline on a cron schedule"
-  schedule_expression = "cron(45 * * * ? *)"
+
+resource "aws_scheduler_schedule" "steampulse_game_pipeline_schedule" {
+  name                = "steampulse_game_pipeline_schedule"
+  description         = "Runs the steampulse game pipeline on a cron schedule"
+  schedule_expression = "cron(0 */3 * * ? *)"
 
   flexible_time_window {
     mode = "OFF"
@@ -243,7 +288,7 @@ resource "aws_scheduler_schedule" "steampulse_pipeline_schedule" {
     role_arn = aws_iam_role.steampulse_pipeline_ecs_task_execution_role.arn
 
     ecs_parameters {
-      task_definition_arn = aws_ecs_task_definition.steampulse_pipeline_task_definition.arn
+      task_definition_arn = aws_ecs_task_definition.steampulse_game_pipeline_task_definition.arn
       launch_type         = "FARGATE"
 
       network_configuration {
@@ -256,6 +301,31 @@ resource "aws_scheduler_schedule" "steampulse_pipeline_schedule" {
 }
 
 
+resource "aws_scheduler_schedule" "steampulse_review_pipeline_schedule" {
+  name                = "steampulse_review_pipeline_schedule"
+  description         = "Runs the steampulse review pipeline on a cron schedule"
+  schedule_expression = "cron(0 0 * * ? *)"
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  target {
+    arn      = aws_ecs_cluster.steampulse_cluster.arn
+    role_arn = aws_iam_role.steampulse_pipeline_ecs_task_execution_role.arn
+
+    ecs_parameters {
+      task_definition_arn = aws_ecs_task_definition.steampulse_review_pipeline_task_definition.arn
+      launch_type         = "FARGATE"
+
+      network_configuration {
+        assign_public_ip = true
+        security_groups  = [aws_security_group.steampulse_pipeline_ecs_sg.id]
+        subnets          = ["subnet-03b1a3e1075174995", "subnet-0667517a2a13e2a6b", "subnet-0cec5bdb9586ed3c4"]
+      }
+    }
+  }
+}
 #unfinished below
 
 # resource "aws_ecs_service" "name" {
@@ -265,4 +335,3 @@ resource "aws_scheduler_schedule" "steampulse_pipeline_schedule" {
 # resource "aws_scheduler_schedule" "name" {
 
 # }
-
