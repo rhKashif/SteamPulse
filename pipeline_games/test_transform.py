@@ -31,12 +31,18 @@ def test_columns_dropped(fake_data_with_tags):
     assert 'user_tags' not in list(result.columns)
 
 
+def test_date_converted_returns_timestamp(fake_date):
+    """Test to check timestamp returned"""
+    result = convert_date_to_datetime(fake_date)
+
+    assert isinstance(result, Timestamp) is True
+
+
 def test_date_converted_if_valid(fake_date):
     """Test valid date is returned"""
     result = convert_date_to_datetime(fake_date)
 
     assert str(result) == "2023-09-05 00:00:00"
-    assert isinstance(result, Timestamp) is True
 
 
 def test_date_converted_to_none(fake_invalid_date):
