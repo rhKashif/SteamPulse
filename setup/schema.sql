@@ -62,7 +62,7 @@ CREATE TABLE game(
     release_date DATE NOT NULL,
     price FLOAT NOT NULL,
     sale_price FLOAT NOT NULL,
-    platform_id SMALLINT,
+    platform_id SMALLINT NOT NULL,
     PRIMARY KEY (game_id),
     FOREIGN KEY (platform_id) REFERENCES platform(platform_id)
 
@@ -75,8 +75,8 @@ CREATE TABLE review(
     review_id INT GENERATED ALWAYS AS IDENTITY,
     sentiment FLOAT NOT NULL DEFAULT 0,
     review_text TEXT NOT NULL, 
-    review_date DATE NOT NULL,
-    game_id INT,
+    reviewed_at TIMESTAMP NOT NULL,
+    game_id INT NOT NULL,
     PRIMARY KEY (review_id),
     FOREIGN KEY (game_id) REFERENCES game(game_id) 
 
@@ -88,8 +88,8 @@ CREATE TABLE review(
 
 CREATE TABLE game_genre_link(
     genre_link_id INT GENERATED ALWAYS AS IDENTITY,
-    game_id INT, 
-    genre_id SMALLINT,
+    game_id INT NOT NULL, 
+    genre_id SMALLINT NOT NULL,
     PRIMARY KEY (genre_link_id),
     FOREIGN KEY (game_id) REFERENCES game(game_id),
     FOREIGN KEY (genre_id) REFERENCES genre(genre_id)
@@ -99,8 +99,8 @@ CREATE TABLE game_genre_link(
 
 CREATE TABLE game_developer_link(
     developer_link_id INT GENERATED ALWAYS AS IDENTITY,
-    game_id INT, 
-    developer_id SMALLINT,
+    game_id INT NOT NULL, 
+    developer_id SMALLINT NOT NULL,
     PRIMARY KEY (developer_link_id),
     FOREIGN KEY (game_id) REFERENCES game(game_id),
     FOREIGN KEY (developer_id) REFERENCES developer(developer_id)
@@ -110,8 +110,8 @@ CREATE TABLE game_developer_link(
 
 CREATE TABLE game_publisher_link(
     publisher_link_id INT GENERATED ALWAYS AS IDENTITY,
-    game_id INT, 
-    publisher_id SMALLINT,
+    game_id INT NOT NULL, 
+    publisher_id SMALLINT NOT NULL,
     PRIMARY KEY (publisher_link_id),
     FOREIGN KEY (game_id) REFERENCES game(game_id),
     FOREIGN KEY (publisher_id) REFERENCES publisher(publisher_id)
