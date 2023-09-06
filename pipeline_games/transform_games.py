@@ -68,10 +68,10 @@ if __name__ == "__main__":
     data_with_unique_tags_only['release_date'] = data_with_unique_tags_only['release_date'].apply(
         convert_date_to_datetime)
 
-    data_with_unique_tags_only['full price'] = data_with_unique_tags_only['full price'].apply(
+    data_with_unique_tags_only['full_price'] = data_with_unique_tags_only['full_price'].apply(
         convert_price_to_float)
 
-    data_with_unique_tags_only['sale price'] = data_with_unique_tags_only['sale price'].apply(
+    data_with_unique_tags_only['sale_price'] = data_with_unique_tags_only['sale_price'].apply(
         convert_price_to_float)
 
     unique_developers = explode_column_to_individual_rows(
