@@ -34,6 +34,21 @@ def add_developer_information(conn, data: list):
         cur.close()
 
 
+def add_publisher_information(conn, data: list):
+    """Add publisher information to database"""
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute(
+            """SELECT exists (SELECT 1 FROM publisher WHERE publisher_name = %s LIMIT 1);""", [data[11]])
+        result = cur.fetchone()
+        if result['exists'] is True:
+            cur.close()
+        elif result['exists'] is False:
+            cur.execute(
+                """INSERT INTO publisher(publisher_name) VALUES (%s)""", [data[11]])
+        conn.commit()
+        cur.close()
+
+
 if __name__ == "__main__":
     load_dotenv()
     configuration = environ
@@ -42,4 +57,5 @@ if __name__ == "__main__":
     df = pd.read_csv("transformed_data.csv")
     for row in df.itertuples():
         print(row[10])
+        print(row[11])
         break
