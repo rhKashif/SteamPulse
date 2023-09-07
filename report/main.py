@@ -1,6 +1,6 @@
 """Python Script: Build a report for email attachment"""
 import base64
-from datetime import datetime
+from datetime import datetime, timedelta
 from os import environ, _Environ
 
 import altair as alt
@@ -76,18 +76,50 @@ def convert_html_to_pdf(source_html, output_filename):
     return pisa_status.err
 
 
-def create_report(chart1, chart2, chart3):
+def get_new_releases(df_releases: DataFrame) -> int:
+    """
+    Return the number of new releases for the previous day
+
+    Args: 
+        df_releases (DataFrame): A pandas DataFrame containing all relevant game data
+
+    Returns:
+        int: An integer relating to the number of new games released
+    """
+    date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+
+    return df_releases[df_releases["release_date"] == date].shape[0]
+
+
+def get_top_rated_release(df_releases: DataFrame) -> int:
+    """
+    Return the name of new release with the highest overall sentiment score
+
+    Args: 
+        df_releases (DataFrame): A pandas DataFrame containing all relevant game data
+
+    Returns:
+        int: An integer relating to the number of new games released
+    """
+    date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+
+    return df_releases[df_releases["release_date"] == date].shape[0]
+
+
+def create_report(df_releases: DataFrame, chart_one: Chart, chart_two: Chart, chart_three: Chart):
     """
     """
-    chart1.save("/tmp/chart1.png")
-    chart2.save("/tmp/chart2.png")
-    chart3.save("/tmp/chart3.png")
 
-    fig1 = "/tmp/chart1.png"
-    fig2 = "/tmp/chart2.png"
-    fig3 = "/tmp/chart3.png"
+    new_releases = get_new_releases(df_releases)
+    chart_one.save("/tmp/chart_one.png")
+    chart_two.save("/tmp/chart_two.png")
+    chart_three.save("/tmp/chart_three.png")
 
-    background_color = "#1b2838"
+    fig1 = "/tmp/chart_one.png"
+    fig2 = "/tmp/chart_two.png"
+    fig3 = "/tmp/chart_three.png"
+
+    # background_color = "#1b2838"
     header_color = "#1b2838"
 
     # header_color = "#66c0f4"
@@ -106,7 +138,7 @@ def create_report(chart1, chart2, chart3):
             h1, {{
                 background-color: {header_color};
                 color: {text_color};
-                padding: 40px;
+                padding: 50px;
                 font-size: 32px;
                 text-align: center;
             }}
@@ -120,7 +152,7 @@ def create_report(chart1, chart2, chart3):
     </head>
     <body>
         <h1>Your SteamPulse Report</h1>
-        <p>Here are some visualizations and data tables:</p>
+        <p>Number of new releases: {new_releases}</p>
         
         <h2>Chart 1</h2>
         <img src="{fig1}" alt="Chart 1">
@@ -275,7 +307,7 @@ def handler(event, context):
         game_df)
     games_release_frequency_plot = plot_games_release_frequency(game_df)
     games_review_frequency_plot = plot_games_review_frequency(game_df)
-    create_report(reviews_per_game_release_frequency_plot,
+    create_report(game_df, reviews_per_game_release_frequency_plot,
                   games_release_frequency_plot, games_review_frequency_plot)
     print("Report created.")
     # send_email()
