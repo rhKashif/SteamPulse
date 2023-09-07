@@ -74,7 +74,6 @@ def convert_html_to_pdf(source_html, output_filename):
     # close output file
     result_file.close()                 # close output file
 
-    # return True on success and False on errors
     return pisa_status.err
 
 
