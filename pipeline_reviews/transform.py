@@ -63,7 +63,8 @@ def change_column_types(reviews_df: DataFrame) -> DataFrame:
 def validate_time_string(row: str) -> datetime | None:
     """Returns datetime object or None if wrong format"""
     try:
-        return datetime.strptime(row, "%Y-%m-%d %H:%M:%S")
+        time = datetime.strptime(row, "%Y-%m-%d %H:%M:%S")
+        return time.strftime("%Y-%m-%d")
     except (TypeError, ValueError):
         return None
 
