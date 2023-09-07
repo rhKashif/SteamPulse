@@ -286,18 +286,39 @@ resource "aws_ecs_task_definition" "steampulse_dashboard_task_definition" {
   container_definitions = jsonencode([
     {
       name   = "steampulse_dashboard_ecr"
-      image  = "na"
+      image  = "129033205317.dkr.ecr.eu-west-2.amazonaws.com/steampulse_dashboard_ecr:latest"
       cpu    = 10
       memory = 512
 
       portMappings = [
         {
-          containerPort = 80
-          hostPort      = 80
+          "name" : "8501-mapping",
+          "containerPort" : 8501,
+          "hostPort" : 8501,
+          "protocol" : "tcp",
+          "appProtocol" : "http"
+        },
+        {
+          "name" : "80-mapping",
+          "containerPort" : 80,
+          "hostPort" : 80,
+          "protocol" : "tcp",
+          "appProtocol" : "http"
         }
       ]
 
       essential : true,
+
+      environment : [
+        {
+          "name" : "ACCESS_KEY_ID",
+          "value" : var.ACCESS_KEY_ID
+        },
+        {
+          "name" : "SECRET_ACCESS_KEY",
+          "value" : var.SECRET_ACCESS_KEY
+        }
+      ]
 
       logConfiguration : {
         "logDriver" : "awslogs",
@@ -367,25 +388,44 @@ resource "aws_scheduler_schedule" "steampulse_review_pipeline_schedule" {
     }
   }
 }
-#unfinished below
+
+resource "aws_security_group" "steampulse_dashboard_sg" {
+  name   = "steampulse_dashboard_sg"
+  vpc_id = "vpc-0e0f897ec7ddc230d"
+  ingress {
+    from_port   = 8501
+    to_port     = 8501
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+
+  }
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+}
 
 resource "aws_ecs_service" "steampulse_streamlit_service" {
   name            = "steampulse_streamlit_service"
   cluster         = aws_ecs_cluster.steampulse_cluster.id
   task_definition = aws_ecs_task_definition.steampulse_dashboard_task_definition.arn
+  desired_count   = 1
   launch_type     = "FARGATE"
 
   network_configuration {
     subnets          = ["subnet-03b1a3e1075174995", "subnet-0cec5bdb9586ed3c4", "subnet-0667517a2a13e2a6b"]
-    security_groups  = [aws_security_group.steampulse_pipeline_ecs_sg.id]
+    security_groups  = [aws_security_group.steampulse_dashboard_sg.id]
     assign_public_ip = true
   }
 }
 
-# resource "aws_ecs_service" "name" {
-
-# }
-
-# resource "aws_scheduler_schedule" "name" {
-
-# }
+#unfinished below
