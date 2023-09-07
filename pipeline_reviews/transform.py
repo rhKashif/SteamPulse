@@ -96,4 +96,4 @@ if __name__ == "__main__":
     reviews = correct_playtime(reviews)
     if "Unnamed: 0" in reviews.columns:
         reviews.drop(columns="Unnamed: 0", inplace=True)
-    reviews.to_csv("reviews2.csv") #! index=False potentially for load
+    reviews.to_csv("reviews.csv") #! index=False potentially for load
