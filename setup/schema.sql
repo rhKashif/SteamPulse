@@ -27,7 +27,7 @@ CREATE TABLE genre(
     genre_id SMALLINT GENERATED ALWAYS AS IDENTITY,
     genre TEXT NOT NULL,
     user_generated BOOLEAN NOT NULL,
-    PRIMARY KEY (genre_id),
+    PRIMARY KEY (genre_id)
 
 );
 
@@ -35,7 +35,7 @@ CREATE TABLE genre(
 CREATE TABLE developer(
     developer_id SMALLINT GENERATED ALWAYS AS IDENTITY,
     developer_name TEXT NOT NULL UNIQUE,
-    PRIMARY KEY (developer_id),
+    PRIMARY KEY (developer_id)
     
 
 );
@@ -44,7 +44,7 @@ CREATE TABLE developer(
 CREATE TABLE publisher(
     publisher_id SMALLINT GENERATED ALWAYS AS IDENTITY,
     publisher_name TEXT NOT NULL UNIQUE,
-    PRIMARY KEY (publisher_id),
+    PRIMARY KEY (publisher_id)
 
 
 );
