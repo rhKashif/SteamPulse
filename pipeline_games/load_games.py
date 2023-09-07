@@ -169,35 +169,35 @@ def add_to_developer_link_table(conn: connect, data: list) -> None:
         cur.close()
 
 
-def upload_developers():
+def upload_developers(data: pd.DataFrame) -> None:
     """Uploads new developers"""
-    developers_data = data_frame['developers']
+    developers_data = data['developers']
     execute_batch_columns(connection, developers_data,
                           'developer', 'developer_name', page_size=100)
 
 
-def upload_publishers():
+def upload_publishers(data: pd.DataFrame) -> None:
     """Uploads new publishers"""
-    publishers_data = data_frame['publishers']
+    publishers_data = data['publishers']
     execute_batch_columns(connection, publishers_data,
                           'publisher', 'publisher_name', page_size=100)
 
 
-def upload_genres():
+def upload_genres(data: pd.DataFrame) -> None:
     """Uploads new genres"""
-    genres = data_frame[["genre", "user_generated", "genre", "user_generated"]]
+    genres = data[["genre", "user_generated", "genre", "user_generated"]]
     execute_batch_columns_for_genres(connection, genres,
                                      'genre', page_size=100)
 
 
-def upload_games():
+def upload_games(data: pd.DataFrame) -> None:
     """Uploads new games"""
     platform_cache = {}
-    game_data['platform_id'] = game_data.apply(
+    data['platform_id'] = data.apply(
         lambda row: get_existing_platform_data(
             row['mac'], row['windows'], row['linux'], connection, platform_cache), axis=1)
 
-    new_game_data = game_data.rename(columns={'full_price': 'price'})
+    new_game_data = data.rename(columns={'full_price': 'price'})
 
     games_to_load = new_game_data[[
         'app_id', 'title', 'release_date', 'price', 'sale_price', 'platform_id']]
@@ -214,10 +214,10 @@ if __name__ == "__main__":
     game_data = pd.read_csv("final_games.csv")
 
     try:
-        upload_publishers()
-        upload_developers()
-        upload_genres()
-        upload_games()
+        upload_publishers(data_frame)
+        upload_developers(data_frame)
+        upload_genres(data_frame)
+        upload_games(game_data)
 
         for row in data_frame.itertuples():
             add_to_genre_link_table(connection, row)
