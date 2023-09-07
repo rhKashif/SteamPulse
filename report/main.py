@@ -88,36 +88,94 @@ def get_new_releases(df_releases: DataFrame) -> int:
     """
     date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
 
-    return df_releases[df_releases["release_date"] == date].shape[0]
+    return df_releases[df_releases["release_date"] == date].reset_index().shape[0]
 
 
-def get_top_rated_release(df_releases: DataFrame) -> int:
+def get_top_rated_release(df_releases: DataFrame) -> str:
     """
-    Return the name of new release with the highest overall sentiment score
+    Return the name of new release with the highest overall sentiment score for the previous day
 
     Args: 
         df_releases (DataFrame): A pandas DataFrame containing all relevant game data
 
     Returns:
-        int: An integer relating to the number of new games released
+        str: A string relating to the title of the highest rated new game released
     """
     date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+    df_releases = df_releases[df_releases["release_date"] == date]
+    df_ratings = df_releases.groupby("title")["sentiment"].mean().reset_index()
 
-    return df_releases[df_releases["release_date"] == date].shape[0]
+    return df_ratings.head(1)["title"][0]
 
 
-def create_report(df_releases: DataFrame, chart_one: Chart, chart_two: Chart, chart_three: Chart):
+def trending_game_information(df_releases: DataFrame, index: int) -> str:
+    """
+    Return information of new releases with the highest overall sentiment score for the previous day
+
+    Args: 
+        df_releases (DataFrame): A pandas DataFrame containing all relevant game data
+
+        index (int): A int associated with a number index within the trending game list
+
+    Returns:
+        str: A string relating to the information of selected trending new game released in html format
+    """
+    date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+    df_releases = df_releases[df_releases["release_date"] == date]
+    df_trending_game = df_releases.groupby(
+        "title")["sentiment"].mean().reset_index().iloc[index]
+    release_name = df_trending_game["title"]
+    sentiment = round(df_trending_game["sentiment"], 1)
+
+    html_template = f"""
+    <html>
+    <head>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                background-color: #f5f5f5;
+                color: #333;
+            }}
+            p {{
+                margin: 20px;
+                line-height: 1.4;
+            }}
+        </style>
+    </head>
+    <body>
+        <p>{release_name}<br>
+        Average Sentiment: {sentiment}</p>
+    </body>
+    </html>
+    """
+
+    return html_template
+
+
+def create_report(df_releases: DataFrame):
     """
     """
 
     new_releases = get_new_releases(df_releases)
-    chart_one.save("/tmp/chart_one.png")
-    chart_two.save("/tmp/chart_two.png")
-    chart_three.save("/tmp/chart_three.png")
+    top_rated_release = get_top_rated_release(df_releases)
+    trending_game_one = trending_game_information(df_releases, 0)
+    trending_game_two = trending_game_information(df_releases, 1)
+
+    reviews_per_game_release_frequency_plot = plot_reviews_per_game_frequency(
+        df_releases)
+    games_release_frequency_plot = plot_games_release_frequency(df_releases)
+    games_review_frequency_plot = plot_games_review_frequency(df_releases)
+    trending_games_plot = plot_top_trending_games(df_releases)
+
+    reviews_per_game_release_frequency_plot.save("/tmp/chart_one.png")
+    games_release_frequency_plot.save("/tmp/chart_two.png")
+    games_review_frequency_plot.save("/tmp/chart_three.png")
+    trending_games_plot.save("/tmp/chart_four.png")
 
     fig1 = "/tmp/chart_one.png"
     fig2 = "/tmp/chart_two.png"
     fig3 = "/tmp/chart_three.png"
+    fig4 = "/tmp/chart_four.png"
 
     # background_color = "#1b2838"
     header_color = "#1b2838"
@@ -133,12 +191,11 @@ def create_report(df_releases: DataFrame, chart_one: Chart, chart_two: Chart, ch
                 font-family: Arial, sans-serif;
                 font-size: 18px;
                 text-align: center;
-
             }}
             h1, {{
                 background-color: {header_color};
                 color: {text_color};
-                padding: 50px;
+                padding: 45px;
                 font-size: 32px;
                 text-align: center;
             }}
@@ -148,11 +205,19 @@ def create_report(df_releases: DataFrame, chart_one: Chart, chart_two: Chart, ch
                 padding-top: 15px;
                 padding-bottom: 0px;
             }}
+            .game-container {{
+                width: 30%;
+                margin: 10px;
+                border: 1px solid #ccc;
+                padding: 10px;
+                background-color: #f5f5f5;
+                display: inline-block;
+            }}        
         </style>
     </head>
     <body>
         <h1>Your SteamPulse Report</h1>
-        <p>Number of new releases: {new_releases}</p>
+        <p>Number of new releases: {new_releases}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Top rated release: {top_rated_release}</p>
         
         <h2>Chart 1</h2>
         <img src="{fig1}" alt="Chart 1">
@@ -162,9 +227,21 @@ def create_report(df_releases: DataFrame, chart_one: Chart, chart_two: Chart, ch
         
         <h2>Chart 3</h2>
         <img src="{fig3}" alt="Chart 3">
+
+        <h2>Chart 4</h2>
+        <img src="{fig4}" alt="Chart 4">
+
+        <p>Trending games:</p>
+        <div class="game-container" style="float: left; margin-right: 10px;">
+            <p>{trending_game_one}</p>
+        </div>
+        <div class="game-container" style="float: right;">
+            <p>{trending_game_two}</p>
+        </div>
     </body>    
     </html>
     '''
+
     with open("test.html", "w") as file:
         file.write(template)
 
@@ -294,6 +371,43 @@ def plot_games_review_frequency(df_releases: DataFrame) -> Chart:
     return chart
 
 
+def plot_top_trending_games(df_releases: DataFrame) -> Chart:
+    """
+    Create a line chart for the number of games released per day
+
+    Args:
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
+
+    Returns:
+        Chart: A chart displaying plotted data
+    """
+    date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+    df_releases = df_releases[df_releases["release_date"] == date]
+
+    df_releases = df_releases.groupby(
+        "title")["sentiment"].mean().reset_index()
+
+    print(df_releases)
+
+    df_releases.columns = ["title", "sentiment"]
+    custom_ticks = [i for i in range(
+        0, 6)]
+
+    chart = alt.Chart(df_releases).mark_bar(
+        color="#44bd4f"
+    ).encode(
+        y=alt.Y("title", title="Release Date"),
+        x=alt.X("sentiment:Q", title="Sentiment Rating", axis=alt.Axis(
+            values=custom_ticks, tickMinStep=1, titlePadding=10)),
+    ).properties(
+        title="Top Rated Games",
+        width=800,
+        height=400
+    )
+
+    return chart
+
+
 def handler(event, context):
     """
     """
@@ -303,12 +417,7 @@ def handler(event, context):
     game_df["review_date"] = pd.to_datetime(
         game_df['review_date'], format='%d/%m/%Y')
 
-    reviews_per_game_release_frequency_plot = plot_reviews_per_game_frequency(
-        game_df)
-    games_release_frequency_plot = plot_games_release_frequency(game_df)
-    games_review_frequency_plot = plot_games_review_frequency(game_df)
-    create_report(game_df, reviews_per_game_release_frequency_plot,
-                  games_release_frequency_plot, games_review_frequency_plot)
+    create_report(game_df)
     print("Report created.")
     # send_email()
     # print("Email sent.")
