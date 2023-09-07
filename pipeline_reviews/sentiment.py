@@ -59,3 +59,4 @@ if __name__ == "__main__":
     reviews = get_sentiment_values(reviews)
     each_game_sentiment = get_sentiment_per_game(reviews)
     reviews.to_csv("reviews.csv")
+    #! add unnamed:0 removal again

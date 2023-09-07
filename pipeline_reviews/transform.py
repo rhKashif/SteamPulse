@@ -14,13 +14,12 @@ def get_release_date(game_id: int, conn: connection, cache: dict) -> datetime:
     """Retrieves the release date for a game with a provided ID"""
     if game_id in cache.keys():
         return cache[game_id]
-    else:
-        with conn.cursor() as cur:
-            cur.execute("SELECT release_date FROM game WHERE app_id = %s;", [game_id])
-            release_date = cur.fetchone()["release_date"]
-        cache[game_id] = release_date
-        conn.close()
-        return cache[game_id]
+    with conn.cursor() as cur:
+        cur.execute("SELECT release_date FROM game WHERE app_id = %s;", [game_id])
+        release_date = cur.fetchone()["release_date"]
+    cache[game_id] = release_date
+    conn.close()
+    return cache[game_id]
 
 
 def correct_playtime(reviews_df: DataFrame) -> DataFrame:
@@ -36,8 +35,8 @@ def correct_playtime(reviews_df: DataFrame) -> DataFrame:
         reviews_df = reviews_df[
             reviews_df["playtime_at_review"] <= reviews_df["maximum_playtime_since_release"]]
         reviews_df.drop(columns=["maximum_playtime_since_release","release_date"], inplace=True)
-    except Error as e:
-        print("Connection Error: ", e)
+    except (Error, ValueError) as e:
+        print("Error at transform: ", e)
     return reviews_df
 
 
@@ -82,6 +81,13 @@ def remove_duplicate_reviews(review_df: DataFrame) -> DataFrame:
     return review_df
 
 
+def remove_unnamed(reviews_df: DataFrame) -> DataFrame:
+    """Removes automatically generated unnamed column"""
+    if "Unnamed: 0" in reviews_df.columns:
+        reviews_df.drop(columns="Unnamed: 0", inplace=True)
+    return reviews_df
+
+
 if __name__ == "__main__":
 
     reviews = pd.read_csv("reviews.csv")
@@ -90,6 +96,5 @@ if __name__ == "__main__":
     reviews = correct_cell_values(reviews)
     reviews = remove_duplicate_reviews(reviews)
     # reviews = correct_playtime(reviews)
-    if "Unnamed: 0" in reviews.columns:
-        reviews.drop(columns="Unnamed: 0", inplace=True)
-    reviews.to_csv("reviews.csv") #! index=False potentially for load
+    reviews = remove_unnamed(reviews)
+    reviews.to_csv("reviews2.csv") #! index=False potentially for load

@@ -6,7 +6,7 @@ from urllib.parse import quote_plus
 
 import pandas as pd
 from dotenv import load_dotenv
-from psycopg2 import connect
+from psycopg2 import connect, Error
 from psycopg2.extensions import connection
 from psycopg2.extras import RealDictCursor
 import requests
@@ -60,7 +60,7 @@ def get_all_reviews(game_ids: list[int]) -> None:
             for page in range(int(number_of_total_reviews/100)+2):
                 api_response = get_reviews_for_game(game, cursor_list[page])
 
-                if not "error" in list(api_response.keys()):
+                if "error" not in api_response:
                     cursor = api_response["next_cursor"]
                     page_reviews = api_response["reviews"]
                     if not page_reviews or cursor in cursor_list:
@@ -94,10 +94,13 @@ def get_game_ids(conn: connection) -> list[int] | None:
     BETWEEN NOW() - INTERVAL '2 WEEKS' AND NOW()""")
         game_ids = cur.fetchall()
     conn.close()
-    if game_ids:
-        return [game_id["app_id"] for game_id in game_ids]
+    return [game_id["app_id"] for game_id in game_ids]
 
 
 if __name__ == "__main__":
-    game_ids = get_game_ids(get_db_connection())
-    get_all_reviews(game_ids)
+    try:
+        game_ids = get_game_ids(get_db_connection())
+        game_ids = [10,11,40]
+        get_all_reviews(game_ids)
+    except (Error, TypeError) as e:
+        print("Error at extract: ", e)
