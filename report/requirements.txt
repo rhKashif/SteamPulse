@@ -3,3 +3,7 @@ python-dotenv
 psycopg2
 streamlit
 reportlab
+xhtml2pdf
+plotly_express
+boto3
+kaleido
