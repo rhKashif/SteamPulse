@@ -251,26 +251,26 @@ def create_report(df_releases: DataFrame):
 
     <body>
         <div id="header_content">
-            <h1>Your SteamPulse Report</h1>
+            <h1>New Release Report</h1>
                 <div class = "myDiv2">
                     <p>Number of new releases: {new_releases}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Top rated release: {top_rated_release}</p>
                 </div>
             </div>
         <div id="footer_content">
-            <h1>Your SteamPulse Report</h1>
+            <h1>SteamPulse</h1>
         SteamPulse - page <pdf:pagenumber>
         </div>
 
         <h2>Number of Reviews per Release</h2>
         <img src="{fig1}" alt="Chart 1">
 
-        <h2>Chart 2</h2>
+        <h2>New Releases per Day</h2>
         <img src="{fig2}" alt="Chart 2">
         
-        <h2>Chart 3</h2>
+        <h2>New Reviews per Day</h2>
         <img src="{fig4}" alt="Chart 3">
 
-        <h2>Chart 4</h2>
+        <h2>New Reviews per Day</h2>
         <img src="{fig3}" alt="Chart 4">
 
         <p>Trending games:</p>
@@ -445,7 +445,7 @@ def plot_top_trending_games(df_releases: DataFrame) -> Chart:
         x=alt.X("sentiment:Q", title="Sentiment Rating", axis=alt.Axis(
             values=custom_ticks, tickMinStep=1, titlePadding=10)),
     ).properties(
-        title="Top Rated Games",
+        title="New Reviews per Day",
         width=800,
         height=500
     )
