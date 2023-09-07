@@ -23,7 +23,8 @@ def execute_batch_columns(conn, data: pd.DataFrame, table: str, column: str, pag
     """batch execution of adding specified data to the database"""
     tuples = list(zip(data.unique()))
     cols = column
-    query = """INSERT INTO %s(%s) VALUES(%%s)""" % (table, cols)
+    query = """INSERT INTO %s(%s) VALUES(%%s) ON CONFLICT (%s) DO NOTHING;""" % (
+        table, cols, cols)
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         try:
             execute_batch(cur, query, tuples, page_size)
@@ -39,8 +40,10 @@ def execute_batch_columns(conn, data: pd.DataFrame, table: str, column: str, pag
 def execute_batch_columns_for_genres(conn, data: pd.DataFrame, table: str, page_size=100) -> None:
     """batch execution of adding genres into the database"""
     tuples = [tuple(x) for x in data.to_numpy()]
-    cols = ','.join(list(data.columns))
-    query = "INSERT INTO %s(%s) VALUES(%%s,%%s) " % (table, cols)
+    cols = 'genre,user_generated'
+
+    query = """INSERT INTO %s(%s) SELECT %%s,%%s WHERE NOT EXISTS 
+            (SELECT genre_id FROM genre WHERE genre = %%s AND user_generated = %%s);""" % (table, cols)
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         try:
             execute_batch(cur, query, tuples, page_size)
@@ -58,7 +61,7 @@ def execute_batch_columns_for_games(conn, data: pd.DataFrame, table: str, page_s
     tuples = [tuple(x) for x in data.to_numpy()]
     cols = ','.join(list(data.columns))
 
-    query = "INSERT INTO %s(%s) VALUES(%%s,%%s,%%s,%%s,%%s,%%s)" % (
+    query = "INSERT INTO %s(%s) VALUES (%%s,%%s,%%s,%%s,%%s,%%s) ON CONFLICT (app_id) DO NOTHING" % (
         table, cols)
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         try:
@@ -70,41 +73,6 @@ def execute_batch_columns_for_games(conn, data: pd.DataFrame, table: str, page_s
             print(f"Error: {error}")
             conn.rollback()
             cur.close()
-
-
-def get_existing_data(variable: str, table: str, value_name: str, value: str, conn: connect, cache: dict) -> None:
-    """Retrieves the existing data and adds to a cache dict given a provided value and table"""
-    if value in cache.keys():
-        return cache[value]
-    try:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute(
-                sql.SQL("""SELECT {variable} FROM {table} WHERE {value_name} = %s;""").format(
-                    variable=sql.Identifier(variable), table=sql.Identifier(table),
-                    value_name=sql.Identifier(value_name)), [value])
-            id_value = cur.fetchone()[variable]
-            cache[value] = id_value
-            cur.close()
-            return cache[value]
-    except TypeError:
-        return "None"
-
-
-def get_existing_data_for_genre(genre_c: str, user_c: bool, conn: connect, cache: dict) -> int | None:
-    """Retrieves the existing data for genre using cache and return genre_id"""
-    value = f'{genre_c} {user_c}'
-    if value in cache.keys():
-        return cache[value]
-    try:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("""SELECT genre_id FROM genre WHERE genre = %s AND user_generated = %s;""", [
-                        genre_c, user_c])
-            id_value = cur.fetchone()['genre_id']
-            cache[value] = id_value
-            cur.close()
-            return cache[value]
-    except TypeError:
-        return "None"
 
 
 def get_existing_platform_data(mac_c, windows_c, linux_c, conn: connect, cache: dict) -> int | None:
@@ -202,44 +170,21 @@ def add_to_developer_link_table(conn: connect, data: list) -> None:
 
 def upload_developers():
     """Uploads new developers"""
-    developers_cache = {}
-    data_frame['developer_id'] = data_frame["developers"].apply(
-        lambda row: get_existing_data(
-            "developer_id", "developer", "developer_name",
-            row, connection, developers_cache))
-
-    developers_data = data_frame[data_frame.developer_id == "None"]
-    new_developers = developers_data['developers']
-
-    execute_batch_columns(connection, new_developers,
+    developers_data = data_frame['developers']
+    execute_batch_columns(connection, developers_data,
                           'developer', 'developer_name', page_size=100)
 
 
 def upload_publishers():
     """Uploads new publishers"""
-    publishers_cache = {}
-    data_frame["publisher_id"] = data_frame["publishers"].apply(
-        lambda row: get_existing_data(
-            "publisher_id", "publisher", "publisher_name",
-            row, connection, publishers_cache))
-
-    publishers_data = data_frame[data_frame.publisher_id == "None"]
-    new_publishers = publishers_data['publishers']
-
-    execute_batch_columns(connection, new_publishers,
+    publishers_data = data_frame['publishers']
+    execute_batch_columns(connection, publishers_data,
                           'publisher', 'publisher_name', page_size=100)
 
 
 def upload_genres():
     """Uploads new genres"""
-    genres_cache = {}
-    data_frame['genre_id'] = data_frame.apply(
-        lambda row: get_existing_data_for_genre(
-            row['genre'], row['user_generated'], connection, genres_cache), axis=1)
-
-    genres_data = data_frame[data_frame.genre_id == "None"]
-    genres = genres_data[["genre", "user_generated"]]
-
+    genres = data_frame[["genre", "user_generated", "genre", "user_generated"]]
     execute_batch_columns_for_genres(connection, genres,
                                      'genre', page_size=100)
 
@@ -251,18 +196,10 @@ def upload_games():
         lambda row: get_existing_platform_data(
             row['mac'], row['windows'], row['linux'], connection, platform_cache), axis=1)
 
-    game_cache = {}
-    game_data["game_id"] = data_frame["app_id"].apply(
-        lambda row: get_existing_data(
-            "game_id", "game", "app_id",
-            row, connection, game_cache))
-
-    new_game_data = game_data[game_data.game_id == "None"]
-    new_game_data = new_game_data.rename(columns={'full_price': 'price'})
+    new_game_data = game_data.rename(columns={'full_price': 'price'})
 
     games_to_load = new_game_data[[
         'app_id', 'title', 'release_date', 'price', 'sale_price', 'platform_id']]
-
     execute_batch_columns_for_games(connection, games_to_load,
                                     'game', page_size=100)
 
@@ -279,6 +216,7 @@ if __name__ == "__main__":
         upload_developers()
         upload_developers()
         upload_genres()
+        upload_games()
 
         for row in data_frame.itertuples():
             add_to_genre_link_table(connection, row)
