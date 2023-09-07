@@ -61,6 +61,8 @@ def get_database(conn_postgres: connection) -> DataFrame:
 
 
 def convert_html_to_pdf(source_html, output_filename):
+    """
+    """
     # open output file for writing (truncated binary)
     result_file = open(output_filename, "w+b")
 
@@ -75,40 +77,61 @@ def convert_html_to_pdf(source_html, output_filename):
     return pisa_status.err
 
 
-def create_report(fig1, fig2, fig3):
-    # Generate graphs as HTML images
-    # fig1 = px.scatter(df1, x='Column1', y='Column2')
-    # fig2 = px.bar(df2, x='Category', y='Count')
-    # fig3 = px.line(df3, x='Date', y='Value')
+def create_report(chart1, chart2, chart3):
+    """
+    """
+    chart1.save("chart1.png")
+    chart2.save("chart2.png")
+    chart3.save("chart3.png")
 
-    img_bytes1 = fig1.to_image(format="png")
-    img_bytes2 = fig2.to_image(format="png")
-    img_bytes3 = fig3.to_image(format="png")
+    fig1 = "chart1.png"
+    fig2 = "chart2.png"
+    fig3 = "chart3.png"
 
-    img1 = base64.b64encode(img_bytes1).decode("utf-8")
-    img2 = base64.b64encode(img_bytes2).decode("utf-8")
-    img3 = base64.b64encode(img_bytes3).decode("utf-8")
+    background_color = "#1b2838"
+    header_color = "#66c0f4"
+    text_color = "#f5f4f1"
 
-    # Create the HTML template
     template = f'''
-    <h1>Your SteamPulse Report</h1>
-    <p>Here are some visualizations and data tables:</p>
-    
-    <h2>Graph 1</h2>
-    <img style="width: 400px; height: 300px" src="data:image/png;base64,{img1}">
-    
-    <h2>Graph 2</h2>
-    <img style="width: 400px; height: 300px" src="data:image/png;base64,{img2}">
-    
-    <h2>Graph 3</h2>
-    <img style="width: 400px; height: 300px" src="data:image/png;base64,{img3}">
+    <html>
+    <head>
+        <style>
+            body {{
+                background-color: {background_color};
+                font-family: Arial, sans-serif;
+                color: {text_color};
+            }}
+            h1, h2 {{
+                background-color: {header_color};
+                color: white;
+                padding: 10px;
+            }}
+        </style>
+    </head>
+    <body>
+        <h1>Your SteamPulse Report</h1>
+        <p>Here are some visualizations and data tables:</p>
+        
+        <h2>Chart 1</h2>
+        <img src="{fig1}" alt="Chart 1">
+        
+        <h2>Chart 2</h2>
+        <img src="{fig2}" alt="Chart 2">
+        
+        <h2>Chart 3</h2>
+        <img src="{fig3}" alt="Chart 3">
+    </body>    
+    </html>
     '''
+    with open("test.html", "w") as file:
+        file.write(template)
 
     convert_html_to_pdf(template, environ.get("REPORT_FILE"))
 
 
 def send_email():
-
+    """
+    """
     client = boto3.client("ses",
                           region_name="eu-west-2",
                           aws_access_key_id=environ["AWS_ACCESS_KEY_ID"],
@@ -148,8 +171,30 @@ def plot_reviews_per_game_frequency(df_releases: DataFrame) -> Chart:
     df_releases = df_releases.groupby(
         "title").size().reset_index()
     df_releases.columns = ["title", "num_of_reviews"]
+    custom_ticks = [i for i in range(
+        0, df_releases["num_of_reviews"].max() + 1)]
 
-    chart = px.bar(df_releases, x='num_of_reviews', y='title')
+    chart = alt.Chart(df_releases).mark_bar(
+    ).encode(
+        x=alt.X("num_of_reviews", title="Number of Reviews",
+                axis=alt.Axis(values=custom_ticks, tickMinStep=1, titlePadding=10)),
+        y=alt.Y("title", title="Release Title", sort="-x")
+    ).properties(
+        title="Number of Reviews per Release",
+        width=800,
+        height=400
+    )
+
+    chart = chart.configure(
+        title=alt.TitleConfig(
+            color='black'  # Set title text color to white
+        ),
+        axis=alt.AxisConfig(
+            labelColor='black'  # Set axis label text color to white
+        )
+    ).configure_view(
+        fill='#1b2838'  # Set the background color of the plot to black
+    )
 
     return chart
 
@@ -167,8 +212,21 @@ def plot_games_release_frequency(df_releases: DataFrame) -> Chart:
     df_releases = df_releases.groupby("release_date")[
         "title"].nunique().reset_index()
     df_releases.columns = ["release_date", "num_of_games"]
+    custom_ticks = [i for i in range(
+        0, df_releases["num_of_games"].max() + 1)]
 
-    chart = px.line(df_releases, x='release_date', y='num_of_games')
+    chart = alt.Chart(df_releases).mark_line(
+        color="#44bd4f"
+    ).encode(
+        x=alt.X("release_date:O", title="Release Date",
+                timeUnit="yearmonthdate"),
+        y=alt.Y("num_of_games:Q", title="Number of Games",
+                axis=alt.Axis(values=custom_ticks, tickMinStep=1, titlePadding=10))
+    ).properties(
+        title="New Releases per Day",
+        width=800,
+        height=400
+    )
 
     return chart
 
@@ -186,13 +244,28 @@ def plot_games_review_frequency(df_releases: DataFrame) -> Chart:
     df_releases = df_releases.groupby(
         "release_date").size().reset_index()
     df_releases.columns = ["release_date", "num_of_reviews"]
+    custom_ticks = [i for i in range(
+        0, df_releases["num_of_reviews"].max() + 1)]
 
-    chart = px.line(df_releases, x='release_date', y='num_of_reviews')
+    chart = alt.Chart(df_releases).mark_line(
+        color="#44bd4f"
+    ).encode(
+        x=alt.X("release_date:O", title="Release Date",
+                timeUnit="yearmonthdate"),
+        y=alt.Y("num_of_reviews:Q", title="Number of Reviews", axis=alt.Axis(
+            values=custom_ticks, tickMinStep=1, titlePadding=10)),
+    ).properties(
+        title="New Reviews per Day",
+        width=800,
+        height=400
+    )
 
     return chart
 
 
 def handler(event, context):
+    """
+    """
     game_df = pd.read_csv("mock_data.csv")
     game_df["release_date"] = pd.to_datetime(
         game_df['release_date'], format='%d/%m/%Y')
