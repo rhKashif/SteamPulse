@@ -27,8 +27,8 @@ def get_reviews_for_game(game_id: int, cursor: str) -> dict:
     cursor = quote_plus(cursor)
 
     try:
-        request = requests.get(f"""https://store.steampowered.com/appreviews/{game_id}
-                    ?json=1&num_per_page=100&cursor={cursor}""", timeout=10)
+        request = requests.get(f"""https://store.steampowered.com/appreviews/
+                {game_id}?json=1&num_per_page=100&language=english&cursor={cursor}""", timeout=10)
         reviews = request.json()
         next_cursor = reviews["cursor"]
 
@@ -53,6 +53,7 @@ def get_all_reviews(game_ids: list[int]) -> None:
     """Combines all reviews together and all review
     information together to be set in a data-frame"""
     reviews_info = []
+    all_reviews = []
 
     for game in game_ids:
         reviews_info.append(get_review_info_for_game(game))
@@ -60,7 +61,6 @@ def get_all_reviews(game_ids: list[int]) -> None:
             continue
 
         cursor_list = ["*"]
-        all_reviews = []
 
         for page in range(int(reviews_info[-1]["number_of_total_reviews"]/100)+2):
             api_response = get_reviews_for_game(game, cursor_list[page])
@@ -99,6 +99,7 @@ def get_game_ids(conn: connection) -> list[int]:
         cur.execute("""SELECT app_id FROM game WHERE release_date
     BETWEEN NOW() - INTERVAL '2 WEEKS' AND NOW()""")
         game_ids = cur.fetchall()
+    conn.close()
     return [game_id["app_id"] for game_id in game_ids]
 
 

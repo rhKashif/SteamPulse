@@ -274,6 +274,47 @@ resource "aws_ecs_task_definition" "steampulse_game_pipeline_task_definition" {
 
 
 
+resource "aws_ecs_task_definition" "steampulse_dashboard_task_definition" {
+  family                   = "steampulse_dashboard_task_definition"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = 1024
+  memory                   = 2048
+  task_role_arn            = aws_iam_role.steampulse_pipeline_ecs_task_role_policy.arn
+  execution_role_arn       = aws_iam_role.steampulse_pipeline_ecs_task_execution_role.arn
+
+  container_definitions = jsonencode([
+    {
+      name   = "steampulse_dashboard_ecr"
+      image  = "na"
+      cpu    = 10
+      memory = 512
+
+      portMappings = [
+        {
+          containerPort = 80
+          hostPort      = 80
+        }
+      ]
+
+      essential : true,
+
+      logConfiguration : {
+        "logDriver" : "awslogs",
+        "options" : {
+          "awslogs-create-group" : "true",
+          "awslogs-group" : "/ecs/",
+          "awslogs-region" : "eu-west-2",
+          "awslogs-stream-prefix" : "ecs"
+        }
+      }
+    }
+  ])
+}
+
+
+
+
 resource "aws_scheduler_schedule" "steampulse_game_pipeline_schedule" {
   name                = "steampulse_game_pipeline_schedule"
   description         = "Runs the steampulse game pipeline on a cron schedule"
@@ -327,6 +368,19 @@ resource "aws_scheduler_schedule" "steampulse_review_pipeline_schedule" {
   }
 }
 #unfinished below
+
+resource "aws_ecs_service" "steampulse_streamlit_service" {
+  name            = "steampulse_streamlit_service"
+  cluster         = aws_ecs_cluster.steampulse_cluster.id
+  task_definition = aws_ecs_task_definition.steampulse_dashboard_task_definition.arn
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = ["subnet-03b1a3e1075174995", "subnet-0cec5bdb9586ed3c4", "subnet-0667517a2a13e2a6b"]
+    security_groups  = [aws_security_group.steampulse_pipeline_ecs_sg.id]
+    assign_public_ip = true
+  }
+}
 
 # resource "aws_ecs_service" "name" {
 

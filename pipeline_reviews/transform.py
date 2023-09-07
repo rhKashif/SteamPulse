@@ -19,6 +19,7 @@ def get_release_date(game_id: int, conn: connection, cache: dict) -> datetime:
             cur.execute("SELECT release_date FROM game WHERE app_id = %s;", [game_id])
             release_date = cur.fetchone()["release_date"]
         cache[game_id] = release_date
+        conn.close()
         return cache[game_id]
 
 
@@ -96,4 +97,4 @@ if __name__ == "__main__":
     reviews = correct_playtime(reviews)
     if "Unnamed: 0" in reviews.columns:
         reviews.drop(columns="Unnamed: 0", inplace=True)
-    reviews.to_csv("reviews2.csv") #! index=False potentially for load
+    reviews.to_csv("reviews.csv") #! index=False potentially for load
