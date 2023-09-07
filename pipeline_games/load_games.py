@@ -119,9 +119,13 @@ def add_to_genre_link_table(conn: connect, data: list):
             [data[2]])
         game_id = cur.fetchone()['game_id']
         cur.execute(
-            """INSERT INTO game_genre_link(game_id, genre_id)
-            VALUES (%s, %s);""",
-            [game_id, genre_id])
+            """SELECT exists (SELECT 1 FROM game_genre_link WHERE game_id = %s AND genre_id = %s LIMIT 1);""", [game_id, genre_id])
+        result = cur.fetchone()
+        if result['exists'] is True:
+            cur.close()
+        elif result['exists'] is False:
+            cur.execute("""INSERT INTO game_genre_link(game_id, genre_id) 
+                        VALUES (%s, %s);""", [game_id, genre_id])
         conn.commit()
         cur.close()
 
@@ -138,9 +142,14 @@ def add_to_publisher_link_table(conn: connect, data: list):
             [data[2]])
         game_id = cur.fetchone()['game_id']
         cur.execute(
-            """INSERT INTO game_publisher_link(game_id, publisher_id)
-            VALUES (%s, %s);""",
-            [game_id, publisher_id])
+            """SELECT exists (SELECT 1 FROM game_publisher_link WHERE game_id = %s AND publisher_id = %s LIMIT 1);""", [game_id, publisher_id])
+        result = cur.fetchone()
+        if result['exists'] is True:
+            cur.close()
+        elif result['exists'] is False:
+            cur.execute(
+                """INSERT INTO game_publisher_link(game_id, publisher_id)
+                VALUES (%s, %s);""", [game_id, publisher_id])
         conn.commit()
         cur.close()
 
@@ -157,9 +166,14 @@ def add_to_developer_link_table(conn: connect, data: list):
             [data[2]])
         game_id = cur.fetchone()['game_id']
         cur.execute(
-            """INSERT INTO game_developer_link(game_id, developer_id)
-            VALUES (%s, %s);""",
-            [game_id, developer_id])
+            """SELECT exists (SELECT 1 FROM game_developer_link WHERE game_id = %s AND developer_id = %s LIMIT 1);""", [game_id, developer_id])
+        result = cur.fetchone()
+        if result['exists'] is True:
+            cur.close()
+        elif result['exists'] is False:
+            cur.execute(
+                """INSERT INTO game_developer_link(game_id, developer_id)
+                VALUES (%s, %s);""", [game_id, developer_id])
         conn.commit()
         cur.close()
 
@@ -221,10 +235,10 @@ if __name__ == "__main__":
 
             add_game_information(connection, row, platform_id)
 
-        """for row in data_frame.itertuples():
+        for row in data_frame.itertuples():
             add_to_genre_link_table(connection, row)
             add_to_developer_link_table(connection, row)
-            add_to_publisher_link_table(connection, row)"""
+            add_to_publisher_link_table(connection, row)
 
     finally:
         connection.close()
