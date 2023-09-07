@@ -7,7 +7,7 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
-from transform import change_column_types #! diff import here check red
+from transform import remove_unnamed #! diff import here check red
 
 
 def remove_stopwords(review: str, stop_words: list[str], punctuation: list[str]) -> str:
@@ -34,12 +34,13 @@ def get_sentiment_values(reviews_df: DataFrame) -> DataFrame:
     """Returns a data-frame with sentiment scores for each review"""
     nltk.download('vader_lexicon')
     vader = SentimentIntensityAnalyzer()
-    reviews_df["sentiment"] = reviews_df["clean_review"].apply(lambda review:
+    reviews_df_copy = reviews_df.copy()
+    reviews_df_copy["sentiment"] = reviews_df_copy["clean_review"].apply(lambda review:
                     vader.polarity_scores(review)["compound"])
-    reviews_df["sentiment"] = reviews_df["sentiment"].apply(
+    reviews_df_copy["sentiment"] = reviews_df_copy["sentiment"].apply(
             lambda score: round((score + 1)/2 * 5, 1))
-    reviews_df.drop(columns=["clean_review"], inplace=True)
-    return reviews_df
+    reviews_df_copy.drop(columns=["clean_review"], inplace=True)
+    return reviews_df_copy
 
 
 def get_sentiment_per_game(reviews_df: DataFrame) -> Series:
@@ -53,10 +54,10 @@ def get_sentiment_per_game(reviews_df: DataFrame) -> Series:
 
 
 if __name__ == "__main__":
-    reviews = pd.read_csv("reviews.csv")
-    reviews = change_column_types(reviews) #! instead do a full transform here
+    reviews = pd.read_csv("reviews.csv") #! instead do a full transform here
     reviews = isolate_non_stop_words(reviews)
     reviews = get_sentiment_values(reviews)
     each_game_sentiment = get_sentiment_per_game(reviews)
+    reviews = remove_unnamed(reviews)
     reviews.to_csv("reviews.csv")
     #! add unnamed:0 removal again

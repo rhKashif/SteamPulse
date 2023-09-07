@@ -100,7 +100,6 @@ def get_game_ids(conn: connection) -> list[int] | None:
 if __name__ == "__main__":
     try:
         game_ids = get_game_ids(get_db_connection())
-        game_ids = [10,11,40]
         get_all_reviews(game_ids)
     except (Error, TypeError) as e:
         print("Error at extract: ", e)

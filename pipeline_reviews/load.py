@@ -24,15 +24,13 @@ def get_game_ids_foreign_key_values(reviews_df: DataFrame) -> DataFrame:
 
 def get_game_ids(conn: connection, app_id: int, cache: dict) -> int | None:
     """Returns game_id from game table from db (foreign key)"""
-    if str(app_id) in cache.keys():
+    if str(app_id) in cache:
         return cache[str(app_id)]
     try:
-        print(app_id, type(app_id))
         with conn.cursor() as cur:
             cur.execute("""SELECT game_id FROM game WHERE app_id = %s""", (app_id,))
             game_id = cur.fetchone()
-            print(game_id)
-        game_id = game_id[["game_id"]]
+        game_id = game_id["game_id"]
         cache[str(app_id)] = game_id
     except (Error, TypeError) as e:
         print("Error at load: ", e)
@@ -43,7 +41,6 @@ def get_game_ids(conn: connection, app_id: int, cache: dict) -> int | None:
 def move_reviews_to_db(conn: connection, reviews_df: DataFrame) -> None:
     """Moves all reviews into the database"""
     data_to_insert = [tuple(row) for row in reviews_df.values]
-    print(data_to_insert[-1])
     try:
         with conn.cursor() as cur:
             execute_batch(cur, """INSERT INTO review (game_id, review_text, review_score, review_date,
