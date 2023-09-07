@@ -21,7 +21,7 @@ def get_db_connection(config):
 
 def execute_batch_columns(conn, data: pd.DataFrame, table: str, column: str, page_size=100):
     """Using psycopg2.extras.execute_batch() to insert the dataframe"""
-    tuples = tuples = list(zip(data.unique()))
+    tuples = list(zip(data.unique()))
     cols = column
     query = """INSERT INTO %s(%s) VALUES(%%s)""" % (table, cols)
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
