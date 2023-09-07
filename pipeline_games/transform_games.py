@@ -54,6 +54,12 @@ def explode_column_to_individual_rows(data: pd.DataFrame, column_name: str) -> p
     return data
 
 
+def check_data_is_not_null(data_value: str) -> str:
+    if str(data_value) in ['N/A', 'None', 'Null', 'nan', '']:
+        return "Data not provided"
+    return data_value
+
+
 if __name__ == "__main__":
 
     data_frame = pd.read_csv('games.csv')
@@ -74,6 +80,12 @@ if __name__ == "__main__":
     data_with_unique_genre_only['sale_price'] = data_with_unique_genre_only['sale_price'].apply(
         convert_price_to_float)
 
+    data_with_unique_genre_only['developers'] = data_with_unique_genre_only['developers'].apply(
+        check_data_is_not_null)
+
+    data_with_unique_genre_only['publishers'] = data_with_unique_genre_only['publishers'].apply(
+        check_data_is_not_null)
+
     unique_developers = explode_column_to_individual_rows(
         data_with_unique_genre_only, 'developers')
     final_df = explode_column_to_individual_rows(
@@ -81,9 +93,8 @@ if __name__ == "__main__":
 
     final_df.to_csv('genres.csv')
 
-    games_only_df = drop_unnecessary_columns(final_df, 'genre')
-    games_df = drop_unnecessary_columns(games_only_df, 'user_generated')
-    games_df = drop_unnecessary_columns(games_df, 'developers')
-    games_df = drop_unnecessary_columns(games_df, 'publishers')
-    games_df = games_df.drop_duplicates()
+    for column in ['genre', 'user_generated', 'developers', 'publishers']:
+        final_df = drop_unnecessary_columns(final_df, column)
+
+    games_df = final_df.drop_duplicates()
     games_df.to_csv('final_games.csv')
