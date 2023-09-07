@@ -2,13 +2,11 @@ provider "aws" {
   region = "eu-west-2"
 }
 
-
 resource "aws_ecr_repository" "steampulse_game_pipeline_ecr" {
   name         = "steampulse_game_pipeline_ecr"
   force_delete = true
 
 }
-
 
 resource "aws_ecr_repository" "steampulse_review_pipeline_ecr" {
   name         = "steampulse_review_pipeline_ecr"
@@ -21,11 +19,9 @@ resource "aws_ecr_repository" "steampulse_dashboard_ecr" {
   force_delete = true
 }
 
-
 resource "aws_ecs_cluster" "steampulse_cluster" {
   name = "steampulse_cluster"
 }
-
 
 resource "aws_db_instance" "steampulse_database" {
   allocated_storage      = 10
@@ -92,9 +88,6 @@ resource "aws_security_group" "steampulse_pipeline_ecs_sg" {
     Name = "steampulse_pipeline_ecs_sg"
   }
 }
-
-
-
 
 resource "aws_iam_role" "steampulse_pipeline_ecs_task_execution_role" {
   name = "steampulse_pipeline_ecs_task_execution_role"
@@ -189,12 +182,10 @@ resource "aws_iam_role" "steampulse_pipeline_ecs_task_role_policy" {
   })
 }
 
-
 resource "aws_iam_role_policy_attachment" "steampulse_pipeline_ecs_task_execution_role_policy_attachment" {
   role       = aws_iam_role.steampulse_pipeline_ecs_task_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
-
 
 resource "aws_ecs_task_definition" "steampulse_review_pipeline_task_definition" {
   family                   = "steampulse_review_pipeline_task_definition"
@@ -272,8 +263,6 @@ resource "aws_ecs_task_definition" "steampulse_game_pipeline_task_definition" {
   ])
 }
 
-
-
 resource "aws_ecs_task_definition" "steampulse_dashboard_task_definition" {
   family                   = "steampulse_dashboard_task_definition"
   requires_compatibilities = ["FARGATE"]
@@ -333,9 +322,6 @@ resource "aws_ecs_task_definition" "steampulse_dashboard_task_definition" {
   ])
 }
 
-
-
-
 resource "aws_scheduler_schedule" "steampulse_game_pipeline_schedule" {
   name                = "steampulse_game_pipeline_schedule"
   description         = "Runs the steampulse game pipeline on a cron schedule"
@@ -361,7 +347,6 @@ resource "aws_scheduler_schedule" "steampulse_game_pipeline_schedule" {
     }
   }
 }
-
 
 resource "aws_scheduler_schedule" "steampulse_review_pipeline_schedule" {
   name                = "steampulse_review_pipeline_schedule"
@@ -427,5 +412,3 @@ resource "aws_ecs_service" "steampulse_streamlit_service" {
     assign_public_ip = true
   }
 }
-
-#unfinished below
