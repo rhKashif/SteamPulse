@@ -6,7 +6,7 @@ from psycopg2 import connect, DatabaseError, sql
 from psycopg2.extras import RealDictCursor, execute_batch
 
 
-def get_db_connection(config):
+def get_db_connection(config) -> connect:
     """Connect to the database with game data"""
     try:
         return connect(
