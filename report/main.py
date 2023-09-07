@@ -126,6 +126,14 @@ def trending_game_information(df_releases: DataFrame, index: int) -> str:
         "title")["sentiment"].mean().reset_index().iloc[index]
     release_name = df_trending_game["title"]
     sentiment = round(df_trending_game["sentiment"], 1)
+    release_df = df_releases[df_releases["title"]
+                             == f"{release_name}"].reset_index().head(1)
+    price = release_df["price"][0]
+    sale_price = release_df["sale_price"][0]
+    release_date = release_df["release_date"][0]
+    mac_compatibility = release_df["mac"][0]
+    windows_compatibility = release_df["windows"][0]
+    linux_compatibility = release_df["linux"][0]
 
     html_template = f"""
     <html>
@@ -133,8 +141,6 @@ def trending_game_information(df_releases: DataFrame, index: int) -> str:
         <style>
             body {{
                 font-family: Arial, sans-serif;
-                background-color: #f5f5f5;
-                color: #333;
             }}
             p {{
                 margin: 20px;
@@ -143,8 +149,15 @@ def trending_game_information(df_releases: DataFrame, index: int) -> str:
         </style>
     </head>
     <body>
-        <p>{release_name}<br>
-        Average Sentiment: {sentiment}</p>
+        <p><b>{release_name}</b><br>
+        Price: {price}<br>
+        Sale Price: {sale_price}<br>
+        Average Sentiment: {sentiment}<br>
+        Release Date: {release_date}<br>
+        Platform COmpatibility:<br>
+        - Mac: {mac_compatibility}<br>
+        - Windows: {windows_compatibility}<br>
+        - Linux: {linux_compatibility}<br>
     </body>
     </html>
     """
@@ -160,6 +173,7 @@ def create_report(df_releases: DataFrame):
     top_rated_release = get_top_rated_release(df_releases)
     trending_game_one = trending_game_information(df_releases, 0)
     trending_game_two = trending_game_information(df_releases, 1)
+    trending_game_three = trending_game_information(df_releases, 2)
 
     reviews_per_game_release_frequency_plot = plot_reviews_per_game_frequency(
         df_releases)
@@ -190,7 +204,7 @@ def create_report(df_releases: DataFrame):
             body {{
                 font-family: Arial, sans-serif;
                 font-size: 18px;
-                text-align: center;
+                text-align: left;
             }}
             h1, {{
                 background-color: {header_color};
@@ -204,21 +218,23 @@ def create_report(df_releases: DataFrame):
                 color: {text_color};
                 padding-top: 15px;
                 padding-bottom: 0px;
-            }}
-            .game-container {{
-                width: 30%;
-                margin: 10px;
-                border: 1px solid #ccc;
-                padding: 10px;
+            }} 
+            .myDiv {{
+                border: 1px solid black; 
+                padding: 5px;
                 background-color: #f5f5f5;
-                display: inline-block;
-            }}        
-        </style>
+            }}   
+            .myDiv2 {{
+                text-align: center;
+                padding: 5px;
+            }}            
+            </style>
     </head>
     <body>
         <h1>Your SteamPulse Report</h1>
-        <p>Number of new releases: {new_releases}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Top rated release: {top_rated_release}</p>
-        
+        <div class = "myDiv2">
+        <p>Number of new releases: {new_releases}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Top rated release: {top_rated_release}</p>
+        </div>
         <h2>Chart 1</h2>
         <img src="{fig1}" alt="Chart 1">
         
@@ -232,11 +248,14 @@ def create_report(df_releases: DataFrame):
         <img src="{fig4}" alt="Chart 4">
 
         <p>Trending games:</p>
-        <div class="game-container" style="float: left; margin-right: 10px;">
+        <div class = "myDiv">
             <p>{trending_game_one}</p>
         </div>
-        <div class="game-container" style="float: right;">
+        <div class = "myDiv">
             <p>{trending_game_two}</p>
+        </div>
+        <div class = "myDiv">
+            <p>{trending_game_three}</p>
         </div>
     </body>    
     </html>
