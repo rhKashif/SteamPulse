@@ -92,6 +92,63 @@ def add_game_information(conn, data: list):
         cur.close()
 
 
+def add_to_genre_link_table(conn: connect, data: list):
+    """Update genre link table"""
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute(
+            """SELECT genre_id FROM genre WHERE genre = %s AND user_generated = %s;""",
+            [data[12], data[13]])
+        genre_id = cur.fetchone()['genre_id']
+        cur.execute(
+            """SELECT game_id FROM game WHERE app_id = %s;""",
+            [data[2]])
+        game_id = cur.fetchone()['game_id']
+        cur.execute(
+            """INSERT INTO game_genre_link(game_id, genre_id)
+            VALUES (%s, %s);""",
+            [game_id, genre_id])
+        conn.commit()
+        cur.close()
+
+
+def add_to_publisher_link_table(conn: connect, data: list):
+    """Update publisher link table"""
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute(
+            """SELECT publisher_id FROM publisher WHERE publisher_name = %s;""",
+            [data[11]])
+        publisher_id = cur.fetchone()['publisher_id']
+        cur.execute(
+            """SELECT game_id FROM game WHERE app_id = %s;""",
+            [data[2]])
+        game_id = cur.fetchone()['game_id']
+        cur.execute(
+            """INSERT INTO game_publisher_link(game_id, publisher_id)
+            VALUES (%s, %s);""",
+            [game_id, publisher_id])
+        conn.commit()
+        cur.close()
+
+
+def add_to_developer_link_table(conn: connect, data: list):
+    """Update link table"""
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute(
+            """SELECT developer_id FROM developer WHERE developer_name = %s;""",
+            [data[10]])
+        developer_id = cur.fetchone()['developer_id']
+        cur.execute(
+            """SELECT game_id FROM game WHERE app_id = %s;""",
+            [data[2]])
+        game_id = cur.fetchone()['game_id']
+        cur.execute(
+            """INSERT INTO game_developer_link(game_id, developer_id)
+            VALUES (%s, %s);""",
+            [game_id, developer_id])
+        conn.commit()
+        cur.close()
+
+
 if __name__ == "__main__":
     load_dotenv()
     configuration = environ
@@ -134,6 +191,11 @@ if __name__ == "__main__":
 
         for row in game_data.itertuples():
             add_game_information(connection, row)
+
+        for row in data_frame.itertuples():
+            add_to_genre_link_table(connection, row)
+            add_to_developer_link_table(connection, row)
+            add_to_publisher_link_table(connection, row)
 
     finally:
         connection.close()
