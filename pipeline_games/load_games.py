@@ -81,36 +81,13 @@ def add_game_information(conn, data: list):
     """Add game information to database"""
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute(
-            """SELECT developer_id FROM developer WHERE developer_name = %s;""",
-            [data[10]])
-        developer_id = cur.fetchone()['developer_id']
-        cur.execute(
-            """SELECT publisher_id FROM publisher WHERE publisher_name = %s;""",
-            [data[11]])
-        publisher_id = cur.fetchone()['publisher_id']
-        cur.execute(
             """SELECT platform_id FROM platform WHERE mac = %s AND windows = %s AND linux = %s;""",
             [data[8], data[7], data[9]])
         platform_id = cur.fetchone()['platform_id']
         cur.execute(
-            """INSERT INTO game(app_id, title, release_date, price, sale_price, developer_id, publisher_id, platform_id)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s);""",
-            [data[2], data[3], data[4], data[5], data[6], developer_id, publisher_id, platform_id])
-        conn.commit()
-        cur.close()
-
-
-def add_genre_information(conn, data: list):
-    """Add genre information for specific game"""
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
-        cur.execute(
-            """SELECT game_id FROM game WHERE app_id = %s;""",
-            [data[2]])
-        game_id = cur.fetchone()['game_id']
-        cur.execute(
-            """INSERT INTO genre(genre, user_generated, game_id)
-            VALUES (%s, %s, %s);""",
-            [data[12], data[13], game_id])
+            """INSERT INTO game(app_id, title, release_date, price, sale_price, platform_id)
+            VALUES (%s, %s, %s, %s, %s, %s);""",
+            [data[2], data[3], data[4], data[5], data[6], platform_id])
         conn.commit()
         cur.close()
 
@@ -121,36 +98,42 @@ if __name__ == "__main__":
     connection = get_db_connection(configuration)
 
     data_frame = pd.read_csv("genres.csv")
+    game_data = pd.read_csv("final_games.csv")
 
-    developers_cache = {}
-    data_frame["developers"].apply(lambda row: get_existing_data("developer_id", "developer", "developer_name",
-                                                                                 row, connection, developers_cache))
-    new_developers = data_frame["developers"].apply(
-        lambda row: check_if_in_cache(row, developers_cache)).dropna(axis=0)
+    try:
+        developers_cache = {}
+        data_frame["developers"].apply(lambda row: get_existing_data("developer_id", "developer", "developer_name",
+                                                                     row, connection, developers_cache))
+        new_developers = data_frame["developers"].apply(
+            lambda row: check_if_in_cache(row, developers_cache)).dropna(axis=0)
 
-    execute_batch_columns(connection, new_developers,
-                          'developer', 'developer_name', page_size=100)
+        execute_batch_columns(connection, new_developers,
+                              'developer', 'developer_name', page_size=100)
 
-    publishers_cache = {}
-    data_frame["publishers"].apply(lambda row: get_existing_data("publisher_id", "publisher", "publisher_name",
-                                                                                 row, connection, publishers_cache))
-    new_publishers = data_frame["publishers"].apply(
-        lambda row: check_if_in_cache(row, publishers_cache)).dropna(axis=0)
+        publishers_cache = {}
+        data_frame["publishers"].apply(lambda row: get_existing_data("publisher_id", "publisher", "publisher_name",
+                                                                     row, connection, publishers_cache))
+        new_publishers = data_frame["publishers"].apply(
+            lambda row: check_if_in_cache(row, publishers_cache)).dropna(axis=0)
 
-    execute_batch_columns(connection, new_publishers,
-                          'publisher', 'publisher_name', page_size=100)
+        execute_batch_columns(connection, new_publishers,
+                              'publisher', 'publisher_name', page_size=100)
 
-    genres_cache = {}
-    data_frame["genre"].apply(lambda row: get_existing_data("genre_id", "genre", "genre",
-                                                            row, connection, genres_cache))
+        genres_cache = {}
+        data_frame["genre"].apply(lambda row: get_existing_data("genre_id", "genre", "genre",
+                                                                row, connection, genres_cache))
 
-    genres = data_frame.copy()
-    genres['genre'] = genres["genre"].apply(
-        lambda row: check_if_in_cache(row, genres_cache)).dropna(axis=0)
+        genres = data_frame.copy()
+        genres['genre'] = genres["genre"].apply(
+            lambda row: check_if_in_cache(row, genres_cache)).dropna(axis=0)
 
-    genres = genres[['genre', 'user_generated']].drop_duplicates()
+        genres = genres[['genre', 'user_generated']].drop_duplicates()
 
-    execute_batch_columns_for_genres(connection, genres,
-                                     'genre', page_size=100)
+        execute_batch_columns_for_genres(connection, genres,
+                                         'genre', page_size=100)
 
-    # execute_batch_columns(connection, data_frame,'publisher', 'publisher_name', page_size=100)
+        for row in game_data.itertuples():
+            add_game_information(connection, row)
+
+    finally:
+        connection.close()
