@@ -213,7 +213,7 @@ if __name__ == "__main__":
     game_data = pd.read_csv("final_games.csv")
 
     try:
-        upload_developers()
+        upload_publishers()
         upload_developers()
         upload_genres()
         upload_games()
