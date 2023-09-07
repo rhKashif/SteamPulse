@@ -17,8 +17,8 @@ def get_release_date(game_id: int, conn: connection, cache: dict) -> datetime:
     with conn.cursor() as cur:
         cur.execute("SELECT release_date FROM game WHERE app_id = %s;", [game_id])
         release_date = cur.fetchone()["release_date"]
+    release_date = datetime.strptime(release_date, "%Y-%m-%d")
     cache[game_id] = release_date
-    conn.close()
     return cache[game_id]
 
 
@@ -29,6 +29,7 @@ def correct_playtime(reviews_df: DataFrame) -> DataFrame:
         conn = get_db_connection()
         reviews_df["release_date"] = reviews_df["game_id"].apply(lambda row: get_release_date(
             row, conn, release_date_cache))
+        conn.close()
         time_now = datetime.now()
         reviews_df["maximum_playtime_since_release"] = reviews_df["release_date"].apply(
             lambda row: (time_now - row).total_seconds()/3600)
