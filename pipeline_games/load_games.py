@@ -20,7 +20,7 @@ def get_db_connection(config) -> connect:
 
 
 def execute_batch_columns(conn, data: pd.DataFrame, table: str, column: str, page_size=100) -> None:
-    """Using psycopg2.extras.execute_batch() to insert the dataframe"""
+    """batch execution of adding specified data to the database"""
     tuples = list(zip(data.unique()))
     cols = column
     query = """INSERT INTO %s(%s) VALUES(%%s)""" % (table, cols)
@@ -37,7 +37,7 @@ def execute_batch_columns(conn, data: pd.DataFrame, table: str, column: str, pag
 
 
 def execute_batch_columns_for_genres(conn, data: pd.DataFrame, table: str, page_size=100) -> None:
-    """Using psycopg2.extras.execute_batch() to insert the genres into database"""
+    """batch execution of adding genres into the database"""
     tuples = [tuple(x) for x in data.to_numpy()]
     cols = ','.join(list(data.columns))
 
@@ -55,7 +55,7 @@ def execute_batch_columns_for_genres(conn, data: pd.DataFrame, table: str, page_
 
 
 def execute_batch_columns_for_games(conn, data: pd.DataFrame, table: str, page_size=100) -> None:
-    """Using psycopg2.extras.execute_batch() to insert the genres into database"""
+    """batch execution of adding games into the database"""
     tuples = [tuple(x) for x in data.to_numpy()]
     cols = ','.join(list(data.columns))
 
@@ -92,7 +92,7 @@ def get_existing_data(variable: str, table: str, value_name: str, value: str, co
 
 
 def get_existing_data_for_genre(genre_c: str, user_c: bool, conn: connect, cache: dict) -> int | None:
-    """Retrieves the existing data and adds to a cache dict given a provided value and table"""
+    """Retrieves the existing data for genre using cache and return genre_id"""
     value = f'{genre_c} {user_c}'
     if value in cache.keys():
         return cache[value]
@@ -109,7 +109,7 @@ def get_existing_data_for_genre(genre_c: str, user_c: bool, conn: connect, cache
 
 
 def get_existing_platform_data(mac_c, windows_c, linux_c, conn: connect, cache: dict) -> int | None:
-    """Retrieves the existing data and adds to a cache dict given a provided value and table"""
+    """Retrieves the existing data for platform using cache and return platform_id"""
     value = f'{mac_c} {windows_c} {linux_c}'
     if value in cache.keys():
         return cache[value]
@@ -125,7 +125,7 @@ def get_existing_platform_data(mac_c, windows_c, linux_c, conn: connect, cache: 
 
 
 def add_to_genre_link_table(conn: connect, data: list) -> None:
-    """Update genre link table"""
+    """Updates genre link table"""
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute(
             """SELECT genre_id FROM genre WHERE genre = %s AND user_generated = %s;""",
@@ -150,7 +150,7 @@ def add_to_genre_link_table(conn: connect, data: list) -> None:
 
 
 def add_to_publisher_link_table(conn: connect, data: list) -> None:
-    """Update publisher link table"""
+    """Updates publisher link table"""
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute(
             """SELECT publisher_id FROM publisher WHERE publisher_name = %s;""",
@@ -176,7 +176,7 @@ def add_to_publisher_link_table(conn: connect, data: list) -> None:
 
 
 def add_to_developer_link_table(conn: connect, data: list) -> None:
-    """Update link table"""
+    """Updates link table"""
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute(
             """SELECT developer_id FROM developer WHERE developer_name = %s;""",
