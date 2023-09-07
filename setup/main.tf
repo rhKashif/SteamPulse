@@ -286,7 +286,7 @@ resource "aws_ecs_task_definition" "steampulse_dashboard_task_definition" {
   container_definitions = jsonencode([
     {
       name   = "steampulse_dashboard_ecr"
-      image  = "129033205317.dkr.ecr.eu-west-2.amazonaws.com/steampulse_dashboard_ecr:latest"
+      image  = var.DASHBOARD_IMAGE
       cpu    = 10
       memory = 512
 
