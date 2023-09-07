@@ -20,7 +20,7 @@ resource "aws_ecr_repository" "steampulse_dashboard_ecr" {
 }
 
 resource "aws_ecr_repository" "steampulse_lambda_ecr" {
-  name         = "steampulse_dashboard_ecr"
+  name         = "steampulse_lambda_ecr"
   force_delete = true
 }
 
