@@ -8,8 +8,6 @@ from altair.vegalite.v5.api import Chart
 from dotenv import load_dotenv
 import pandas as pd
 from pandas import DataFrame
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
 import streamlit as st
 from psycopg2 import connect
 from psycopg2.extensions import connection
@@ -77,13 +75,33 @@ def convert_html_to_pdf(source_html, output_filename):
     return pisa_status.err
 
 
-def create_report():
-    img_bytes = px.scatter([1, 2, 3], [4, 5, 6]).to_image()
-    img = base64.b64encode(img_bytes).decode("utf-8")
+def create_report(fig1, fig2, fig3):
+    # Generate graphs as HTML images
+    # fig1 = px.scatter(df1, x='Column1', y='Column2')
+    # fig2 = px.bar(df2, x='Category', y='Count')
+    # fig3 = px.line(df3, x='Date', y='Value')
+
+    img_bytes1 = fig1.to_image(format="png")
+    img_bytes2 = fig2.to_image(format="png")
+    img_bytes3 = fig3.to_image(format="png")
+
+    img1 = base64.b64encode(img_bytes1).decode("utf-8")
+    img2 = base64.b64encode(img_bytes2).decode("utf-8")
+    img3 = base64.b64encode(img_bytes3).decode("utf-8")
+
+    # Create the HTML template
     template = f'''
-    <h1>TMNT</h1>
-    <p>Example!</p>
-    <img style="width: 400; height: 600" src="data:image/png;base64,{img}">
+    <h1>Your SteamPulse Report</h1>
+    <p>Here are some visualizations and data tables:</p>
+    
+    <h2>Graph 1</h2>
+    <img style="width: 400px; height: 300px" src="data:image/png;base64,{img1}">
+    
+    <h2>Graph 2</h2>
+    <img style="width: 400px; height: 300px" src="data:image/png;base64,{img2}">
+    
+    <h2>Graph 3</h2>
+    <img style="width: 400px; height: 300px" src="data:image/png;base64,{img3}">
     '''
 
     convert_html_to_pdf(template, environ.get("REPORT_FILE"))
@@ -117,8 +135,76 @@ def send_email():
     )
 
 
+def plot_reviews_per_game_frequency(df_releases: DataFrame) -> Chart:
+    """
+    Create a bar chart for the number of reviews per game
+
+    Args:
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
+
+    Returns:
+        Chart: A chart displaying plotted data
+    """
+    df_releases = df_releases.groupby(
+        "title").size().reset_index()
+    df_releases.columns = ["title", "num_of_reviews"]
+
+    chart = px.bar(df_releases, x='num_of_reviews', y='title')
+
+    return chart
+
+
+def plot_games_release_frequency(df_releases: DataFrame) -> Chart:
+    """
+    Create a line chart for the number of games released per day
+
+    Args:
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
+
+    Returns:
+        Chart: A chart displaying plotted data
+    """
+    df_releases = df_releases.groupby("release_date")[
+        "title"].nunique().reset_index()
+    df_releases.columns = ["release_date", "num_of_games"]
+
+    chart = px.line(df_releases, x='release_date', y='num_of_games')
+
+    return chart
+
+
+def plot_games_review_frequency(df_releases: DataFrame) -> Chart:
+    """
+    Create a line chart for the number of games released per day
+
+    Args:
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
+
+    Returns:
+        Chart: A chart displaying plotted data
+    """
+    df_releases = df_releases.groupby(
+        "release_date").size().reset_index()
+    df_releases.columns = ["release_date", "num_of_reviews"]
+
+    chart = px.line(df_releases, x='release_date', y='num_of_reviews')
+
+    return chart
+
+
 def handler(event, context):
-    create_report()
+    game_df = pd.read_csv("mock_data.csv")
+    game_df["release_date"] = pd.to_datetime(
+        game_df['release_date'], format='%d/%m/%Y')
+    game_df["review_date"] = pd.to_datetime(
+        game_df['review_date'], format='%d/%m/%Y')
+
+    reviews_per_game_release_frequency_plot = plot_reviews_per_game_frequency(
+        game_df)
+    games_release_frequency_plot = plot_games_release_frequency(game_df)
+    games_review_frequency_plot = plot_games_review_frequency(game_df)
+    create_report(reviews_per_game_release_frequency_plot,
+                  games_release_frequency_plot, games_review_frequency_plot)
     print("Report created.")
     send_email()
     print("Email sent.")
@@ -126,11 +212,6 @@ def handler(event, context):
 
 if __name__ == "__main__":
     # Temporary mock data
-    game_df = pd.read_csv("mock_data.csv")
-    game_df["release_date"] = pd.to_datetime(
-        game_df['release_date'], format='%d/%m/%Y')
-    game_df["review_date"] = pd.to_datetime(
-        game_df['review_date'], format='%d/%m/%Y')
 
     # Start of dashboard script
     load_dotenv()
