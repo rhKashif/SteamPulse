@@ -99,6 +99,7 @@ def get_game_ids(conn: connection) -> list[int]:
         cur.execute("""SELECT app_id FROM game WHERE release_date
     BETWEEN NOW() - INTERVAL '2 WEEKS' AND NOW()""")
         game_ids = cur.fetchall()
+    conn.close()
     return [game_id["app_id"] for game_id in game_ids]
 
 
