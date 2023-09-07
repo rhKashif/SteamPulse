@@ -8,7 +8,6 @@ from altair.vegalite.v5.api import Chart
 from dotenv import load_dotenv
 import pandas as pd
 from pandas import DataFrame
-import streamlit as st
 from psycopg2 import connect
 from psycopg2.extensions import connection
 
@@ -80,16 +79,18 @@ def convert_html_to_pdf(source_html, output_filename):
 def create_report(chart1, chart2, chart3):
     """
     """
-    chart1.save("chart1.png")
-    chart2.save("chart2.png")
-    chart3.save("chart3.png")
+    chart1.save("/tmp/chart1.png")
+    chart2.save("/tmp/chart2.png")
+    chart3.save("/tmp/chart3.png")
 
-    fig1 = "chart1.png"
-    fig2 = "chart2.png"
-    fig3 = "chart3.png"
+    fig1 = "/tmp/chart1.png"
+    fig2 = "/tmp/chart2.png"
+    fig3 = "/tmp/chart3.png"
 
     background_color = "#1b2838"
-    header_color = "#66c0f4"
+    header_color = "#1b2838"
+
+    # header_color = "#66c0f4"
     text_color = "#f5f4f1"
 
     template = f'''
@@ -97,14 +98,23 @@ def create_report(chart1, chart2, chart3):
     <head>
         <style>
             body {{
-                background-color: {background_color};
                 font-family: Arial, sans-serif;
-                color: {text_color};
+                font-size: 18px;
+                text-align: center;
+
             }}
-            h1, h2 {{
+            h1, {{
                 background-color: {header_color};
-                color: white;
-                padding: 10px;
+                color: {text_color};
+                padding: 40px;
+                font-size: 32px;
+                text-align: center;
+            }}
+            h2 {{
+                background-color: {header_color};
+                color: {text_color};
+                padding-top: 15px;
+                padding-bottom: 0px;
             }}
         </style>
     </head>
@@ -183,17 +193,6 @@ def plot_reviews_per_game_frequency(df_releases: DataFrame) -> Chart:
         title="Number of Reviews per Release",
         width=800,
         height=400
-    )
-
-    chart = chart.configure(
-        title=alt.TitleConfig(
-            color='black'  # Set title text color to white
-        ),
-        axis=alt.AxisConfig(
-            labelColor='black'  # Set axis label text color to white
-        )
-    ).configure_view(
-        fill='#1b2838'  # Set the background color of the plot to black
     )
 
     return chart
@@ -279,8 +278,8 @@ def handler(event, context):
     create_report(reviews_per_game_release_frequency_plot,
                   games_release_frequency_plot, games_review_frequency_plot)
     print("Report created.")
-    send_email()
-    print("Email sent.")
+    # send_email()
+    # print("Email sent.")
 
 
 if __name__ == "__main__":
