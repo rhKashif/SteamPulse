@@ -191,10 +191,8 @@ def create_report(df_releases: DataFrame):
     fig3 = "/tmp/chart_three.png"
     fig4 = "/tmp/chart_four.png"
 
-    # background_color = "#1b2838"
     header_color = "#1b2838"
 
-    # header_color = "#66c0f4"
     text_color = "#f5f4f1"
 
     template = f'''
@@ -344,7 +342,6 @@ def plot_reviews_per_game_frequency(df_releases: DataFrame) -> Chart:
                 axis=alt.Axis(values=custom_ticks, tickMinStep=1, titlePadding=10)),
         y=alt.Y("title", title="Release Title", sort="-x")
     ).properties(
-        title="Number of Reviews per Release",
         width=800,
         height=500
     )
@@ -376,7 +373,6 @@ def plot_games_release_frequency(df_releases: DataFrame) -> Chart:
         y=alt.Y("num_of_games:Q", title="Number of Games",
                 axis=alt.Axis(values=custom_ticks, tickMinStep=1, titlePadding=10))
     ).properties(
-        title="New Releases per Day",
         width=800,
         height=400
     )
@@ -408,7 +404,6 @@ def plot_games_review_frequency(df_releases: DataFrame) -> Chart:
         y=alt.Y("num_of_reviews:Q", title="Number of Reviews", axis=alt.Axis(
             values=custom_ticks, tickMinStep=1, titlePadding=10)),
     ).properties(
-        title="New Reviews per Day",
         width=800,
         height=400
     )
@@ -445,7 +440,6 @@ def plot_top_trending_games(df_releases: DataFrame) -> Chart:
         x=alt.X("sentiment:Q", title="Sentiment Rating", axis=alt.Axis(
             values=custom_ticks, tickMinStep=1, titlePadding=10)),
     ).properties(
-        title="New Reviews per Day",
         width=800,
         height=500
     )
