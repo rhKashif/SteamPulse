@@ -77,8 +77,9 @@ def check_if_in_cache(name: str, cache: dict):
     return name
 
 
-def get_existing_platform_data(conn: connect, cache: dict):
+def get_existing_platform_data(conn: connect):
     """Retrieves the existing data and adds to a cache dict given a provided value and table"""
+    cache = {}
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute("""SELECT * FROM platform;""")
@@ -181,7 +182,7 @@ def add_to_developer_link_table(conn: connect, data: list):
 def find_platform_id_for_row(cache: dict, data: list) -> int:
     """Returns platform id based on cache dict for platform"""
     platforms_for_row = {'mac': data[8],
-                         'windows': data[7], 'data': row[9]}
+                         'windows': data[7], 'linux': data[9]}
     for key, value in cache.items():
         if platforms_for_row.items() <= value.items():
             return key
@@ -227,12 +228,10 @@ if __name__ == "__main__":
         execute_batch_columns_for_genres(connection, genres,
                                          'genre', page_size=100)
 
-        platform_cache = {}
-        get_existing_platform_data(connection, platform_cache)
+        platform_cache = get_existing_platform_data(connection)
 
         for row in game_data.itertuples():
             platform_id = find_platform_id_for_row(platform_cache, row)
-
             add_game_information(connection, row, platform_id)
 
         for row in data_frame.itertuples():
