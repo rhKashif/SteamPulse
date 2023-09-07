@@ -19,7 +19,7 @@ def get_db_connection(config):
         return "Error connecting to database."
 
 
-def execute_batch_columns(conn, data: pd.DataFrame, table: str, column: str, page_size=100):
+def execute_batch_columns(conn, data: pd.DataFrame, table: str, column: str, page_size=100) -> None:
     """Using psycopg2.extras.execute_batch() to insert the dataframe"""
     tuples = list(zip(data.unique()))
     cols = column
@@ -36,7 +36,7 @@ def execute_batch_columns(conn, data: pd.DataFrame, table: str, column: str, pag
             cur.close()
 
 
-def execute_batch_columns_for_genres(conn, data: pd.DataFrame, table: str, page_size=100):
+def execute_batch_columns_for_genres(conn, data: pd.DataFrame, table: str, page_size=100) -> None:
     """Using psycopg2.extras.execute_batch() to insert the genres into database"""
     tuples = [tuple(x) for x in data.to_numpy()]
     cols = ','.join(list(data.columns))
