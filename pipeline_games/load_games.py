@@ -40,8 +40,7 @@ def execute_batch_columns_for_genres(conn, data: pd.DataFrame, table: str, page_
     """batch execution of adding genres into the database"""
     tuples = [tuple(x) for x in data.to_numpy()]
     cols = ','.join(list(data.columns))
-
-    query = "INSERT INTO %s(%s) VALUES(%%s,%%s)" % (table, cols)
+    query = "INSERT INTO %s(%s) VALUES(%%s,%%s) " % (table, cols)
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         try:
             execute_batch(cur, query, tuples, page_size)
@@ -201,6 +200,73 @@ def add_to_developer_link_table(conn: connect, data: list) -> None:
         cur.close()
 
 
+def upload_developers():
+    """Uploads new developers"""
+    developers_cache = {}
+    data_frame['developer_id'] = data_frame["developers"].apply(
+        lambda row: get_existing_data(
+            "developer_id", "developer", "developer_name",
+            row, connection, developers_cache))
+
+    developers_data = data_frame[data_frame.developer_id == "None"]
+    new_developers = developers_data['developers']
+
+    execute_batch_columns(connection, new_developers,
+                          'developer', 'developer_name', page_size=100)
+
+
+def upload_publishers():
+    """Uploads new publishers"""
+    publishers_cache = {}
+    data_frame["publisher_id"] = data_frame["publishers"].apply(
+        lambda row: get_existing_data(
+            "publisher_id", "publisher", "publisher_name",
+            row, connection, publishers_cache))
+
+    publishers_data = data_frame[data_frame.publisher_id == "None"]
+    new_publishers = publishers_data['publishers']
+
+    execute_batch_columns(connection, new_publishers,
+                          'publisher', 'publisher_name', page_size=100)
+
+
+def upload_genres():
+    """Uploads new genres"""
+    genres_cache = {}
+    data_frame['genre_id'] = data_frame.apply(
+        lambda row: get_existing_data_for_genre(
+            row['genre'], row['user_generated'], connection, genres_cache), axis=1)
+
+    genres_data = data_frame[data_frame.genre_id == "None"]
+    genres = genres_data[["genre", "user_generated"]]
+
+    execute_batch_columns_for_genres(connection, genres,
+                                     'genre', page_size=100)
+
+
+def upload_games():
+    """Uploads new games"""
+    platform_cache = {}
+    game_data['platform_id'] = game_data.apply(
+        lambda row: get_existing_platform_data(
+            row['mac'], row['windows'], row['linux'], connection, platform_cache), axis=1)
+
+    game_cache = {}
+    game_data["game_id"] = data_frame["app_id"].apply(
+        lambda row: get_existing_data(
+            "game_id", "game", "app_id",
+            row, connection, game_cache))
+
+    new_game_data = game_data[game_data.game_id == "None"]
+    new_game_data = new_game_data.rename(columns={'full_price': 'price'})
+
+    games_to_load = new_game_data[[
+        'app_id', 'title', 'release_date', 'price', 'sale_price', 'platform_id']]
+
+    execute_batch_columns_for_games(connection, games_to_load,
+                                    'game', page_size=100)
+
+
 if __name__ == "__main__":
     load_dotenv()
     configuration = environ
@@ -210,61 +276,9 @@ if __name__ == "__main__":
     game_data = pd.read_csv("final_games.csv")
 
     try:
-
-        developers_cache = {}
-        data_frame['developer_id'] = data_frame["developers"].apply(
-            lambda row: get_existing_data(
-                "developer_id", "developer", "developer_name",
-                row, connection, developers_cache))
-
-        developers_data = data_frame[data_frame.developer_id == "None"]
-        new_developers = developers_data['developers']
-
-        execute_batch_columns(connection, new_developers,
-                              'developer', 'developer_name', page_size=100)
-
-        publishers_cache = {}
-        data_frame["publisher_id"] = data_frame["publishers"].apply(
-            lambda row: get_existing_data(
-                "publisher_id", "publisher", "publisher_name",
-                row, connection, publishers_cache))
-
-        publishers_data = data_frame[data_frame.publisher_id == "None"]
-        new_publishers = publishers_data['publishers']
-
-        execute_batch_columns(connection, new_publishers,
-                              'publisher', 'publisher_name', page_size=100)
-
-        genres_cache = {}
-        data_frame['genre_id'] = data_frame.apply(
-            lambda row: get_existing_data_for_genre(
-                row['genre'], row['user_generated'], connection, genres_cache), axis=1)
-
-        genres_data = data_frame[data_frame.genre_id == "None"]
-        genres = genres_data[["genre", "user_generated"]]
-
-        execute_batch_columns_for_genres(connection, genres,
-                                         'genre', page_size=100)
-
-        platform_cache = {}
-        game_data['platform_id'] = game_data.apply(
-            lambda row: get_existing_platform_data(
-                row['mac'], row['windows'], row['linux'], connection, platform_cache), axis=1)
-
-        game_cache = {}
-        game_data["game_id"] = data_frame["app_id"].apply(
-            lambda row: get_existing_data(
-                "game_id", "game", "app_id",
-                row, connection, game_cache))
-
-        new_game_data = game_data[game_data.game_id == "None"]
-        new_game_data = new_game_data.rename(columns={'full_price': 'price'})
-
-        games_to_load = new_game_data[[
-            'app_id', 'title', 'release_date', 'price', 'sale_price', 'platform_id']]
-
-        execute_batch_columns_for_games(connection, games_to_load,
-                                        'game', page_size=100)
+        upload_developers()
+        upload_developers()
+        upload_genres()
 
         for row in data_frame.itertuples():
             add_to_genre_link_table(connection, row)
