@@ -3,10 +3,11 @@ from os import environ
 from dotenv import load_dotenv
 import pandas as pd
 from psycopg2 import connect, DatabaseError
+from psycopg2.extension import Connection
 from psycopg2.extras import RealDictCursor, execute_batch
 
 
-def get_db_connection(config) -> connect:
+def get_db_connection(config) -> Connection:
     """Connect to the database with game data"""
     try:
         return connect(
@@ -19,7 +20,7 @@ def get_db_connection(config) -> connect:
         return "Error connecting to database."
 
 
-def execute_batch_columns(conn, data: pd.DataFrame, table: str, column: str, page_size=100) -> None:
+def execute_batch_columns(conn: Connection, data: pd.DataFrame, table: str, column: str, page_size=100) -> None:
     """batch execution of adding specified data to the database"""
     tuples = list(zip(data.unique()))
     cols = column
@@ -37,7 +38,7 @@ def execute_batch_columns(conn, data: pd.DataFrame, table: str, column: str, pag
             cur.close()
 
 
-def execute_batch_columns_for_genres(conn, data: pd.DataFrame, table: str, page_size=100) -> None:
+def execute_batch_columns_for_genres(conn: Connection, data: pd.DataFrame, table: str, page_size=100) -> None:
     """batch execution of adding genres into the database"""
     tuples = [tuple(x) for x in data.to_numpy()]
     cols = 'genre,user_generated'
@@ -57,7 +58,7 @@ def execute_batch_columns_for_genres(conn, data: pd.DataFrame, table: str, page_
             cur.close()
 
 
-def execute_batch_columns_for_games(conn, data: pd.DataFrame, table: str, page_size=100) -> None:
+def execute_batch_columns_for_games(conn: Connection, data: pd.DataFrame, table: str, page_size=100) -> None:
     """batch execution of adding games into the database"""
     tuples = [tuple(x) for x in data.to_numpy()]
     cols = ','.join(list(data.columns))
@@ -76,7 +77,7 @@ def execute_batch_columns_for_games(conn, data: pd.DataFrame, table: str, page_s
             cur.close()
 
 
-def get_existing_platform_data(mac_c, windows_c, linux_c, conn: connect, cache: dict) -> int | None:
+def get_existing_platform_data(mac_c, windows_c, linux_c, conn: Connection, cache: dict) -> int | None:
     """Retrieves the existing data for platform using cache and return platform_id"""
     value = f'{mac_c} {windows_c} {linux_c}'
     if value in cache.keys():
@@ -92,7 +93,7 @@ def get_existing_platform_data(mac_c, windows_c, linux_c, conn: connect, cache: 
         return cache[value]
 
 
-def add_to_genre_link_table(conn: connect, data: list) -> None:
+def add_to_genre_link_table(conn: Connection, data: list) -> None:
     """Updates genre link table"""
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute(
@@ -117,7 +118,7 @@ def add_to_genre_link_table(conn: connect, data: list) -> None:
         cur.close()
 
 
-def add_to_publisher_link_table(conn: connect, data: list) -> None:
+def add_to_publisher_link_table(conn: Connection, data: list) -> None:
     """Updates publisher link table"""
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute(
@@ -133,9 +134,7 @@ def add_to_publisher_link_table(conn: connect, data: list) -> None:
             WHERE game_id = %s AND publisher_id = %s LIMIT 1);""",
             [game_id, publisher_id])
         result = cur.fetchone()
-        if result['exists'] is True:
-            cur.close()
-        elif result['exists'] is False:
+        if result['exists'] is False:
             cur.execute(
                 """INSERT INTO game_publisher_link(game_id, publisher_id)
                 VALUES (%s, %s);""", [game_id, publisher_id])
@@ -143,7 +142,7 @@ def add_to_publisher_link_table(conn: connect, data: list) -> None:
         cur.close()
 
 
-def add_to_developer_link_table(conn: connect, data: list) -> None:
+def add_to_developer_link_table(conn: Connection, data: list) -> None:
     """Updates link table"""
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute(
@@ -169,24 +168,24 @@ def add_to_developer_link_table(conn: connect, data: list) -> None:
         cur.close()
 
 
-def upload_developers(data: pd.DataFrame) -> None:
+def upload_developers(data: pd.DataFrame, conn: Connection) -> None:
     """Uploads new developers"""
     developers_data = data['developers']
-    execute_batch_columns(connection, developers_data,
+    execute_batch_columns(conn, developers_data,
                           'developer', 'developer_name', page_size=100)
 
 
-def upload_publishers(data: pd.DataFrame) -> None:
+def upload_publishers(data: pd.DataFrame, conn: Connection) -> None:
     """Uploads new publishers"""
     publishers_data = data['publishers']
-    execute_batch_columns(connection, publishers_data,
+    execute_batch_columns(conn, publishers_data,
                           'publisher', 'publisher_name', page_size=100)
 
 
-def upload_genres(data: pd.DataFrame) -> None:
+def upload_genres(data: pd.DataFrame, conn: Connection) -> None:
     """Uploads new genres"""
     genres = data[["genre", "user_generated", "genre", "user_generated"]]
-    execute_batch_columns_for_genres(connection, genres,
+    execute_batch_columns_for_genres(conn, genres,
                                      'genre', page_size=100)
 
 
@@ -195,34 +194,34 @@ def upload_games(data: pd.DataFrame) -> None:
     platform_cache = {}
     data['platform_id'] = data.apply(
         lambda row: get_existing_platform_data(
-            row['mac'], row['windows'], row['linux'], connection, platform_cache), axis=1)
+            row['mac'], row['windows'], row['linux'], connect_d, platform_cache), axis=1)
 
     new_game_data = data.rename(columns={'full_price': 'price'})
 
     games_to_load = new_game_data[[
         'app_id', 'title', 'release_date', 'price', 'sale_price', 'platform_id']]
-    execute_batch_columns_for_games(connection, games_to_load,
+    execute_batch_columns_for_games(connect_d, games_to_load,
                                     'game', page_size=100)
 
 
 if __name__ == "__main__":
     load_dotenv()
     configuration = environ
-    connection = get_db_connection(configuration)
+    connect_d = get_db_connection(configuration)
 
     data_frame = pd.read_csv("genres.csv")
     game_data = pd.read_csv("final_games.csv")
 
     try:
-        upload_publishers(data_frame)
-        upload_developers(data_frame)
-        upload_genres(data_frame)
-        upload_games(game_data)
+        upload_publishers(data_frame, connect_d)
+        upload_developers(data_frame, connect_d)
+        upload_genres(data_frame, connect_d)
+        upload_games(game_data, connect_d)
 
         for row in data_frame.itertuples():
-            add_to_genre_link_table(connection, row)
-            add_to_developer_link_table(connection, row)
-            add_to_publisher_link_table(connection, row)
+            add_to_genre_link_table(connect_d, row)
+            add_to_developer_link_table(connect_d, row)
+            add_to_publisher_link_table(connect_d, row)
 
     finally:
-        connection.close()
+        connect_d.close()
