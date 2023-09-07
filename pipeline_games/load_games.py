@@ -91,15 +91,15 @@ def get_existing_data(variable: str, table: str, value_name: str, value: str, co
         return "None"
 
 
-def get_existing_data_for_genre(genre_column: str, user_column: bool, conn: connect, cache: dict) -> int | None:
+def get_existing_data_for_genre(genre_c: str, user_c: bool, conn: connect, cache: dict) -> int | None:
     """Retrieves the existing data and adds to a cache dict given a provided value and table"""
-    value = f'{genre_column} {user_column}'
+    value = f'{genre_c} {user_c}'
     if value in cache.keys():
         return cache[value]
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute("""SELECT genre_id FROM genre WHERE genre = %s AND user_generated = %s;""", [
-                        genre_column, user_column])
+                        genre_c, user_c])
             id_value = cur.fetchone()['genre_id']
             cache[value] = id_value
             cur.close()
@@ -108,19 +108,20 @@ def get_existing_data_for_genre(genre_column: str, user_column: bool, conn: conn
         return "None"
 
 
-def get_existing_platform_data(mac_column, windows_column, linux_column, conn: connect, cache: dict) -> int | None:
+def get_existing_platform_data(mac_c, windows_c, linux_c, conn: connect, cache: dict) -> int | None:
     """Retrieves the existing data and adds to a cache dict given a provided value and table"""
-    value = f'{mac_column} {windows_column} {linux_column}'
+    value = f'{mac_c} {windows_c} {linux_c}'
     if value in cache.keys():
         return cache[value]
-    else:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("""SELECT platform_id FROM platform WHERE mac = %s AND windows = %s AND linux = %s;""", [
-                        mac_column, windows_column, linux_column])
-            id_value = cur.fetchone()['platform_id']
-            cache[value] = id_value
-            cur.close()
-            return cache[value]
+
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("""SELECT platform_id FROM platform
+                    WHERE mac = %s AND windows = %s AND linux = %s;""",
+                    [mac_c, windows_c, linux_c])
+        id_value = cur.fetchone()['platform_id']
+        cache[value] = id_value
+        cur.close()
+        return cache[value]
 
 
 def add_to_genre_link_table(conn: connect, data: list) -> None:
