@@ -6,7 +6,7 @@ from urllib.parse import quote_plus
 
 import pandas as pd
 from dotenv import load_dotenv
-from psycopg2 import connect
+from psycopg2 import connect, Error
 from psycopg2.extensions import connection
 from psycopg2.extras import RealDictCursor
 import requests
@@ -16,9 +16,7 @@ def get_review_info_for_game(game_id: int) -> dict:
     """Retrieves information about all reviews from a given game ID"""
     request = requests.get(f"https://store.steampowered.com/appreviews/{game_id}?json=1")
     reviews_info = request.json()
-    return {"game_id": game_id, "number_of_total_reviews": reviews_info["query_summary"]["total_reviews"],
-            "number_of_positive_reviews": reviews_info["query_summary"]["total_positive"],
-            "number_of_negative_reviews": reviews_info["query_summary"]["total_negative"]}
+    return reviews_info["query_summary"]["total_reviews"]
 
 
 def get_reviews_for_game(game_id: int, cursor: str) -> dict:
@@ -44,7 +42,6 @@ def get_reviews_for_game(game_id: int, cursor: str) -> dict:
         review_dict["last_timestamp"] = datetime.fromtimestamp(
             review["timestamp_updated"]).strftime("%Y-%m-%d %H:%M:%S")
         review_dict["playtime_at_review"] = review["author"]["playtime_at_review"]
-        review_dict["full_playtime"] = review["author"]["playtime_forever"]
         page_reviews.append(review_dict)
     return {"next_cursor": next_cursor, "reviews": page_reviews}
 
@@ -52,35 +49,32 @@ def get_reviews_for_game(game_id: int, cursor: str) -> dict:
 def get_all_reviews(game_ids: list[int]) -> None:
     """Combines all reviews together and all review
     information together to be set in a data-frame"""
-    reviews_info = []
     all_reviews = []
 
     for game in game_ids:
-        reviews_info.append(get_review_info_for_game(game))
-        if reviews_info[-1]["number_of_total_reviews"] == 0:
-            continue
+        number_of_total_reviews = get_review_info_for_game(game)
 
-        cursor_list = ["*"]
+        if number_of_total_reviews:
+            cursor_list = ["*"]
 
-        for page in range(int(reviews_info[-1]["number_of_total_reviews"]/100)+2):
-            api_response = get_reviews_for_game(game, cursor_list[page])
-            if "error" in list(api_response.keys()):
-                continue
-            cursor = api_response["next_cursor"]
-            page_reviews = api_response["reviews"]
-            if not page_reviews or cursor in cursor_list:
-                break
-            if not cursor in cursor_list:
-                cursor_list.append(cursor)
-            all_reviews.extend(page_reviews)
-    make_csv_files(all_reviews, reviews_info)
+            for page in range(int(number_of_total_reviews/100)+2):
+                api_response = get_reviews_for_game(game, cursor_list[page])
+
+                if "error" not in api_response:
+                    cursor = api_response["next_cursor"]
+                    page_reviews = api_response["reviews"]
+                    if not page_reviews or cursor in cursor_list:
+                        break
+                    if not cursor in cursor_list:
+                        cursor_list.append(cursor)
+                    all_reviews.extend(page_reviews)
+    make_csv_files(all_reviews)
 
 
-def make_csv_files(all_reviews: list[dict], reviews_info: list[dict]) -> None:
+def make_csv_files(all_reviews: list[dict]) -> None:
     """Makes data-frames from lists and creates
     csv files from both"""
     pd.DataFrame(all_reviews).to_csv("reviews.csv")
-    pd.DataFrame(reviews_info).to_csv("review_info.csv")
 
 
 def get_db_connection() -> connection:
@@ -93,7 +87,7 @@ def get_db_connection() -> connection:
                     cursor_factory=RealDictCursor)
 
 
-def get_game_ids(conn: connection) -> list[int]:
+def get_game_ids(conn: connection) -> list[int] | None:
     """Returns game IDs from the past 2 weeks"""
     with conn.cursor() as cur:
         cur.execute("""SELECT app_id FROM game WHERE release_date
@@ -104,5 +98,9 @@ def get_game_ids(conn: connection) -> list[int]:
 
 
 if __name__ == "__main__":
-    game_ids = get_game_ids(get_db_connection())
-    get_all_reviews(game_ids)
+    try:
+        game_ids = get_game_ids(get_db_connection())
+        game_ids = [10,11,40]
+        get_all_reviews(game_ids)
+    except (Error, TypeError) as e:
+        print("Error at extract: ", e)
