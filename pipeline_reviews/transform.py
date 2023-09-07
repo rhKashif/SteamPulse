@@ -19,6 +19,7 @@ def get_release_date(game_id: int, conn: connection, cache: dict) -> datetime:
             cur.execute("SELECT release_date FROM game WHERE app_id = %s;", [game_id])
             release_date = cur.fetchone()["release_date"]
         cache[game_id] = release_date
+        conn.close()
         return cache[game_id]
 
 
