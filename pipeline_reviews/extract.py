@@ -42,7 +42,6 @@ def get_reviews_for_game(game_id: int, cursor: str) -> dict:
         review_dict["last_timestamp"] = datetime.fromtimestamp(
             review["timestamp_updated"]).strftime("%Y-%m-%d %H:%M:%S")
         review_dict["playtime_at_review"] = review["author"]["playtime_at_review"]
-        review_dict["full_playtime"] = review["author"]["playtime_forever"]
         page_reviews.append(review_dict)
     return {"next_cursor": next_cursor, "reviews": page_reviews}
 
@@ -88,14 +87,15 @@ def get_db_connection() -> connection:
                     cursor_factory=RealDictCursor)
 
 
-def get_game_ids(conn: connection) -> list[int]:
+def get_game_ids(conn: connection) -> list[int] | None:
     """Returns game IDs from the past 2 weeks"""
     with conn.cursor() as cur:
         cur.execute("""SELECT app_id FROM game WHERE release_date
     BETWEEN NOW() - INTERVAL '2 WEEKS' AND NOW()""")
         game_ids = cur.fetchall()
     conn.close()
-    return [game_id["app_id"] for game_id in game_ids]
+    if game_ids:
+        return [game_id["app_id"] for game_id in game_ids]
 
 
 if __name__ == "__main__":
