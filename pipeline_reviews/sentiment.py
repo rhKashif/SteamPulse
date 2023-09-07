@@ -1,13 +1,10 @@
 """Sentiment analysis on extracted reviews"""
 
-import pandas as pd
 from pandas import DataFrame
 from pandas.core.series import Series
 import nltk
 from nltk.corpus import stopwords
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-
-from transform import remove_unnamed #! diff import here check red
 
 
 def remove_stopwords(review: str, stop_words: list[str], punctuation: list[str]) -> str:
@@ -51,13 +48,3 @@ def get_sentiment_per_game(reviews_df: DataFrame) -> Series:
     each_game_sentiment_overall = each_game_sentiment_overall.transform(
         lambda score: score/n_cols[score.index])
     return each_game_sentiment_overall
-
-
-if __name__ == "__main__":
-    reviews = pd.read_csv("reviews.csv") #! instead do a full transform here
-    reviews = isolate_non_stop_words(reviews)
-    reviews = get_sentiment_values(reviews)
-    each_game_sentiment = get_sentiment_per_game(reviews)
-    reviews = remove_unnamed(reviews)
-    reviews.to_csv("reviews.csv")
-    #! add unnamed:0 removal again
