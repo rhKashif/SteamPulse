@@ -77,17 +77,32 @@ def check_if_in_cache(name: str, cache: dict):
     return name
 
 
-def add_game_information(conn, data: list):
+def get_existing_platform_data(conn: connect, cache: dict):
+    """Retrieves the existing data and adds to a cache dict given a provided value and table"""
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""SELECT * FROM platform;""")
+            platforms = cur.fetchall()
+            for row in platforms:
+                cache[row["platform_id"]] = dict(row)
+            return cache
+    except:
+        return None
+
+
+def add_game_information(conn, data: list, platform_id: int):
     """Add game information to database"""
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute(
-            """SELECT platform_id FROM platform WHERE mac = %s AND windows = %s AND linux = %s;""",
-            [data[8], data[7], data[9]])
-        platform_id = cur.fetchone()['platform_id']
-        cur.execute(
-            """INSERT INTO game(app_id, title, release_date, price, sale_price, platform_id)
+            """SELECT exists (SELECT 1 FROM game WHERE app_id = %s LIMIT 1);""", [data[2]])
+        result = cur.fetchone()
+        if result['exists'] is True:
+            cur.close()
+        elif result['exists'] is False:
+            cur.execute(
+                """INSERT INTO game(app_id, title, release_date, price, sale_price, platform_id)
             VALUES (%s, %s, %s, %s, %s, %s);""",
-            [data[2], data[3], data[4], data[5], data[6], platform_id])
+                [data[2], data[3], data[4], data[5], data[6], platform_id])
         conn.commit()
         cur.close()
 
@@ -149,6 +164,15 @@ def add_to_developer_link_table(conn: connect, data: list):
         cur.close()
 
 
+def find_platform_id_for_row(cache: dict, data: list) -> int:
+    """Returns platform id based on cache dict for platform"""
+    platforms_for_row = {'mac': data[8],
+                         'windows': data[7], 'data': row[9]}
+    for key, value in cache.items():
+        if platforms_for_row.items() <= value.items():
+            return key
+
+
 if __name__ == "__main__":
     load_dotenv()
     configuration = environ
@@ -189,13 +213,18 @@ if __name__ == "__main__":
         execute_batch_columns_for_genres(connection, genres,
                                          'genre', page_size=100)
 
-        for row in game_data.itertuples():
-            add_game_information(connection, row)
+        platform_cache = {}
+        get_existing_platform_data(connection, platform_cache)
 
-        for row in data_frame.itertuples():
+        for row in game_data.itertuples():
+            platform_id = find_platform_id_for_row(platform_cache, row)
+
+            add_game_information(connection, row, platform_id)
+
+        """for row in data_frame.itertuples():
             add_to_genre_link_table(connection, row)
             add_to_developer_link_table(connection, row)
-            add_to_publisher_link_table(connection, row)
+            add_to_publisher_link_table(connection, row)"""
 
     finally:
         connection.close()
