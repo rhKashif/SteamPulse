@@ -4,12 +4,17 @@ from datetime import datetime
 from os import environ
 from urllib.parse import quote_plus
 
-import pandas as pd
+from pandas import DataFrame
 from dotenv import load_dotenv
-from psycopg2 import connect, Error
+from psycopg2 import connect
 from psycopg2.extensions import connection
 from psycopg2.extras import RealDictCursor
 import requests
+
+
+class GamesNotFound(Exception):
+    def __init__(self, message="No new games were found!"):
+        super().__init__(message)
 
 
 def get_review_info_for_game(game_id: int) -> dict:
@@ -41,12 +46,12 @@ def get_reviews_for_game(game_id: int, cursor: str) -> dict:
         review_dict["review_score"] = review["votes_up"]
         review_dict["last_timestamp"] = datetime.fromtimestamp(
             review["timestamp_updated"]).strftime("%Y-%m-%d %H:%M:%S")
-        review_dict["playtime_at_review"] = review["author"]["playtime_at_review"]
+        review_dict["playtime_last_2_weeks"] = review["author"]["playtime_forever"]
         page_reviews.append(review_dict)
     return {"next_cursor": next_cursor, "reviews": page_reviews}
 
 
-def get_all_reviews(game_ids: list[int]) -> None:
+def get_all_reviews(game_ids: list[int]) -> DataFrame:
     """Combines all reviews together and all review
     information together to be set in a data-frame"""
     all_reviews = []
@@ -68,13 +73,7 @@ def get_all_reviews(game_ids: list[int]) -> None:
                     if not cursor in cursor_list:
                         cursor_list.append(cursor)
                     all_reviews.extend(page_reviews)
-    make_csv_files(all_reviews)
-
-
-def make_csv_files(all_reviews: list[dict]) -> None:
-    """Makes data-frames from lists and creates
-    csv files from both"""
-    pd.DataFrame(all_reviews).to_csv("reviews.csv")
+    return DataFrame(all_reviews)
 
 
 def get_db_connection() -> connection:
@@ -94,12 +93,9 @@ def get_game_ids(conn: connection) -> list[int] | None:
     BETWEEN NOW() - INTERVAL '2 WEEKS' AND NOW()""")
         game_ids = cur.fetchall()
     conn.close()
-    return [game_id["app_id"] for game_id in game_ids]
+    if game_ids:
+        print(game_ids)
+        return [game_id["app_id"] for game_id in game_ids]
+    else:
+        raise GamesNotFound()
 
-
-if __name__ == "__main__":
-    try:
-        game_ids = get_game_ids(get_db_connection())
-        get_all_reviews(game_ids)
-    except (Error, TypeError) as e:
-        print("Error at extract: ", e)
