@@ -220,7 +220,6 @@ if __name__ == "__main__":
         upload_games(game_data, connect_d)
 
         for row in data_frame.itertuples():
-            print(row)
             add_to_genre_link_table(connect_d, row)
             add_to_developer_link_table(connect_d, row)
             add_to_publisher_link_table(connect_d, row)

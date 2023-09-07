@@ -55,7 +55,7 @@ def explode_column_to_individual_rows(data: pd.DataFrame, column_name: str) -> p
 
 
 def check_data_is_not_null(data_value: str) -> str:
-    if str(data_value) in ['N/A', 'None', 'Null', 'nan', '']:
+    if str(data_value) in ['N/A', 'None', 'Null', 'nan', 'NaN', '']:
         return "Data not provided"
     return data_value
 
