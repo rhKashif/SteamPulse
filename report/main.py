@@ -201,18 +201,36 @@ def create_report(df_releases: DataFrame):
     <html>
     <head>
         <style>
+            @page {{
+                size: letter portrait;
+                @frame header_frame {{           /* Static frame */
+                    -pdf-frame-content: header_content;
+                    left: 50pt; width: 512pt; top: 50; height: 200pt;
+                }}
+                @frame col1_frame {{             /* Content frame 1 */
+                    left: 44pt; width: 245pt; top: 150pt; height: 632pt;
+                }}
+                @frame col2_frame {{             /* Content frame 2 */
+                    left: 323pt; width: 245pt; top: 150pt; height: 632pt;
+                }}
+                @frame footer_frame {{           /* Static frame */
+                    -pdf-frame-content: footer_content;
+                    left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+                }}
+
+            }}
             body {{
                 font-family: Arial, sans-serif;
                 font-size: 18px;
                 text-align: left;
             }}
-            h1, {{
-                background-color: {header_color};
-                color: {text_color};
-                padding: 45px;
-                font-size: 32px;
-                text-align: center;
-            }}
+            h1 {{
+                    background-color: {header_color};
+                    color: {text_color};
+                    padding-top: 20px;
+                    font-size: 32px;
+                    text-align: center;
+                }}            
             h2 {{
                 background-color: {header_color};
                 color: {text_color};
@@ -226,15 +244,22 @@ def create_report(df_releases: DataFrame):
             }}   
             .myDiv2 {{
                 text-align: center;
-                padding: 5px;
             }}            
             </style>
     </head>
+
     <body>
-        <h1>Your SteamPulse Report</h1>
-        <div class = "myDiv2">
-        <p>Number of new releases: {new_releases}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Top rated release: {top_rated_release}</p>
-        </div>
+        <div id="header_content">
+            <h1>Your SteamPulse Report</h1>
+                <div class = "myDiv2">
+                    <p>Number of new releases: {new_releases}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Top rated release: {top_rated_release}</p>
+                </div>
+            </div>
+        <div id="footer_content">SteamPulse - page <pdf:pagenumber></div>
+
+        
+        
+        
         <h2>Chart 1</h2>
         <img src="{fig1}" alt="Chart 1">
         
