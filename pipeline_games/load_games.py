@@ -54,6 +54,25 @@ def execute_batch_columns_for_genres(conn, data: pd.DataFrame, table: str, page_
             cur.close()
 
 
+def execute_batch_columns_for_games(conn, data: pd.DataFrame, table: str, page_size=100) -> None:
+    """Using psycopg2.extras.execute_batch() to insert the genres into database"""
+    tuples = [tuple(x) for x in data.to_numpy()]
+    cols = ','.join(list(data.columns))
+
+    query = "INSERT INTO %s(%s) VALUES(%%s,%%s,%%s,%%s,%%s,%%s)" % (
+        table, cols)
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        try:
+            execute_batch(cur, query, tuples, page_size)
+            conn.commit()
+            cur.close()
+            print("execute_batch() done")
+        except (Exception, DatabaseError) as error:
+            print(f"Error: {error}")
+            conn.rollback()
+            cur.close()
+
+
 def get_existing_data(variable: str, table: str, value_name: str, value: str, conn: connect, cache: dict) -> None:
     """Retrieves the existing data and adds to a cache dict given a provided value and table"""
     if value in cache.keys():
@@ -67,11 +86,12 @@ def get_existing_data(variable: str, table: str, value_name: str, value: str, co
             id_value = cur.fetchone()[variable]
             cache[value] = id_value
             cur.close()
+            return cache[value]
     except TypeError:
         return "None"
 
 
-def get_existing_data_for_genre(genre_column: str, user_column: bool, conn: connect, cache: dict) -> None:
+def get_existing_data_for_genre(genre_column: str, user_column: bool, conn: connect, cache: dict) -> int | None:
     """Retrieves the existing data and adds to a cache dict given a provided value and table"""
     value = f'{genre_column} {user_column}'
     if value in cache.keys():
@@ -83,40 +103,24 @@ def get_existing_data_for_genre(genre_column: str, user_column: bool, conn: conn
             id_value = cur.fetchone()['genre_id']
             cache[value] = id_value
             cur.close()
+            return cache[value]
     except TypeError:
         return "None"
 
 
-def get_existing_platform_data(conn: connect) -> dict | None:
+def get_existing_platform_data(mac_column, windows_column, linux_column, conn: connect, cache: dict) -> int | None:
     """Retrieves the existing data and adds to a cache dict given a provided value and table"""
-    cache = {}
-    try:
+    value = f'{mac_column} {windows_column} {linux_column}'
+    if value in cache.keys():
+        return cache[value]
+    else:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("""SELECT * FROM platform;""")
-            platforms = cur.fetchall()
+            cur.execute("""SELECT platform_id FROM platform WHERE mac = %s AND windows = %s AND linux = %s;""", [
+                        mac_column, windows_column, linux_column])
+            id_value = cur.fetchone()['platform_id']
+            cache[value] = id_value
             cur.close()
-            for line in platforms:
-                cache[line["platform_id"]] = dict(line)
-            return cache
-    except TypeError:
-        return None
-
-
-def add_game_information(conn, data: list, platform_value: int) -> None:
-    """Add game information to database"""
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
-        cur.execute(
-            """SELECT exists (SELECT 1 FROM game WHERE app_id = %s LIMIT 1);""", [data[2]])
-        result = cur.fetchone()
-        if result['exists'] is True:
-            cur.close()
-        elif result['exists'] is False:
-            cur.execute(
-                """INSERT INTO game(app_id, title, release_date, price, sale_price, platform_id)
-            VALUES (%s, %s, %s, %s, %s, %s);""",
-                [data[2], data[3], data[4], data[5], data[6], platform_value])
-        conn.commit()
-        cur.close()
+            return cache[value]
 
 
 def add_to_genre_link_table(conn: connect, data: list) -> None:
@@ -196,16 +200,6 @@ def add_to_developer_link_table(conn: connect, data: list) -> None:
         cur.close()
 
 
-def find_platform_id_for_row(cache: dict, data: list) -> int:
-    """Returns platform id based on cache dict for platform"""
-    platforms_for_row = {'mac': data[8],
-                         'windows': data[7], 'linux': data[9]}
-    for key, value in cache.items():
-        if platforms_for_row.items() <= value.items():
-            return key
-        return None
-
-
 if __name__ == "__main__":
     load_dotenv()
     configuration = environ
@@ -251,11 +245,25 @@ if __name__ == "__main__":
         execute_batch_columns_for_genres(connection, genres,
                                          'genre', page_size=100)
 
-        platform_cache = get_existing_platform_data(connection)
+        platform_cache = {}
+        game_data['platform_id'] = game_data.apply(
+            lambda row: get_existing_platform_data(
+                row['mac'], row['windows'], row['linux'], connection, platform_cache), axis=1)
 
-        for row in game_data.itertuples():
-            platform_id = find_platform_id_for_row(platform_cache, row)
-            add_game_information(connection, row, platform_id)
+        game_cache = {}
+        game_data["game_id"] = data_frame["app_id"].apply(
+            lambda row: get_existing_data(
+                "game_id", "game", "app_id",
+                row, connection, game_cache))
+
+        new_game_data = game_data[game_data.game_id == "None"]
+        new_game_data = new_game_data.rename(columns={'full_price': 'price'})
+
+        games_to_load = new_game_data[[
+            'app_id', 'title', 'release_date', 'price', 'sale_price', 'platform_id']]
+
+        execute_batch_columns_for_games(connection, games_to_load,
+                                        'game', page_size=100)
 
         for row in data_frame.itertuples():
             add_to_genre_link_table(connection, row)
