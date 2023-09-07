@@ -130,7 +130,7 @@ def trending_game_information(df_releases: DataFrame, index: int) -> str:
                              == f"{release_name}"].reset_index().head(1)
     price = release_df["price"][0]
     sale_price = release_df["sale_price"][0]
-    release_date = release_df["release_date"][0]
+    release_date = release_df["release_date"][0].strftime("%Y-%m-%d")
     mac_compatibility = release_df["mac"][0]
     windows_compatibility = release_df["windows"][0]
     linux_compatibility = release_df["linux"][0]
@@ -150,11 +150,11 @@ def trending_game_information(df_releases: DataFrame, index: int) -> str:
     </head>
     <body>
         <p><b>{release_name}</b><br>
-        Price: {price}<br>
-        Sale Price: {sale_price}<br>
+        Price: £{price}<br>
+        Sale Price: £{sale_price}<br>
         Average Sentiment: {sentiment}<br>
         Release Date: {release_date}<br>
-        Platform COmpatibility:<br>
+        Platform Compatibility:<br>
         - Mac: {mac_compatibility}<br>
         - Windows: {windows_compatibility}<br>
         - Linux: {linux_compatibility}<br>
@@ -205,19 +205,18 @@ def create_report(df_releases: DataFrame):
                 size: letter portrait;
                 @frame header_frame {{           /* Static frame */
                     -pdf-frame-content: header_content;
-                    left: 50pt; width: 512pt; top: 50; height: 200pt;
+                    left: 50pt; width: 512pt; top: 50; height: 350pt;
                 }}
                 @frame col1_frame {{             /* Content frame 1 */
-                    left: 44pt; width: 245pt; top: 150pt; height: 632pt;
+                    left: 44pt; width: 245pt; top: 200pt; height: 365pt;
                 }}
                 @frame col2_frame {{             /* Content frame 2 */
-                    left: 323pt; width: 245pt; top: 150pt; height: 632pt;
+                    left: 323pt; width: 245pt; top: 200pt; height: 365pt;
                 }}
                 @frame footer_frame {{           /* Static frame */
                     -pdf-frame-content: footer_content;
-                    left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+                    left: 50pt; width: 512pt; top: 650pt; height: 330pt;
                 }}
-
             }}
             body {{
                 font-family: Arial, sans-serif;
@@ -225,17 +224,19 @@ def create_report(df_releases: DataFrame):
                 text-align: left;
             }}
             h1 {{
-                    background-color: {header_color};
-                    color: {text_color};
-                    padding-top: 20px;
-                    font-size: 32px;
-                    text-align: center;
+                background-color: {header_color};
+                color: {text_color};
+                padding-bottom: 25px;
+                padding-top: 50px;
+                font-size: 32px;
+                text-align: center;
                 }}            
             h2 {{
                 background-color: {header_color};
                 color: {text_color};
-                padding-top: 15px;
-                padding-bottom: 0px;
+                padding-top: 10px;
+                font-size: 11px;
+                text-align: center;
             }} 
             .myDiv {{
                 border: 1px solid black; 
@@ -255,22 +256,22 @@ def create_report(df_releases: DataFrame):
                     <p>Number of new releases: {new_releases}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Top rated release: {top_rated_release}</p>
                 </div>
             </div>
-        <div id="footer_content">SteamPulse - page <pdf:pagenumber></div>
+        <div id="footer_content">
+            <h1>Your SteamPulse Report</h1>
+        SteamPulse - page <pdf:pagenumber>
+        </div>
 
-        
-        
-        
-        <h2>Chart 1</h2>
+        <h2>Number of Reviews per Release</h2>
         <img src="{fig1}" alt="Chart 1">
-        
+
         <h2>Chart 2</h2>
         <img src="{fig2}" alt="Chart 2">
         
         <h2>Chart 3</h2>
-        <img src="{fig3}" alt="Chart 3">
+        <img src="{fig4}" alt="Chart 3">
 
         <h2>Chart 4</h2>
-        <img src="{fig4}" alt="Chart 4">
+        <img src="{fig3}" alt="Chart 4">
 
         <p>Trending games:</p>
         <div class = "myDiv">
@@ -345,7 +346,7 @@ def plot_reviews_per_game_frequency(df_releases: DataFrame) -> Chart:
     ).properties(
         title="Number of Reviews per Release",
         width=800,
-        height=400
+        height=500
     )
 
     return chart
@@ -446,7 +447,7 @@ def plot_top_trending_games(df_releases: DataFrame) -> Chart:
     ).properties(
         title="Top Rated Games",
         width=800,
-        height=400
+        height=500
     )
 
     return chart
