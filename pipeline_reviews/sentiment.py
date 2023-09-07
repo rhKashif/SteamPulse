@@ -38,6 +38,7 @@ def get_sentiment_values(reviews_df: DataFrame) -> DataFrame:
                     vader.polarity_scores(review)["compound"])
     reviews_df["sentiment"] = reviews_df["sentiment"].apply(
             lambda score: round((score + 1)/2 * 5, 1))
+    reviews_df.drop(columns=["clean_review"], inplace=True)
     return reviews_df
 
 
@@ -57,3 +58,4 @@ if __name__ == "__main__":
     reviews = isolate_non_stop_words(reviews)
     reviews = get_sentiment_values(reviews)
     each_game_sentiment = get_sentiment_per_game(reviews)
+    reviews.to_csv("reviews.csv")
