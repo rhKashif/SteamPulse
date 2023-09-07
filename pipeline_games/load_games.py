@@ -71,27 +71,20 @@ def get_existing_data(variable: str, table: str, value_name: str, value: str, co
         return "None"
 
 
-def get_existing_data_for_genre(value: list, conn: connect, cache: dict) -> None:
+def get_existing_data_for_genre(genre_column: str, user_column: bool, conn: connect, cache: dict) -> None:
     """Retrieves the existing data and adds to a cache dict given a provided value and table"""
-    print(value)
-    # if value in cache.keys():
-    #    return cache[value]
-    # try:
-    #    with conn.cursor(cursor_factory=RealDictCursor) as cur:
-   #         cur.execute("""SELECT genre_id FROM genre WHERE genre = %s AND user_generated = %s;""", [
-    #                    genre, user])
-   #         id_value = cur.fetchone()['genre_id']
-    #        cache[value] = id_value
-   #         cur.close()
-   # except TypeError:
-   #     return "None"
-
-
-def check_if_in_cache(name: str, cache: dict) -> str | None:
-    """Check if the name passed in exists int the cache dictionary"""
-    if name in cache.keys():
-        return None
-    return name
+    value = f'{genre_column} {user_column}'
+    if value in cache.keys():
+        return cache[value]
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""SELECT genre_id FROM genre WHERE genre = %s AND user_generated = %s;""", [
+                        genre_column, user_column])
+            id_value = cur.fetchone()['genre_id']
+            cache[value] = id_value
+            cur.close()
+    except TypeError:
+        return "None"
 
 
 def get_existing_platform_data(conn: connect) -> dict | None:
@@ -223,7 +216,7 @@ if __name__ == "__main__":
 
     try:
 
-        """developers_cache = {}
+        developers_cache = {}
         data_frame['developer_id'] = data_frame["developers"].apply(
             lambda row: get_existing_data(
                 "developer_id", "developer", "developer_name",
@@ -233,7 +226,7 @@ if __name__ == "__main__":
         new_developers = developers_data['developers']
 
         execute_batch_columns(connection, new_developers,
-            'developer', 'developer_name', page_size=100)
+                              'developer', 'developer_name', page_size=100)
 
         publishers_cache = {}
         data_frame["publisher_id"] = data_frame["publishers"].apply(
@@ -245,27 +238,20 @@ if __name__ == "__main__":
         new_publishers = publishers_data['publishers']
 
         execute_batch_columns(connection, new_publishers,
-                              'publisher', 'publisher_name', page_size=100)"""
+                              'publisher', 'publisher_name', page_size=100)
 
         genres_cache = {}
         data_frame['genre_id'] = data_frame.apply(
             lambda row: get_existing_data_for_genre(
-                row, connection, genres_cache))
+                row['genre'], row['user_generated'], connection, genres_cache), axis=1)
 
         genres_data = data_frame[data_frame.genre_id == "None"]
-        # print(data_frame)
+        genres = genres_data[["genre", "user_generated"]]
 
-        # genres = data_frame.copy()
-        # genres['genre'] = genres["genre"].apply(
-        # lambda row: check_if_in_cache(row, genres_cache)).dropna(axis=0)
-        # print(genres)
+        execute_batch_columns_for_genres(connection, genres,
+                                         'genre', page_size=100)
 
-        # genres = genres[['genre', 'user_generated']].drop_duplicates()
-
-        # execute_batch_columns_for_genres(connection, genres,
-        # 'genre', page_size=100)
-
-        """platform_cache = get_existing_platform_data(connection)
+        platform_cache = get_existing_platform_data(connection)
 
         for row in game_data.itertuples():
             platform_id = find_platform_id_for_row(platform_cache, row)
@@ -274,7 +260,7 @@ if __name__ == "__main__":
         for row in data_frame.itertuples():
             add_to_genre_link_table(connection, row)
             add_to_developer_link_table(connection, row)
-            add_to_publisher_link_table(connection, row)"""
+            add_to_publisher_link_table(connection, row)
 
     finally:
         connection.close()
