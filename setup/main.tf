@@ -19,6 +19,11 @@ resource "aws_ecr_repository" "steampulse_dashboard_ecr" {
   force_delete = true
 }
 
+resource "aws_ecr_repository" "steampulse_lambda_ecr" {
+  name         = "steampulse_dashboard_ecr"
+  force_delete = true
+}
+
 resource "aws_ecs_cluster" "steampulse_cluster" {
   name = "steampulse_cluster"
 }
@@ -275,7 +280,7 @@ resource "aws_ecs_task_definition" "steampulse_dashboard_task_definition" {
   container_definitions = jsonencode([
     {
       name   = "steampulse_dashboard_ecr"
-      image  = var.DASHBOARD_IMAGE
+      image  = "${aws_ecr_repository.steampulse_dashboard_ecr.repository_url}:latest"
       cpu    = 10
       memory = 512
 
@@ -411,4 +416,44 @@ resource "aws_ecs_service" "steampulse_streamlit_service" {
     security_groups  = [aws_security_group.steampulse_dashboard_sg.id]
     assign_public_ip = true
   }
+}
+
+
+
+
+
+resource "aws_lambda_permission" "steampulse_lambda_allow_eventbridge" {
+  statement_id  = "AllowExecutionFromEventBridge"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.steampulse_email_lambda.function_name
+  principal     = "events.amazonaws.com"
+
+}
+
+resource "aws_lambda_function" "steampulse_email_lambda" {
+  image_uri      = "${aws_ecr_repository.steampulse_lambda_ecr.repository_url}:latest"
+  package_type = "Image"
+  function_name = "steampulse_email_lambda"
+  role          = aws_iam_role.steampulse_lambda_iam.arn
+  timeout = 5
+
+}
+
+
+resource "aws_iam_role" "steampulse_lambda_iam" {
+  name = "steampulse_lambda_iam"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      },
+    ]
+  })
 }
