@@ -2,7 +2,7 @@
 from os import environ
 from dotenv import load_dotenv
 import pandas as pd
-from psycopg2 import connect, DatabaseError, sql
+from psycopg2 import connect, DatabaseError
 from psycopg2.extras import RealDictCursor, execute_batch
 
 
@@ -42,8 +42,9 @@ def execute_batch_columns_for_genres(conn, data: pd.DataFrame, table: str, page_
     tuples = [tuple(x) for x in data.to_numpy()]
     cols = 'genre,user_generated'
 
-    query = """INSERT INTO %s(%s) SELECT %%s,%%s WHERE NOT EXISTS 
-            (SELECT genre_id FROM genre WHERE genre = %%s AND user_generated = %%s);""" % (table, cols)
+    query = """INSERT INTO %s(%s) SELECT %%s,%%s WHERE NOT EXISTS
+            (SELECT genre_id FROM genre
+              WHERE genre = %%s AND user_generated = %%s);""" % (table, cols)
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         try:
             execute_batch(cur, query, tuples, page_size)
@@ -61,8 +62,8 @@ def execute_batch_columns_for_games(conn, data: pd.DataFrame, table: str, page_s
     tuples = [tuple(x) for x in data.to_numpy()]
     cols = ','.join(list(data.columns))
 
-    query = "INSERT INTO %s(%s) VALUES (%%s,%%s,%%s,%%s,%%s,%%s) ON CONFLICT (app_id) DO NOTHING" % (
-        table, cols)
+    query = """INSERT INTO %s(%s) VALUES (%%s,%%s,%%s,%%s,%%s,%%s)
+            ON CONFLICT (app_id) DO NOTHING""" % (table, cols)
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         try:
             execute_batch(cur, query, tuples, page_size)
