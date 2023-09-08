@@ -92,11 +92,11 @@ def add_to_genre_link_table(conn: connection, data: list) -> None:
     with conn.cursor() as cur:
         cur.execute(
             """SELECT genre_id FROM genre WHERE genre = %s AND user_generated = %s;""",
-            [data[12], data[13]])
+            [data[-2], data[-1]])
         genre_id = cur.fetchone()['genre_id']
         cur.execute(
             """SELECT game_id FROM game WHERE app_id = %s;""",
-            [data[2]])
+            [data[-12]])
         game_id = cur.fetchone()['game_id']
         cur.execute(
             """SELECT exists (SELECT 1 FROM game_genre_link 
@@ -114,11 +114,11 @@ def add_to_publisher_link_table(conn: connection, data: list) -> None:
     with conn.cursor() as cur:
         cur.execute(
             """SELECT publisher_id FROM publisher WHERE publisher_name = %s;""",
-            [data[11]])
+            [data[-3]])
         publisher_id = cur.fetchone()['publisher_id']
         cur.execute(
             """SELECT game_id FROM game WHERE app_id = %s;""",
-            [data[2]])
+            [data[-12]])
         game_id = cur.fetchone()['game_id']
         cur.execute(
             """SELECT exists (SELECT 1 FROM game_publisher_link 
@@ -137,11 +137,11 @@ def add_to_developer_link_table(conn: connection, data: list) -> None:
     with conn.cursor() as cur:
         cur.execute(
             """SELECT developer_id FROM developer WHERE developer_name = %s;""",
-            [data[10]])
+            [data[-4]])
         developer_id = cur.fetchone()['developer_id']
         cur.execute(
             """SELECT game_id FROM game WHERE app_id = %s;""",
-            [data[2]])
+            [data[-12]])
         game_id = cur.fetchone()['game_id']
         cur.execute(
             """SELECT exists (SELECT 1 FROM game_developer_link 
@@ -196,16 +196,16 @@ if __name__ == "__main__":
     configuration = environ
     connect_d = get_db_connection(configuration)
 
-    data_frame = pd.read_csv("genres.csv")
+    final_df = pd.read_csv("genres.csv")
     game_data = pd.read_csv("final_games.csv")
 
     try:
-        upload_publishers(data_frame, connect_d)
-        upload_developers(data_frame, connect_d)
-        upload_genres(data_frame, connect_d)
+        upload_publishers(final_df, connect_d)
+        upload_developers(final_df, connect_d)
+        upload_genres(final_df, connect_d)
         upload_games(game_data, connect_d)
 
-        for row in data_frame.itertuples():
+        for row in final_df.itertuples():
             add_to_genre_link_table(connect_d, row)
             add_to_developer_link_table(connect_d, row)
             add_to_publisher_link_table(connect_d, row)
