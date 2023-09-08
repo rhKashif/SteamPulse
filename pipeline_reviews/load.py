@@ -41,7 +41,7 @@ def move_reviews_to_db(conn: connection, reviews_df: DataFrame) -> None:
     data_to_insert = [tuple(row) for row in reviews_df.values]
     try:
         with conn.cursor() as cur:
-            execute_batch(cur, """INSERT INTO review (game_id, review_text, review_score, review_date,
+            execute_batch(cur, """INSERT INTO review (game_id, review_text, review_score, reviewed_at,
         playtime_last_2_weeks, sentiment) VALUES (%s, %s, %s, %s, %s, %s)""", data_to_insert)
             conn.commit()
     except Error as e:
