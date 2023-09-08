@@ -115,7 +115,6 @@ def add_to_publisher_link_table(conn: connection, data: list) -> None:
         cur.execute(
             """SELECT publisher_id FROM publisher WHERE publisher_name = %s;""",
             [data[11]])
-
         publisher_id = cur.fetchone()['publisher_id']
         cur.execute(
             """SELECT game_id FROM game WHERE app_id = %s;""",
