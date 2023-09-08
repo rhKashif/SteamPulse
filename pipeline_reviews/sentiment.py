@@ -17,7 +17,6 @@ def remove_stopwords(review: str, stop_words: list[str], punctuation: list[str])
 def isolate_non_stop_words(reviews_df: DataFrame) -> DataFrame:
     """Returns a data-frame ready to process for sentiment scores
     with cleaned text in reviews section"""
-    nltk.download('stopwords')
     stop_words = stopwords.words('english')
     punctuation_and_more = ["/",".",",","@","£","#","+","=","_",
             "-",")","(","*","^","%","$","~","`","'",'"',"<",">","1",
@@ -29,7 +28,6 @@ def isolate_non_stop_words(reviews_df: DataFrame) -> DataFrame:
 
 def get_sentiment_values(reviews_df: DataFrame) -> DataFrame:
     """Returns a data-frame with sentiment scores for each review"""
-    nltk.download('vader_lexicon')
     vader = SentimentIntensityAnalyzer()
     reviews_df_copy = reviews_df.copy()
     reviews_df_copy["sentiment"] = reviews_df_copy["clean_review"].apply(lambda review:
