@@ -1,23 +1,18 @@
 """Python Script: Build a report for email attachment"""
-import base64
 from datetime import datetime, timedelta
 from os import environ, _Environ
 
 import altair as alt
 from altair.vegalite.v5.api import Chart
+import boto3
 from dotenv import load_dotenv
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
 import pandas as pd
 from pandas import DataFrame
 from psycopg2 import connect
 from psycopg2.extensions import connection
-
-
-from email.mime.multipart import MIMEMultipart
-from email.mime.application import MIMEApplication
-
 from xhtml2pdf import pisa
-import plotly_express as px
-import boto3
 
 
 def get_db_connection(config_file: _Environ) -> connection:
@@ -59,19 +54,26 @@ def get_database(conn_postgres: connection) -> DataFrame:
     return df_releases
 
 
-def convert_html_to_pdf(source_html, output_filename):
+def convert_html_to_pdf(source_html: str, output_filename: str) -> int:
     """
+    Converts a html file to a PDF 
+
+    Args:
+        source_html (str): A file containing html formatted code
+
+        output_filename (str): A string representing the desired output PDF file name
+
+    Returns:
+        int: An int value associate with an error code
+
     """
-    # open output file for writing (truncated binary)
     result_file = open(output_filename, "w+b")
 
-    # convert HTML to PDF
     pisa_status = pisa.CreatePDF(
-        source_html,                # the HTML to convert
-        dest=result_file)           # file handle to recieve result
+        source_html,
+        dest=result_file)
 
-    # close output file
-    result_file.close()                 # close output file
+    result_file.close()
 
     return pisa_status.err
 
@@ -124,6 +126,7 @@ def trending_game_information(df_releases: DataFrame, index: int) -> str:
     df_releases = df_releases[df_releases["release_date"] == date]
     df_trending_game = df_releases.groupby(
         "title")["sentiment"].mean().reset_index().iloc[index]
+
     release_name = df_trending_game["title"]
     sentiment = round(df_trending_game["sentiment"], 1)
     release_df = df_releases[df_releases["title"]
@@ -307,8 +310,6 @@ def send_email():
                           'attachment', filename='report.pdf')
     message.attach(attachment)
 
-    print(message)
-
     client.send_raw_email(
         Source='trainee.hassan.kashif@sigmalabs.co.uk',
         Destinations=[
@@ -426,8 +427,6 @@ def plot_top_trending_games(df_releases: DataFrame) -> Chart:
 
     df_releases = df_releases.groupby(
         "title")["sentiment"].mean().reset_index()
-
-    print(df_releases)
 
     df_releases.columns = ["title", "sentiment"]
     custom_ticks = [i for i in range(
