@@ -1,0 +1,9 @@
+altair
+boto3
+kaleido
+plotly_express
+psycopg2-binary
+python-dotenv
+reportlab
+streamlit
+xhtml2pdf

@@ -1,4 +1,6 @@
 altair
 python-dotenv
+streamlit
+ironpdf
 psycopg2-binary
 streamlit
