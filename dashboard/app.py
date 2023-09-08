@@ -225,16 +225,13 @@ def plot_games_release_frequency(df_releases: DataFrame) -> Chart:
     df_releases = df_releases.groupby("release_date")[
         "title"].nunique().reset_index()
     df_releases.columns = ["release_date", "num_of_games"]
-    custom_ticks = [i for i in range(
-        0, df_releases["num_of_games"].max() + 1)]
 
     chart = alt.Chart(df_releases).mark_line(
         color="#44bd4f"
     ).encode(
         x=alt.X("release_date:O", title="Release Date",
                 timeUnit="yearmonthdate"),
-        y=alt.Y("num_of_games:Q", title="Number of Games",
-                axis=alt.Axis(values=custom_ticks, tickMinStep=1, titlePadding=10))
+        y=alt.Y("num_of_games:Q", title="Number of Games")
     ).properties(
         title="New Releases per Day",
         width=800,
@@ -257,20 +254,15 @@ def plot_games_review_frequency(df_releases: DataFrame) -> Chart:
     df_releases = df_releases.groupby(
         "release_date").size().reset_index()
     df_releases.columns = ["release_date", "num_of_reviews"]
-    custom_ticks = [i for i in range(
-        0, df_releases["num_of_reviews"].max() + 1)]
 
     chart = alt.Chart(df_releases).mark_line(
         color="#44bd4f"
     ).encode(
         x=alt.X("release_date:O", title="Release Date",
                 timeUnit="yearmonthdate"),
-        y=alt.Y("num_of_reviews:Q", title="Number of Reviews", axis=alt.Axis(
-            values=custom_ticks, tickMinStep=1, titlePadding=10)),
+        y=alt.Y("num_of_reviews:Q", title="Number of Reviews"),
     ).properties(
         title="New Reviews per Day",
-        width=800,
-        height=400
     )
 
     return chart
@@ -289,18 +281,13 @@ def plot_reviews_per_game_frequency(df_releases: DataFrame) -> Chart:
     df_releases = df_releases.groupby(
         "title").size().reset_index()
     df_releases.columns = ["title", "num_of_reviews"]
-    custom_ticks = [i for i in range(
-        0, df_releases["num_of_reviews"].max() + 1)]
 
     chart = alt.Chart(df_releases).mark_bar(
     ).encode(
-        x=alt.X("num_of_reviews", title="Number of Reviews",
-                axis=alt.Axis(values=custom_ticks, tickMinStep=1, titlePadding=10)),
+        x=alt.X("num_of_reviews", title="Number of Reviews"),
         y=alt.Y("title", title="Release Title", sort="-x")
     ).properties(
         title="Number of Reviews per Release",
-        width=800,
-        height=400
     )
 
     return chart
@@ -334,13 +321,9 @@ def plot_platform_distribution(df_releases: DataFrame) -> Chart:
     compatibility_df = pd.DataFrame({"platform": ['mac', 'windows', "linux"],
                                      "compatibility": [mac_compatibility, windows_compatibility, linux_compatibility]})
 
-    custom_ticks = [i for i in range(
-        0, compatibility_df["compatibility"].max() + 1)]
-
     chart = alt.Chart(compatibility_df).mark_bar().encode(
         x=alt.X("platform", title="Platform"),
-        y=alt.Y("compatibility", title="Compatible Games",
-                axis=alt.Axis(values=custom_ticks, tickMinStep=1, titlePadding=10)),
+        y=alt.Y("compatibility", title="Compatible Games"),
     ).properties(
         title="Releases Compatibility per Platform",
         width=800,
@@ -363,17 +346,14 @@ def plot_genre_distribution(df_releases: DataFrame) -> Chart:
     df_releases = df_releases.groupby(
         "genre").size().reset_index()
     df_releases.columns = ["genre", "releases_per_genres"]
-    custom_ticks = [i for i in range(
-        0, df_releases["releases_per_genres"].max() + 1)]
 
     chart = alt.Chart(df_releases).mark_bar().encode(
-        x=alt.X("releases_per_genres", title="Number of Releases",
-                axis=alt.Axis(values=custom_ticks, tickMinStep=1, titlePadding=10)),
+        x=alt.X("releases_per_genres", title="Number of Releases"),
         y=alt.Y("genre:N", title="Genre")
     ).properties(
         title="Releases per Genre",
         width=800,
-        height=400
+        height=800
     )
 
     return chart
