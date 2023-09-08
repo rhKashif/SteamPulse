@@ -45,7 +45,24 @@ def get_database(conn_postgres: connection) -> DataFrame:
     Returns:
         DataFrame:  A pandas DataFrame containing all relevant release data
     """
-    query = f""
+    query = f"SELECT\
+            game.game_id, title, review_text FROM review\
+            LEFT JOIN game ON\
+            review.game_id=game.game_id\
+            LEFT JOIN platform ON\
+            game.platform_id=platform.platform_id\
+            LEFT JOIN game_developer_link as developer_link ON\
+            game.game_id=developer_link.game_id\
+            LEFT JOIN developer ON\
+            developer_link.developer_id=developer.developer_id\
+            LEFT JOIN game_genre_link as genre_link ON\
+            game.game_id=genre_link.game_id\
+            LEFT JOIN genre ON\
+            genre_link.genre_id=genre.genre_id\
+            LEFT JOIN game_publisher_link as publisher_link ON\
+            game.game_id=publisher_link.game_id\
+            LEFT JOIN publisher ON\
+            publisher_link.publisher_id=publisher.publisher_id;"
     df_releases = pd.read_sql_query(query, conn_postgres)
 
     return df_releases
@@ -515,7 +532,8 @@ if __name__ == "__main__":
 
     conn = get_db_connection(config)
 
-    # game_df = get_database(conn)
+    df = get_database(conn)
+    print(df)
 
     st.set_page_config(layout="wide")
 
