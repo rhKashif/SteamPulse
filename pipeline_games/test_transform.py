@@ -1,4 +1,5 @@
 """Testing file for transform script"""
+import pytest
 from pandas._libs.tslibs.timestamps import Timestamp
 
 from transform_games import identify_unique_tags, create_user_generated_column, drop_unnecessary_columns, convert_date_to_datetime, convert_price_to_float, explode_column_to_individual_rows
@@ -42,18 +43,12 @@ def test_date_converted_to_none():
     assert result is None
 
 
-def test_prices_converted_to_float():
+@pytest.mark.parametrize("fake_price, expected_result", [("£5.30", 5.3), ("Free to play", 0.0)])
+def test_prices_converted_to_float(fake_price, expected_result):
     """Test float returned when price passed in"""
-    result = convert_price_to_float("£5.30")
+    result = convert_price_to_float(fake_price)
     assert isinstance(result, float) is True
-    assert result == 5.30
-
-
-def test_prices_converted_to_float_free_fames():
-    """Test float returned when price passed in"""
-    result = convert_price_to_float("Free to play")
-    assert isinstance(result, float) is True
-    assert result == 0.0
+    assert result == expected_result
 
 
 def test_explode_columns(fake_raw_data):
