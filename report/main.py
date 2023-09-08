@@ -175,15 +175,15 @@ def format_trending_game_information(df_releases: DataFrame, index: int) -> str:
         </style>
     </head>
     <body>
-        <p><b>{release_information[""]}</b><br>
-        Price: £{price}<br>
-        Sale Price: £{sale_price}<br>
-        Average Sentiment: {sentiment}<br>
-        Release Date: {release_date}<br>
+        <p><b>{release_information["name"]}</b><br>
+        Price: £{release_information["price"]}<br>
+        Sale Price: £{release_information["sale_price"]}<br>
+        Average Sentiment: {release_information["sentiment"]}<br>
+        Release Date: {release_information["release_date"]}<br>
         Platform Compatibility:<br>
-        - Mac: {mac_compatibility}<br>
-        - Windows: {windows_compatibility}<br>
-        - Linux: {linux_compatibility}<br>
+        - Mac: {release_information["mac_compatibility"]}<br>
+        - Windows: {release_information["windows_compatibility"]}<br>
+        - Linux: {release_information["linux_compatibility"]}<br>
     </body>
     </html>
     """
