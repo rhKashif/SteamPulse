@@ -31,12 +31,10 @@ def execute_batch_columns(conn: connection, data: pd.DataFrame, table: str, colu
         try:
             execute_batch(cur, query, tuples, page_size)
             conn.commit()
-            cur.close()
             print("execute_batch() done")
         except Error as err:
             print(f"Error: {err}")
             conn.rollback()
-            cur.close()
 
 
 def execute_batch_columns_for_genres(conn: connection, data: pd.DataFrame, table: str, page_size=100) -> None:
@@ -51,12 +49,10 @@ def execute_batch_columns_for_genres(conn: connection, data: pd.DataFrame, table
         try:
             execute_batch(cur, query, tuples, page_size)
             conn.commit()
-            cur.close()
             print("execute_batch() done")
         except Error as err:
             print(f"Error: {err}")
             conn.rollback()
-            cur.close()
 
 
 def execute_batch_columns_for_games(conn: connection, data: pd.DataFrame, table: str, page_size=100) -> None:
@@ -70,12 +66,10 @@ def execute_batch_columns_for_games(conn: connection, data: pd.DataFrame, table:
         try:
             execute_batch(cur, query, tuples, page_size)
             conn.commit()
-            cur.close()
             print("execute_batch() done")
         except Error as err:
             print(f"Error: {err}")
             conn.rollback()
-            cur.close()
 
 
 def get_existing_platform_data(mac_c, windows_c, linux_c, conn: connection, cache: dict) -> int | None:
@@ -90,7 +84,6 @@ def get_existing_platform_data(mac_c, windows_c, linux_c, conn: connection, cach
                     [mac_c, windows_c, linux_c])
         id_value = cur.fetchone()['platform_id']
         cache[value] = id_value
-        cur.close()
         return cache[value]
 
 
@@ -110,13 +103,10 @@ def add_to_genre_link_table(conn: connection, data: list) -> None:
             WHERE game_id = %s AND genre_id = %s LIMIT 1);""",
             [game_id, genre_id])
         result = cur.fetchone()
-        if result['exists'] is True:
-            cur.close()
-        elif result['exists'] is False:
+        if result['exists'] is False:
             cur.execute("""INSERT INTO game_genre_link(game_id, genre_id)
                         VALUES (%s, %s);""", [game_id, genre_id])
         conn.commit()
-        cur.close()
 
 
 def add_to_publisher_link_table(conn: connection, data: list) -> None:
@@ -141,7 +131,6 @@ def add_to_publisher_link_table(conn: connection, data: list) -> None:
                 """INSERT INTO game_publisher_link(game_id, publisher_id)
                 VALUES (%s, %s);""", [game_id, publisher_id])
         conn.commit()
-        cur.close()
 
 
 def add_to_developer_link_table(conn: connection, data: list) -> None:
@@ -160,14 +149,11 @@ def add_to_developer_link_table(conn: connection, data: list) -> None:
             WHERE game_id = %s AND developer_id = %s LIMIT 1);""",
             [game_id, developer_id])
         result = cur.fetchone()
-        if result['exists'] is True:
-            cur.close()
-        elif result['exists'] is False:
+        if result['exists'] is False:
             cur.execute(
                 """INSERT INTO game_developer_link(game_id, developer_id)
                 VALUES (%s, %s);""", [game_id, developer_id])
         conn.commit()
-        cur.close()
 
 
 def upload_developers(data: pd.DataFrame, conn: connection) -> None:
