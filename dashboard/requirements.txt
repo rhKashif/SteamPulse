@@ -2,3 +2,4 @@ altair
 python-dotenv
 psycopg2
 streamlit
+ironpdf
