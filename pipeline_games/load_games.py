@@ -17,8 +17,8 @@ def get_db_connection(config) -> connection:
             port=config['DATABASE_PORT'],
             database=config['DATABASE_NAME'],
             cursor_factory=RealDictCursor)
-    except ValueError:
-        return "Error connecting to database."
+    except (Error, ValueError) as err:
+        return f"Error connecting to database. {err}"
 
 
 def execute_batch_columns(conn: connection, data: pd.DataFrame, table: str, column: str, page_size=100) -> None:
