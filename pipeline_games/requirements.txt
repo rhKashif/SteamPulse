@@ -1,7 +1,5 @@
 bs4 
 pandas
 psycopg2-binary
-pylint
-pytest
 python-dotenv
 requests
