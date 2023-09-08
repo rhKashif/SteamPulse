@@ -1,9 +1,9 @@
 altair
-python-dotenv
-psycopg2-binary
-streamlit
-reportlab
-xhtml2pdf
-plotly_express
 boto3
 kaleido
+plotly_express
+psycopg2-binary
+python-dotenv
+reportlab
+streamlit
+xhtml2pdf
