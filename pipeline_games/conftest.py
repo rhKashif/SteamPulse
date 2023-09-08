@@ -110,4 +110,38 @@ def fake_raw_data():
 def fake_data_with_tags():
     return pd.DataFrame([[2246030, "Fake: Escape", "5 Sep, 2023", "Early Access,Clicker,Strategy", '£3.39', '£2.54',
                           True, False, False, "Adventure,Early Access", "Fake", "Fake", "Early Access"]], columns=['app_id', 'title',
-                        'release_date', 'user_tags', 'full price', 'sale price', 'windows', 'mac', 'linux', 'genres', 'developers', 'publishers', 'tags'])
+                        'release_date', 'user_tags', 'full price', 'sale price', 'windows', 'mac', 'linux', 'genres', 'developers', 'publishers', 'genre'])
+
+
+@pytest.fixture
+def fake_publisher_data():
+    publisher = pd.DataFrame(
+        [['fake publisher 1'], ['fake_publisher 2']], columns=['publishers'])
+    return publisher['publishers']
+
+
+@pytest.fixture
+def fake_genre_data():
+    genre = pd.DataFrame(
+        [['fake_genre', True], ['fake 2', False]], columns=['genre', 'user_generated'])
+    return genre[["genre", "user_generated", "genre", "user_generated"]]
+
+
+@pytest.fixture
+def fake_game_data():
+    genre = pd.DataFrame(
+        [[1, 'fake_title 1', '2023-09-05', 5.30, 5.30, 1], [3, 'fake_title 2', '2023-09-05', 5.30, 4.30, 2]], columns=['app_id', 'title', 'release_date', 'price', 'sale_price', 'platform_id'])
+    return genre[['app_id', 'title', 'release_date', 'price', 'sale_price', 'platform_id']]
+
+
+@pytest.fixture
+def fake_row():
+    return ['', 0, 1837620, 'Sans Logique', '2023-09-07', 0.0, 0.0, True, False, False, 'Gamagora ICOM', 'Gamagora ICOM', 'Adventure', False]
+
+
+@pytest.fixture
+def fake_complete_data():
+    return pd.DataFrame(
+        [[1, 'fake_title 1', '2023-09-05', 5.30, 5.30, True, False, True, 'fake developer', 'fake publisher', 'hiphop', True],
+            [2, 'fake_title 2', '2023-09-05', 5.30, 4.30, True, False, True, 'fake developer 1', 'fake publisher 2', 'rock', True]],
+        columns=['app_id', 'title', 'release_date', 'full_price', 'sale_price', 'windows', 'mac', 'linux', 'developers', 'publishers', 'genre', 'user generated'])

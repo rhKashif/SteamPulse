@@ -115,7 +115,6 @@ def add_to_publisher_link_table(conn: connection, data: list) -> None:
         cur.execute(
             """SELECT publisher_id FROM publisher WHERE publisher_name = %s;""",
             [data[11]])
-
         publisher_id = cur.fetchone()['publisher_id']
         cur.execute(
             """SELECT game_id FROM game WHERE app_id = %s;""",
@@ -188,7 +187,7 @@ def upload_games(data: pd.DataFrame, conn: connection) -> None:
 
     games_to_load = new_game_data[[
         'app_id', 'title', 'release_date', 'price', 'sale_price', 'platform_id']]
-    execute_batch_columns_for_games(connect_d, games_to_load,
+    execute_batch_columns_for_games(conn, games_to_load,
                                     'game', page_size=100)
 
 

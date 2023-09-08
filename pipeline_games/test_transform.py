@@ -2,16 +2,16 @@
 import pytest
 from pandas._libs.tslibs.timestamps import Timestamp
 
-from transform_games import identify_unique_tags, create_user_generated_column, drop_unnecessary_columns, convert_date_to_datetime, convert_price_to_float, explode_column_to_individual_rows
+from transform_games import identify_unique_genre, create_user_generated_column, drop_unnecessary_columns, convert_date_to_datetime, convert_price_to_float, explode_column_to_individual_rows, check_data_is_not_null
 
 
 def test_separate_rows_created_for_unique_tags(fake_raw_data):
-    """Tests that unique tags have a separate row"""
-    assert 'tags' not in list(fake_raw_data.columns)
+    """Tests that unique genre have a separate row"""
+    assert 'genre' not in list(fake_raw_data.columns)
     assert fake_raw_data.shape[0] == 1
-    result = identify_unique_tags(fake_raw_data)
+    result = identify_unique_genre(fake_raw_data)
     assert result.shape[0] == 4
-    assert 'tags' in list(result.columns)
+    assert 'genre' in list(result.columns)
 
 
 def test_user_generated_column_created(fake_data_with_tags):
@@ -56,3 +56,11 @@ def test_explode_columns(fake_raw_data):
     assert fake_raw_data.shape[0] == 1
     result = explode_column_to_individual_rows(fake_raw_data, 'developers')
     assert result.shape[0] == 2
+
+
+@pytest.mark.parametrize("fake_data, expected_result", [(None, "Data not provided"), ("Fake publisher", "Fake publisher")])
+def test_data_is_not_null_function(fake_data, expected_result):
+    """Test data returned if valid or generic string if not valid"""
+    result = check_data_is_not_null(fake_data)
+    assert isinstance(result, str) is True
+    assert result == expected_result
