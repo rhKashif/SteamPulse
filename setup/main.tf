@@ -2,13 +2,11 @@ provider "aws" {
   region = "eu-west-2"
 }
 
-
 resource "aws_ecr_repository" "steampulse_game_pipeline_ecr" {
   name         = "steampulse_game_pipeline_ecr"
   force_delete = true
 
 }
-
 
 resource "aws_ecr_repository" "steampulse_review_pipeline_ecr" {
   name         = "steampulse_review_pipeline_ecr"
@@ -21,11 +19,14 @@ resource "aws_ecr_repository" "steampulse_dashboard_ecr" {
   force_delete = true
 }
 
+resource "aws_ecr_repository" "steampulse_lambda_ecr" {
+  name         = "steampulse_lambda_ecr"
+  force_delete = true
+}
 
 resource "aws_ecs_cluster" "steampulse_cluster" {
   name = "steampulse_cluster"
 }
-
 
 resource "aws_db_instance" "steampulse_database" {
   allocated_storage      = 10
@@ -92,9 +93,6 @@ resource "aws_security_group" "steampulse_pipeline_ecs_sg" {
     Name = "steampulse_pipeline_ecs_sg"
   }
 }
-
-
-
 
 resource "aws_iam_role" "steampulse_pipeline_ecs_task_execution_role" {
   name = "steampulse_pipeline_ecs_task_execution_role"
@@ -189,12 +187,10 @@ resource "aws_iam_role" "steampulse_pipeline_ecs_task_role_policy" {
   })
 }
 
-
 resource "aws_iam_role_policy_attachment" "steampulse_pipeline_ecs_task_execution_role_policy_attachment" {
   role       = aws_iam_role.steampulse_pipeline_ecs_task_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
-
 
 resource "aws_ecs_task_definition" "steampulse_review_pipeline_task_definition" {
   family                   = "steampulse_review_pipeline_task_definition"
@@ -272,8 +268,6 @@ resource "aws_ecs_task_definition" "steampulse_game_pipeline_task_definition" {
   ])
 }
 
-
-
 resource "aws_ecs_task_definition" "steampulse_dashboard_task_definition" {
   family                   = "steampulse_dashboard_task_definition"
   requires_compatibilities = ["FARGATE"]
@@ -286,7 +280,7 @@ resource "aws_ecs_task_definition" "steampulse_dashboard_task_definition" {
   container_definitions = jsonencode([
     {
       name   = "steampulse_dashboard_ecr"
-      image  = var.DASHBOARD_IMAGE
+      image  = "${aws_ecr_repository.steampulse_dashboard_ecr.repository_url}:latest"
       cpu    = 10
       memory = 512
 
@@ -333,9 +327,6 @@ resource "aws_ecs_task_definition" "steampulse_dashboard_task_definition" {
   ])
 }
 
-
-
-
 resource "aws_scheduler_schedule" "steampulse_game_pipeline_schedule" {
   name                = "steampulse_game_pipeline_schedule"
   description         = "Runs the steampulse game pipeline on a cron schedule"
@@ -361,7 +352,6 @@ resource "aws_scheduler_schedule" "steampulse_game_pipeline_schedule" {
     }
   }
 }
-
 
 resource "aws_scheduler_schedule" "steampulse_review_pipeline_schedule" {
   name                = "steampulse_review_pipeline_schedule"
@@ -428,4 +418,42 @@ resource "aws_ecs_service" "steampulse_streamlit_service" {
   }
 }
 
-#unfinished below
+
+
+
+
+resource "aws_lambda_permission" "steampulse_lambda_allow_eventbridge" {
+  statement_id  = "AllowExecutionFromEventBridge"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.steampulse_email_lambda.function_name
+  principal     = "events.amazonaws.com"
+
+}
+
+resource "aws_lambda_function" "steampulse_email_lambda" {
+  image_uri      = "${aws_ecr_repository.steampulse_lambda_ecr.repository_url}:latest"
+  package_type = "Image"
+  function_name = "steampulse_email_lambda"
+  role          = aws_iam_role.steampulse_lambda_iam.arn
+  timeout = 5
+
+}
+
+
+resource "aws_iam_role" "steampulse_lambda_iam" {
+  name = "steampulse_lambda_iam"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
