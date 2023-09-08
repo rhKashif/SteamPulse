@@ -76,6 +76,8 @@ CREATE TABLE review(
     sentiment FLOAT NOT NULL DEFAULT 0,
     review_text TEXT NOT NULL, 
     reviewed_at TIMESTAMP NOT NULL,
+    review_score INT NOT NULL DEFAULT 0,
+    playtime_last_2_weeks INT NOT NULL,
     game_id INT NOT NULL,
     PRIMARY KEY (review_id),
     FOREIGN KEY (game_id) REFERENCES game(game_id) 
