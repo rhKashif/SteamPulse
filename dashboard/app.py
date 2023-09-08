@@ -195,6 +195,8 @@ def filter_data(df_releases: DataFrame, titles: list[str], release_dates: list[d
     if genres:
         df_releases = df_releases[df_releases["genre"].isin(genres)]
 
+    print(titles, release_dates, review_dates, genres)
+
     df_releases = df_releases[df_releases[platforms].any(axis=1)]
     df_releases = df_releases[(df_releases['sentiment'] >= minimum_sentiment) &
                               (df_releases['sentiment'] <= maximum_sentiment)]
@@ -525,10 +527,6 @@ def second_row_figures(genre_distribution_plot: Chart, reviews_per_game_frequenc
 
 if __name__ == "__main__":
 
-    # Temporary mock data
-    game_df = pd.read_csv("mock_data.csv")
-
-    # Start of dashboard script
     load_dotenv()
     config = environ
 
