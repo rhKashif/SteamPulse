@@ -198,8 +198,16 @@ def filter_data(df_releases: DataFrame, titles: list[str], release_dates: list[d
     print(titles, release_dates, review_dates, genres)
 
     df_releases = df_releases[df_releases[platforms].any(axis=1)]
-    df_releases = df_releases[(df_releases['sentiment'] >= minimum_sentiment) &
-                              (df_releases['sentiment'] <= maximum_sentiment)]
+    average_sentiment_by_title = df_releases.groupby('title')[
+        'sentiment'].mean()
+
+    filtered_titles = average_sentiment_by_title[
+        ((average_sentiment_by_title >= minimum_sentiment) | average_sentiment_by_title.isna()) &
+        ((average_sentiment_by_title <= maximum_sentiment)
+         | average_sentiment_by_title.isna())
+    ].index
+
+    df_releases = df_releases[df_releases['title'].isin(filtered_titles)]
 
     return df_releases
 
@@ -533,7 +541,6 @@ if __name__ == "__main__":
     conn = get_db_connection(config)
 
     game_df = get_database(conn)
-    print(game_df)
 
     game_df["release_date"] = pd.to_datetime(
         game_df['release_date'], format='%d/%m/%Y')
@@ -555,6 +562,7 @@ if __name__ == "__main__":
 
     filtered_df = filter_data(game_df, selected_releases, selected_release_dates, selected_review_dates,
                               selected_genre, selected_platform, min_sentiment, max_sentiment)
+    print(filtered_df)
 
     headline_figures(filtered_df)
 
