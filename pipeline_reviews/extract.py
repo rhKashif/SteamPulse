@@ -45,7 +45,7 @@ def get_reviews_for_game(game_id: int, cursor: str) -> dict:
         review_dict["review"] = review["review"]
         review_dict["review_score"] = review["votes_up"]
         review_dict["last_timestamp"] = datetime.fromtimestamp(
-            review["timestamp_updated"]).strftime("%Y-%m-%d %H:%M:%S")
+            review["timestamp_created"]).strftime("%Y-%m-%d %H:%M:%S")
         review_dict["playtime_last_2_weeks"] = review["author"]["playtime_forever"]
         page_reviews.append(review_dict)
     return {"next_cursor": next_cursor, "reviews": page_reviews}
