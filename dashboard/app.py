@@ -46,8 +46,14 @@ def get_database(conn_postgres: connection) -> DataFrame:
         DataFrame:  A pandas DataFrame containing all relevant release data
     """
     query = f"SELECT\
-            game.game_id, title, review_text FROM review\
-            LEFT JOIN game ON\
+            game.game_id, title, release_date, price, sale_price,\
+            sentiment, review_text, reviewed_at, review_score,\
+            genre, user_generated,\
+            developer_name,\
+            publisher_name,\
+            mac, windows, linux\
+            FROM game\
+            LEFT JOIN review ON\
             review.game_id=game.game_id\
             LEFT JOIN platform ON\
             game.platform_id=platform.platform_id\
@@ -521,10 +527,6 @@ if __name__ == "__main__":
 
     # Temporary mock data
     game_df = pd.read_csv("mock_data.csv")
-    game_df["release_date"] = pd.to_datetime(
-        game_df['release_date'], format='%d/%m/%Y')
-    game_df["review_date"] = pd.to_datetime(
-        game_df['review_date'], format='%d/%m/%Y')
 
     # Start of dashboard script
     load_dotenv()
@@ -532,8 +534,13 @@ if __name__ == "__main__":
 
     conn = get_db_connection(config)
 
-    df = get_database(conn)
-    print(df)
+    game_df = get_database(conn)
+    print(game_df)
+
+    game_df["release_date"] = pd.to_datetime(
+        game_df['release_date'], format='%d/%m/%Y')
+    game_df["review_date"] = pd.to_datetime(
+        game_df['reviewed_at'], format='%d/%m/%Y')
 
     st.set_page_config(layout="wide")
 
