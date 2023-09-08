@@ -15,7 +15,8 @@ def get_db_connection(config) -> connection:
             password=config['DATABASE_PASSWORD'],
             host=config['DATABASE_IP'],
             port=config['DATABASE_PORT'],
-            database=config['DATABASE_NAME'])
+            database=config['DATABASE_NAME'],
+            cursor_factory=RealDictCursor)
     except ValueError:
         return "Error connecting to database."
 
@@ -26,7 +27,7 @@ def execute_batch_columns(conn: connection, data: pd.DataFrame, table: str, colu
     cols = column
     query = """INSERT INTO %s(%s) VALUES(%%s) ON CONFLICT (%s) DO NOTHING;""" % (
         table, cols, cols)
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+    with conn.cursor() as cur:
         try:
             execute_batch(cur, query, tuples, page_size)
             conn.commit()
@@ -46,7 +47,7 @@ def execute_batch_columns_for_genres(conn: connection, data: pd.DataFrame, table
     query = """INSERT INTO %s(%s) SELECT %%s,%%s WHERE NOT EXISTS
             (SELECT genre_id FROM genre
               WHERE genre = %%s AND user_generated = %%s);""" % (table, cols)
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+    with conn.cursor() as cur:
         try:
             execute_batch(cur, query, tuples, page_size)
             conn.commit()
@@ -65,7 +66,7 @@ def execute_batch_columns_for_games(conn: connection, data: pd.DataFrame, table:
 
     query = """INSERT INTO %s(%s) VALUES (%%s,%%s,%%s,%%s,%%s,%%s)
             ON CONFLICT (app_id) DO NOTHING""" % (table, cols)
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+    with conn.cursor() as cur:
         try:
             execute_batch(cur, query, tuples, page_size)
             conn.commit()
@@ -83,7 +84,7 @@ def get_existing_platform_data(mac_c, windows_c, linux_c, conn: connection, cach
     if value in cache.keys():
         return cache[value]
 
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+    with conn.cursor() as cur:
         cur.execute("""SELECT platform_id FROM platform
                     WHERE mac = %s AND windows = %s AND linux = %s;""",
                     [mac_c, windows_c, linux_c])
@@ -95,7 +96,7 @@ def get_existing_platform_data(mac_c, windows_c, linux_c, conn: connection, cach
 
 def add_to_genre_link_table(conn: connection, data: list) -> None:
     """Updates genre link table"""
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+    with conn.cursor() as cur:
         cur.execute(
             """SELECT genre_id FROM genre WHERE genre = %s AND user_generated = %s;""",
             [data[12], data[13]])
@@ -120,7 +121,7 @@ def add_to_genre_link_table(conn: connection, data: list) -> None:
 
 def add_to_publisher_link_table(conn: connection, data: list) -> None:
     """Updates publisher link table"""
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+    with conn.cursor() as cur:
         cur.execute(
             """SELECT publisher_id FROM publisher WHERE publisher_name = %s;""",
             [data[11]])
@@ -145,7 +146,7 @@ def add_to_publisher_link_table(conn: connection, data: list) -> None:
 
 def add_to_developer_link_table(conn: connection, data: list) -> None:
     """Updates link table"""
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+    with conn.cursor() as cur:
         cur.execute(
             """SELECT developer_id FROM developer WHERE developer_name = %s;""",
             [data[10]])
