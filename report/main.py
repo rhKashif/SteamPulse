@@ -340,6 +340,13 @@ def create_report(df_releases: DataFrame) -> None:
 
 def send_email():
     """
+    Send an email with an attached PDF report using Amazon Simple Email Service (SES).
+
+    Args:
+        None
+
+    Returns:
+        None
     """
     client = boto3.client("ses",
                           region_name="eu-west-2",
@@ -492,6 +499,14 @@ def plot_top_trending_games(df_releases: DataFrame) -> Chart:
 
 def handler(event, context):
     """
+    AWS Lambda function to generate a report, send it via email using Amazon SES.
+
+    Args:
+        event: AWS Lambda event
+        context: AWS Lambda context  
+
+    Return:
+        None
     """
     game_df = pd.read_csv("mock_data.csv")
     game_df["release_date"] = pd.to_datetime(
@@ -499,21 +514,17 @@ def handler(event, context):
     game_df["review_date"] = pd.to_datetime(
         game_df['review_date'], format='%d/%m/%Y')
 
+    # conn = get_db_connection(config)
+    # game_df = get_database(conn)
+
     create_report(game_df)
     print("Report created.")
-    # send_email()
-    # print("Email sent.")
+    send_email()
+    print("Email sent.")
 
 
 if __name__ == "__main__":
-    # Temporary mock data
 
-    # Start of dashboard script
     load_dotenv()
     config = environ
-
-    # conn = get_db_connection(config)
-
-    # game_df = get_database(conn)
-
-    print(handler(None, None))
+    handler(None, None)
