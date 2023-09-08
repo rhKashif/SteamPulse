@@ -77,11 +77,12 @@ CREATE TABLE review(
     review_id INT GENERATED ALWAYS AS IDENTITY,
     sentiment FLOAT NOT NULL DEFAULT 0,
     review_text TEXT NOT NULL, 
-    reviewed_at TIMESTAMP NOT NULL,
+    reviewed_at DATE NOT NULL,
     review_score INT NOT NULL DEFAULT 0,
     playtime_last_2_weeks INT NOT NULL,
     game_id INT NOT NULL,
     PRIMARY KEY (review_id),
+    UNIQUE(game_id, review_text, review_score, reviewed_at, playtime_last_2_weeks, sentiment),
     FOREIGN KEY (game_id) REFERENCES game(game_id) 
 
 );
