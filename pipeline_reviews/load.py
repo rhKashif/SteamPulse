@@ -42,7 +42,7 @@ def move_reviews_to_db(conn: connection, reviews_df: DataFrame) -> None:
     try:
         with conn.cursor() as cur:
             execute_batch(cur, """INSERT INTO review (game_id, review_text, review_score, reviewed_at,
-        playtime_last_2_weeks, sentiment) VALUES (%s, %s, %s, %s, %s, %s)""", data_to_insert)
+        playtime_last_2_weeks, sentiment) VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT DO NOTHING""", data_to_insert)
             conn.commit()
     except Error as e:
         print("Error at load: ", e)
