@@ -13,7 +13,7 @@ import requests
 
 
 class GamesNotFound(Exception):
-    def __init__(self, message="No new games were found!"):
+    def __init__(self, message="No new games were found in the last 2 weeks!"):
         super().__init__(message)
 
 
