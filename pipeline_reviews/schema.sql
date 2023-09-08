@@ -67,7 +67,7 @@ CREATE TABLE review(
     review_date DATE NOT NULL,
     game_id INT,
     review_score INT NOT NULL DEFAULT 0,
-    playtime_at_review INT NOT NULL,
+    playtime_last_2_weeks INT NOT NULL,
     PRIMARY KEY (review_id),
     FOREIGN KEY (game_id) REFERENCES game(game_id) 
 
