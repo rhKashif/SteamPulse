@@ -22,3 +22,7 @@ variable "DATABASE_USERNAME" {
   type = string
 
 }
+
+variable "DASHBOARD_IMAGE" {
+  type = string
+}
