@@ -47,13 +47,13 @@ def parse_price_bs(soup) -> dict:
     prices = {}
     try:
         tag = soup.find("div", class_="game_purchase_price price")
-        prices["full price"] = tag.string.strip()
-        prices["sale price"] = tag.string.strip()
+        prices["full_price"] = tag.string.strip()
+        prices["sale_price"] = tag.string.strip()
     except AttributeError:
         full_tag = soup.find("div", class_="discount_original_price")
-        prices["full price"] = full_tag.string.strip()
+        prices["full_price"] = full_tag.string.strip()
         discount_tag = soup.find("div", class_="discount_final_price")
-        prices["sale price"] = discount_tag.string.strip()
+        prices["sale_price"] = discount_tag.string.strip()
 
     return prices
 
