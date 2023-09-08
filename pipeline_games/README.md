@@ -14,6 +14,16 @@ pip3 install -r requirements.txt
 
 The following environment variables must be supplied in a `.env` file.
 
+```sh
+ACCESS_KEY_ID     = XXXXXXXXXXX
+SECRET_ACCESS_KEY = XXXXXXXXXXX
+DATABASE_NAME     = steampulse
+DATABASE_USERNAME = steampulse_admin
+DATABASE_PASSWORD = XXXXXXXXXXX
+DATABASE_IP       = XXXXXXXXXXX
+DATABASE_PORT     = XXXXXXXXXXX
+```
+
 ## Run the code
 
 Main scripts:
