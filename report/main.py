@@ -191,15 +191,38 @@ def format_trending_game_information(df_releases: DataFrame, index: int) -> str:
     return html_template
 
 
-def create_report(df_releases: DataFrame):
+def build_figure_from_plot(plot: Chart, figure_name: str) -> str:
     """
+    Build a .png file for a plot and return its path
+
+    Args:
+        plot (Chart): A chart displaying plotted data
+
+        figure_name (str): A string for use as the name of the created .png file
+
+    Return:
+        str: A string representing the path of a .png file
+    """
+    plot.save(f"/tmp/{figure_name}.png")
+    return f"/tmp/{figure_name}.png"
+
+
+def create_report(df_releases: DataFrame) -> None:
+    """
+    Create a pdf file from a html string
+
+    Args:  
+        df_releases (DataFrame): A DataFrame containing new release information
+
+    Returns:
+        None
     """
 
     new_releases = get_new_releases(df_releases)
     top_rated_release = get_top_rated_release(df_releases)
     trending_game_one = format_trending_game_information(df_releases, 0)
     trending_game_two = format_trending_game_information(df_releases, 1)
-    trending_game_three = format_trending_game_information(df_releases, 2)
+    trending_game_three = format_trending_game_information(df_releases, 1)
 
     reviews_per_game_release_frequency_plot = plot_reviews_per_game_frequency(
         df_releases)
@@ -207,18 +230,16 @@ def create_report(df_releases: DataFrame):
     games_review_frequency_plot = plot_games_review_frequency(df_releases)
     trending_games_plot = plot_top_trending_games(df_releases)
 
-    reviews_per_game_release_frequency_plot.save("/tmp/chart_one.png")
-    games_release_frequency_plot.save("/tmp/chart_two.png")
-    games_review_frequency_plot.save("/tmp/chart_three.png")
-    trending_games_plot.save("/tmp/chart_four.png")
-
-    fig1 = "/tmp/chart_one.png"
-    fig2 = "/tmp/chart_two.png"
-    fig3 = "/tmp/chart_three.png"
-    fig4 = "/tmp/chart_four.png"
+    fig1 = build_figure_from_plot(
+        reviews_per_game_release_frequency_plot, "chart_one")
+    fig2 = build_figure_from_plot(
+        games_release_frequency_plot, "chart_two")
+    fig3 = build_figure_from_plot(
+        games_review_frequency_plot, "chart_three")
+    fig4 = build_figure_from_plot(
+        trending_games_plot, "chart_four")
 
     header_color = "#1b2838"
-
     text_color = "#f5f4f1"
 
     template = f'''
