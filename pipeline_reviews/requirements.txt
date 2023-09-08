@@ -1,5 +1,5 @@
+nltk
+pandas
 psycopg2-binary
 python-dotenv
-pandas
 requests
-nltk
