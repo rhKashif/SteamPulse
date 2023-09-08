@@ -113,6 +113,6 @@ def test_genres_called(fake_batch, fake_complete_data):
 def test_games_called(fake_batch, fake_complete_data):
     """Test appropriate functions called for games"""
     fake_conn = MagicMock()
-    upload_genres(fake_conn, fake_complete_data)
+    upload_games(fake_conn, fake_complete_data)
 
     assert fake_batch.call_count == 1

@@ -187,7 +187,7 @@ def upload_games(data: pd.DataFrame, conn: connection) -> None:
 
     games_to_load = new_game_data[[
         'app_id', 'title', 'release_date', 'price', 'sale_price', 'platform_id']]
-    execute_batch_columns_for_games(connect_d, games_to_load,
+    execute_batch_columns_for_games(conn, games_to_load,
                                     'game', page_size=100)
 
 
