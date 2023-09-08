@@ -110,7 +110,41 @@ def get_top_rated_release(df_releases: DataFrame) -> str:
     return df_ratings.head(1)["title"][0]
 
 
-def trending_game_information(df_releases: DataFrame, index: int) -> str:
+def get_release_information(df_releases: DataFrame, index: int) -> dict:
+    """
+    Return key information related to a new release
+
+    Args:
+        df_release (DataFrame): A DataFrame containing new release data
+
+        index (int): A int associated with a number index within the trending game list
+
+    Return:
+        dict: A python dictionary containing all information relating to a game title
+    """
+    df_trending_game = df_releases.groupby(
+        "title")["sentiment"].mean().reset_index().iloc[index]
+
+    release_name = df_trending_game["title"]
+    sentiment = round(df_trending_game["sentiment"], 1)
+    release_df = df_releases[df_releases["title"]
+                             == f"{release_name}"].reset_index().head(1)
+
+    game_information = {
+        "name": release_name,
+        "sentiment": sentiment,
+        "price": release_df["price"][0],
+        "sale_price": release_df["sale_price"][0],
+        "release_date": release_df["release_date"][0].strftime("%Y-%m-%d"),
+        "mac_compatibility": release_df["mac"][0],
+        "windows_compatibility": release_df["windows"][0],
+        "linux_compatibility": release_df["linux"][0]
+    }
+
+    return game_information
+
+
+def format_trending_game_information(df_releases: DataFrame, index: int) -> str:
     """
     Return information of new releases with the highest overall sentiment score for the previous day
 
@@ -124,19 +158,8 @@ def trending_game_information(df_releases: DataFrame, index: int) -> str:
     """
     date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
     df_releases = df_releases[df_releases["release_date"] == date]
-    df_trending_game = df_releases.groupby(
-        "title")["sentiment"].mean().reset_index().iloc[index]
 
-    release_name = df_trending_game["title"]
-    sentiment = round(df_trending_game["sentiment"], 1)
-    release_df = df_releases[df_releases["title"]
-                             == f"{release_name}"].reset_index().head(1)
-    price = release_df["price"][0]
-    sale_price = release_df["sale_price"][0]
-    release_date = release_df["release_date"][0].strftime("%Y-%m-%d")
-    mac_compatibility = release_df["mac"][0]
-    windows_compatibility = release_df["windows"][0]
-    linux_compatibility = release_df["linux"][0]
+    release_information = get_release_information(df_releases, index)
 
     html_template = f"""
     <html>
@@ -152,7 +175,7 @@ def trending_game_information(df_releases: DataFrame, index: int) -> str:
         </style>
     </head>
     <body>
-        <p><b>{release_name}</b><br>
+        <p><b>{release_information[""]}</b><br>
         Price: £{price}<br>
         Sale Price: £{sale_price}<br>
         Average Sentiment: {sentiment}<br>
@@ -174,9 +197,9 @@ def create_report(df_releases: DataFrame):
 
     new_releases = get_new_releases(df_releases)
     top_rated_release = get_top_rated_release(df_releases)
-    trending_game_one = trending_game_information(df_releases, 0)
-    trending_game_two = trending_game_information(df_releases, 1)
-    trending_game_three = trending_game_information(df_releases, 2)
+    trending_game_one = format_trending_game_information(df_releases, 0)
+    trending_game_two = format_trending_game_information(df_releases, 1)
+    trending_game_three = format_trending_game_information(df_releases, 2)
 
     reviews_per_game_release_frequency_plot = plot_reviews_per_game_frequency(
         df_releases)
