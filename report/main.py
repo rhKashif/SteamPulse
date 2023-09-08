@@ -78,7 +78,24 @@ def convert_html_to_pdf(source_html: str, output_filename: str) -> int:
     return pisa_status.err
 
 
-def get_new_releases(df_releases: DataFrame) -> int:
+def get_data_for_release_date(df_releases: DataFrame, index: int) -> DataFrame:
+    """
+    Return a DataFrame for a specific date behind the current date
+
+    Args:
+        df_releases (DataFrame): A pandas DataFrame containing all relevant game data
+
+        index (int): An integer representing the number of days to go back from current date
+
+    Returns:
+        DataFrame: A pandas DataFrame containing all relevant game data for a specific date
+    """
+    date = (datetime.now() - timedelta(days=index)).strftime("%Y-%m-%d")
+
+    return df_releases[df_releases["release_date"] == date]
+
+
+def get_number_of_new_releases(df_releases: DataFrame) -> int:
     """
     Return the number of new releases for the previous day
 
@@ -103,8 +120,7 @@ def get_top_rated_release(df_releases: DataFrame) -> str:
     Returns:
         str: A string relating to the title of the highest rated new game released
     """
-    date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-    df_releases = df_releases[df_releases["release_date"] == date]
+    df_releases = get_data_for_release_date(df_releases, 1)
     df_ratings = df_releases.groupby("title")["sentiment"].mean().reset_index()
 
     return df_ratings.head(1)["title"][0]
@@ -156,8 +172,7 @@ def format_trending_game_information(df_releases: DataFrame, index: int) -> str:
     Returns:
         str: A string relating to the information of selected trending new game released in html format
     """
-    date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-    df_releases = df_releases[df_releases["release_date"] == date]
+    df_releases = get_data_for_release_date(df_releases, 1)
 
     release_information = get_release_information(df_releases, index)
 
@@ -218,7 +233,7 @@ def create_report(df_releases: DataFrame) -> None:
         None
     """
 
-    new_releases = get_new_releases(df_releases)
+    new_releases = get_number_of_new_releases(df_releases)
     top_rated_release = get_top_rated_release(df_releases)
     trending_game_one = format_trending_game_information(df_releases, 0)
     trending_game_two = format_trending_game_information(df_releases, 1)
@@ -473,8 +488,7 @@ def plot_top_trending_games(df_releases: DataFrame) -> Chart:
     Returns:
         Chart: A chart displaying plotted data
     """
-    date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-    df_releases = df_releases[df_releases["release_date"] == date]
+    df_releases = get_data_for_release_date(df_releases, 1)
 
     df_releases = df_releases.groupby(
         "title")["sentiment"].mean().reset_index()
