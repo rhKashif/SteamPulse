@@ -1,6 +1,6 @@
 altair
 python-dotenv
-psycopg2
+psycopg2-binary
 streamlit
 reportlab
 xhtml2pdf

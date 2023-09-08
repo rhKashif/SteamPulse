@@ -497,7 +497,7 @@ def plot_top_trending_games(df_releases: DataFrame) -> Chart:
     return chart
 
 
-def handler(event, context):
+def handler(event, context) -> None:
     """
     AWS Lambda function to generate a report, send it via email using Amazon SES.
 
