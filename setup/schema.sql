@@ -69,7 +69,7 @@ CREATE TABLE game(
 );
 
 CREATE INDEX date_index ON game (release_date);
-
+CREATE INDEX app_index ON game (game_id);
 
 -- review references game
 
