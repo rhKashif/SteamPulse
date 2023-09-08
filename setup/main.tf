@@ -204,7 +204,7 @@ resource "aws_ecs_task_definition" "steampulse_review_pipeline_task_definition" 
   container_definitions = jsonencode([
     {
       name   = "steampulse_review_pipeline_ecr"
-      image  = "na"
+      image  = "${aws_ecr_repository.steampulse_review_pipeline_ecr.repository_url}:latest"
       cpu    = 10
       memory = 512
 
@@ -216,6 +216,39 @@ resource "aws_ecs_task_definition" "steampulse_review_pipeline_task_definition" 
       ]
 
       essential : true,
+      environment : [
+
+        {
+          "name" : "ACCESS_KEY_ID",
+          "value" : var.ACCESS_KEY_ID
+        },
+        {
+          "name" : "SECRET_ACCESS_KEY",
+          "value" : var.SECRET_ACCESS_KEY
+        },
+        {
+          "name" : "DATABASE_NAME",
+          "value" : var.DATABASE_NAME
+        },
+        {
+          "name" : "DATABASE_USERNAME",
+          "value" : var.DATABASE_USERNAME
+        },
+        {
+          "name" : "DATABASE_PASSWORD",
+          "value" : var.DATABASE_PASSWORD
+        },
+        {
+          "name" : "DATABASE_IP",
+          "value" : "${aws_db_instance.steampulse_database.address}"
+        },
+        {
+          "name" : "DATABASE_PORT",
+          "value" : "5432"
+        }
+      ]
+
+
 
       logConfiguration : {
         "logDriver" : "awslogs",
@@ -242,7 +275,7 @@ resource "aws_ecs_task_definition" "steampulse_game_pipeline_task_definition" {
   container_definitions = jsonencode([
     {
       name   = "steampulse_game_pipeline_ecr"
-      image  = "na"
+      image  = "${aws_ecr_repository.steampulse_game_pipeline_ecr.repository_url}:latest"
       cpu    = 10
       memory = 512
 
@@ -254,6 +287,37 @@ resource "aws_ecs_task_definition" "steampulse_game_pipeline_task_definition" {
       ]
 
       essential : true,
+      environment : [
+
+        {
+          "name" : "ACCESS_KEY_ID",
+          "value" : var.ACCESS_KEY_ID
+        },
+        {
+          "name" : "SECRET_ACCESS_KEY",
+          "value" : var.SECRET_ACCESS_KEY
+        },
+        {
+          "name" : "DATABASE_NAME",
+          "value" : var.DATABASE_NAME
+        },
+        {
+          "name" : "DATABASE_USERNAME",
+          "value" : var.DATABASE_USERNAME
+        },
+        {
+          "name" : "DATABASE_PASSWORD",
+          "value" : var.DATABASE_PASSWORD
+        },
+        {
+          "name" : "DATABASE_IP",
+          "value" : "${aws_db_instance.steampulse_database.address}"
+        },
+        {
+          "name" : "DATABASE_PORT",
+          "value" : "5432"
+        }
+      ]
 
       logConfiguration : {
         "logDriver" : "awslogs",
@@ -422,38 +486,38 @@ resource "aws_ecs_service" "steampulse_streamlit_service" {
 
 
 
-resource "aws_lambda_permission" "steampulse_lambda_allow_eventbridge" {
-  statement_id  = "AllowExecutionFromEventBridge"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.steampulse_email_lambda.function_name
-  principal     = "events.amazonaws.com"
+# resource "aws_lambda_permission" "steampulse_lambda_allow_eventbridge" {
+#   statement_id  = "AllowExecutionFromEventBridge"
+#   action        = "lambda:InvokeFunction"
+#   function_name = aws_lambda_function.steampulse_email_lambda.function_name
+#   principal     = "events.amazonaws.com"
 
-}
+# }
 
-resource "aws_lambda_function" "steampulse_email_lambda" {
-  image_uri      = "${aws_ecr_repository.steampulse_lambda_ecr.repository_url}:latest"
-  package_type = "Image"
-  function_name = "steampulse_email_lambda"
-  role          = aws_iam_role.steampulse_lambda_iam.arn
-  timeout = 5
+# resource "aws_lambda_function" "steampulse_email_lambda" {
+#   image_uri      = "${aws_ecr_repository.steampulse_lambda_ecr.repository_url}:latest"
+#   package_type = "Image"
+#   function_name = "steampulse_email_lambda"
+#   role          = aws_iam_role.steampulse_lambda_iam.arn
+#   timeout = 5
 
-}
+# }
 
 
-resource "aws_iam_role" "steampulse_lambda_iam" {
-  name = "steampulse_lambda_iam"
+# resource "aws_iam_role" "steampulse_lambda_iam" {
+#   name = "steampulse_lambda_iam"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Action = "sts:AssumeRole"
+#         Effect = "Allow"
+#         Sid    = ""
+#         Principal = {
+#           Service = "lambda.amazonaws.com"
+#         }
+#       },
+#     ]
+#   })
+# }
