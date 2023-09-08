@@ -68,6 +68,8 @@ CREATE TABLE game(
 
 );
 
+CREATE INDEX date_index ON game (release_date);
+
 
 -- review references game
 
