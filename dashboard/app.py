@@ -536,7 +536,7 @@ def plot_trending_games_table(df_releases: DataFrame) -> None:
 
 def plot_price_distribution(df_releases: DataFrame) -> Chart:
     """
-    Create a line chart for the number of games released per day
+    Create a histogram chart for range of game price
 
     Args:
         df_releases (DataFrame): A DataFrame containing filtered data related to new releases
@@ -550,8 +550,6 @@ def plot_price_distribution(df_releases: DataFrame) -> Chart:
         alt.X('price:Q', bin=alt.Bin(maxbins=20), title='Game Price Range'),
         alt.Y('count():Q', title='Number of Games')
     ).properties(
-        width=600,
-        height=400,
         title='Game Price Range Histogram'
     )
 
