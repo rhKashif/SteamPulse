@@ -195,12 +195,10 @@ def filter_data(df_releases: DataFrame, titles: list[str], release_dates: list[d
     if genres:
         df_releases = df_releases[df_releases["genre"].isin(genres)]
 
-    print(titles, release_dates, review_dates, genres)
-
     df_releases = df_releases[df_releases[platforms].any(axis=1)]
+
     average_sentiment_by_title = df_releases.groupby('title')[
         'sentiment'].mean()
-
     filtered_titles = average_sentiment_by_title[
         ((average_sentiment_by_title >= minimum_sentiment) | average_sentiment_by_title.isna()) &
         ((average_sentiment_by_title <= maximum_sentiment)
@@ -234,8 +232,6 @@ def plot_games_release_frequency(df_releases: DataFrame) -> Chart:
         y=alt.Y("num_of_games:Q", title="Number of Games")
     ).properties(
         title="New Releases per Day",
-        width=800,
-        height=400
     )
 
     return chart
@@ -252,7 +248,8 @@ def plot_games_review_frequency(df_releases: DataFrame) -> Chart:
         Chart: A chart displaying plotted data
     """
     df_releases = df_releases.groupby(
-        "release_date").size().reset_index()
+        "release_date")["review_text"].nunique().reset_index()
+
     df_releases.columns = ["release_date", "num_of_reviews"]
 
     chart = alt.Chart(df_releases).mark_line(
@@ -279,7 +276,9 @@ def plot_reviews_per_game_frequency(df_releases: DataFrame) -> Chart:
         Chart: A chart displaying plotted data
     """
     df_releases = df_releases.groupby(
-        "title").size().reset_index()
+        "title")["review_text"].nunique().reset_index().sort_values(by=["review_text"]).tail(5)
+
+    print(df_releases)
     df_releases.columns = ["title", "num_of_reviews"]
 
     chart = alt.Chart(df_releases).mark_bar(
@@ -322,12 +321,12 @@ def plot_platform_distribution(df_releases: DataFrame) -> Chart:
                                      "compatibility": [mac_compatibility, windows_compatibility, linux_compatibility]})
 
     chart = alt.Chart(compatibility_df).mark_bar().encode(
-        x=alt.X("platform", title="Platform"),
-        y=alt.Y("compatibility", title="Compatible Games"),
+        y=alt.Y("platform", title="Platform"),
+        x=alt.X("compatibility", title="Compatible Games"),
     ).properties(
         title="Releases Compatibility per Platform",
         width=800,
-        height=400
+        height=350
     )
 
     return chart
@@ -344,16 +343,16 @@ def plot_genre_distribution(df_releases: DataFrame) -> Chart:
         Chart: A chart displaying plotted data
     """
     df_releases = df_releases.groupby(
-        "genre").size().reset_index()
+        "genre").size().reset_index().sort_values(by=[0]).tail(5)
+
     df_releases.columns = ["genre", "releases_per_genres"]
 
     chart = alt.Chart(df_releases).mark_bar().encode(
-        x=alt.X("releases_per_genres", title="Number of Releases"),
-        y=alt.Y("genre:N", title="Genre")
+        x=alt.Y("releases_per_genres:Q",
+                title="Number of Releases"),
+        y=alt.X("genre:N", title="Genre", sort="-x")
     ).properties(
         title="Releases per Genre",
-        width=800,
-        height=800
     )
 
     return chart
@@ -413,7 +412,7 @@ def headline_figures(df_releases: DataFrame) -> None:
         st.metric("Total Releases:", df_releases["title"].nunique())
     with cols[1]:
         st.metric("Total Reviews:",
-                  df_releases.shape[0])
+                  df_releases["review_text"].nunique())
     with cols[2]:
         st.metric("Average Sentiment:", df_releases["sentiment"].mean())
 
@@ -542,7 +541,6 @@ if __name__ == "__main__":
 
     filtered_df = filter_data(game_df, selected_releases, selected_release_dates, selected_review_dates,
                               selected_genre, selected_platform, min_sentiment, max_sentiment)
-    print(filtered_df)
 
     headline_figures(filtered_df)
 
