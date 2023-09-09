@@ -187,8 +187,10 @@ def build_sidebar_price(df_releases: DataFrame) -> tuple:
     Returns:
         list: A tuple with minimum and maximum sentiment that the user has selected
     """
+    max_price = df_releases["price"].max()
+    min_price = df_releases["price"].min()
     price = st.sidebar.slider(
-        "Sentiment:", min_value=0.0, max_value=70.0, value=(0.0, 70.0), step=1)
+        "Price:", min_value=min_price, max_value=max_price, value=(min_price, max_price), step=1.0)
     return price
 
 
@@ -202,13 +204,17 @@ def build_sidebar_sentiment(df_releases: DataFrame) -> tuple:
     Returns:
         list: A tuple with minimum and maximum sentiment that the user has selected
     """
+    max_sentiment = df_releases["sentiment"].max()
+    min_sentiment = df_releases["sentiment"].min()
+
     sentiment = st.sidebar.slider(
-        "Sentiment:", min_value=0.0, max_value=5.0, value=(0.0, 5.0), step=0.1)
+        "Sentiment:", min_value=min_sentiment, max_value=max_sentiment, value=(min_sentiment, max_sentiment), step=0.1)
     return sentiment
 
 
 def filter_data(df_releases: DataFrame, titles: list[str], release_dates: list[datetime], review_dates: list[datetime],
-                genres: list[str], developers: list[str], publishers: list[str], platforms: list[str], minimum_sentiment: float, maximum_sentiment: float) -> DataFrame:
+                genres: list[str], developers: list[str], publishers: list[str], platforms: list[str], minimum_price: float,
+                maximum_price: float, minimum_sentiment: float, maximum_sentiment: float) -> DataFrame:
     """
     Apply live filtering according to sidebar filters to the data frame
 
@@ -252,6 +258,9 @@ def filter_data(df_releases: DataFrame, titles: list[str], release_dates: list[d
             publishers)]
 
     df_releases = df_releases[df_releases[platforms].any(axis=1)]
+
+    df_releases = df_releases[(df_releases['price'] >= minimum_price) & (
+        df_releases['price'] <= maximum_price)]
 
     average_sentiment_by_title = df_releases.groupby('title')[
         'sentiment'].mean()
@@ -330,7 +339,7 @@ def plot_reviews_per_game_frequency(df_releases: DataFrame) -> Chart:
     Returns:
         Chart: A chart displaying plotted data
     """
-    df_releases = df_releases.groupby(
+    df_releases = df_releases.dropna().groupby(
         "title")["review_text"].nunique().reset_index().sort_values(by=["review_text"]).tail(5)
 
     df_releases.columns = ["title", "num_of_reviews"]
@@ -505,11 +514,11 @@ def plot_trending_games_table(df_releases: DataFrame) -> None:
         ascending=False).dropna().reset_index()
     average_sentiment_per_title.columns = ["title", "avg_sentiment"]
 
-    merged_info = pd.merge(average_sentiment_per_title, df_releases,
-                           on='title').drop_duplicates("title")
+    merged_df = pd.merge(average_sentiment_per_title, df_releases,
+                         on='title').drop_duplicates("title")
     desired_columns = ["title", "release_date",
                        "sale_price", "avg_sentiment"]
-    df_releases = merged_info[desired_columns]
+    df_releases = merged_df[desired_columns]
 
     df_releases['sale_price'] = df_releases['sale_price'].apply(
         lambda x: f"£{x:.2f}")
@@ -523,6 +532,30 @@ def plot_trending_games_table(df_releases: DataFrame) -> None:
     st.markdown("Top Recommended Games by Sentiment")
     st.table(df_releases.head(5).style.set_properties(
         **{'font-size': '16px'}))
+
+
+def plot_price_distribution(df_releases: DataFrame) -> Chart:
+    """
+    Create a line chart for the number of games released per day
+
+    Args:
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
+
+    Returns:
+        Chart: A chart displaying plotted data
+    """
+    df_releases = df_releases.drop_duplicates("title")
+
+    chart = alt.Chart(df_releases).mark_bar().encode(
+        alt.X('price:Q', bin=alt.Bin(maxbins=20), title='Game Price Range'),
+        alt.Y('count():Q', title='Number of Games')
+    ).properties(
+        width=600,
+        height=400,
+        title='Game Price Range Histogram'
+    )
+
+    return chart
 
 
 def dashboard_header() -> None:
@@ -735,7 +768,7 @@ if __name__ == "__main__":
     min_sentiment, max_sentiment = build_sidebar_sentiment(game_df)
 
     filtered_df = filter_data(game_df, selected_releases, selected_release_dates, selected_review_dates,
-                              selected_genre, selected_developer, selected_publisher, selected_platform, min_sentiment, max_sentiment)
+                              selected_genre, selected_developer, selected_publisher, selected_platform, min_price, max_price, min_sentiment, max_sentiment)
 
     headline_figures(filtered_df)
 
@@ -764,3 +797,7 @@ if __name__ == "__main__":
     third_row_figures(average_sentiment_per_developer_plot,
                       average_sentiment_per_publisher_plot)
     plot_trending_games_table(filtered_df)
+
+    games_price_distribution_plot = plot_price_distribution(filtered_df)
+
+    st.altair_chart(games_price_distribution_plot, use_container_width=True)
