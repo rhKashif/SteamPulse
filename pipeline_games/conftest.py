@@ -157,7 +157,7 @@ def fake_genre_data() -> pd.DataFrame:
 def fake_game_and_genre() -> pd.DataFrame:
     """Fake game and genre data for testing"""
     game_genre = pd.DataFrame(
-        [[123, 'solo', True], [234, 'multi', False]],
+        [[123, 'solo', True]],
         columns=['app_id', 'genre', 'user_generated']
     )
     return game_genre[['app_id', 'genre', 'user_generated']]
@@ -167,7 +167,7 @@ def fake_game_and_genre() -> pd.DataFrame:
 def fake_game_and_publisher() -> pd.DataFrame:
     """Fake game and publisher data for testing"""
     game_genre = pd.DataFrame(
-        [[123, 'publisher'], [234, 'fake_publisher']],
+        [[123, 'publisher']],
         columns=['app_id', 'publishers']
     )
     return game_genre[['app_id', 'publishers']]

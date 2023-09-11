@@ -48,11 +48,13 @@ def test_all_game_id_commands_called(fake_game_and_genre):
     fake_conn = MagicMock()
     fake_execute = fake_conn.cursor().__enter__().execute
     fake_fetch = fake_conn.cursor().__enter__().fetchall
+    fake_fetch.return_value = [{'game_id': 1, 'genre_id': 2}]
 
-    get_all_game_genre_ids(fake_conn, fake_game_and_genre)
+    result = get_all_game_genre_ids(fake_conn, fake_game_and_genre)
 
-    assert fake_execute.call_count == 2
-    assert fake_fetch.call_count == 2
+    assert fake_execute.call_count == 1
+    assert fake_fetch.call_count == 1
+    assert result == [(1, 2, 1, 2)]
 
 
 def test_all_publisher_id_commands_called(fake_game_and_publisher):
@@ -60,11 +62,13 @@ def test_all_publisher_id_commands_called(fake_game_and_publisher):
     fake_conn = MagicMock()
     fake_execute = fake_conn.cursor().__enter__().execute
     fake_fetch = fake_conn.cursor().__enter__().fetchall
+    fake_fetch.return_value = [{'game_id': 2, 'publisher_id': 3}]
 
-    get_all_publisher_game_ids(fake_conn, fake_game_and_publisher)
+    result = get_all_publisher_game_ids(fake_conn, fake_game_and_publisher)
 
-    assert fake_execute.call_count == 2
-    assert fake_fetch.call_count == 2
+    assert fake_execute.call_count == 1
+    assert fake_fetch.call_count == 1
+    assert result == [(2, 3, 2, 3)]
 
 
 def test_all_developer_id_commands_called(fake_game_and_developer):
@@ -72,11 +76,13 @@ def test_all_developer_id_commands_called(fake_game_and_developer):
     fake_conn = MagicMock()
     fake_execute = fake_conn.cursor().__enter__().execute
     fake_fetch = fake_conn.cursor().__enter__().fetchall
+    fake_fetch.return_value = [{'game_id': 2, 'developer_id': 3}]
 
-    get_all_developer_game_ids(fake_conn, fake_game_and_developer)
+    result = get_all_developer_game_ids(fake_conn, fake_game_and_developer)
 
     assert fake_execute.call_count == 1
     assert fake_fetch.call_count == 1
+    assert result == [(2, 3, 2, 3)]
 
 
 @patch("load_games.execute_batch")
