@@ -228,12 +228,20 @@ def aggregate_release_data(df_releases: DataFrame) -> DataFrame:
     df_merged = reduce(lambda left, right: pd.merge(left, right, on=['title'],
                                                     how='outer'), data_frames)
 
-    # merged_df = pd.merge(average_sentiment_per_title, df_releases,
-    #                      on='title').drop_duplicates("title")
+    df_merged = df_merged.drop_duplicates("title")
 
-    print(df_merged.drop_duplicates("title"))
+    desired_columns = ["title", "release_date",
+                       "sale_price", "avg_sentiment", "num_of_reviews"]
+    df_merged = df_merged[desired_columns]
 
-    return df_merged.drop_duplicates("title")
+    df_merged['sale_price'] = df_merged['sale_price'].apply(
+        lambda x: f"£{x:.2f}")
+    df_merged['release_date'] = df_merged['release_date'].dt.strftime(
+        '%d/%m/%Y')
+    df_merged['avg_sentiment'] = df_merged['avg_sentiment'].apply(
+        lambda x: round(x, 2))
+
+    return df_merged
 
 
 def plot_trending_games_sentiment_table(df_releases: DataFrame) -> None:
@@ -247,17 +255,10 @@ def plot_trending_games_sentiment_table(df_releases: DataFrame) -> None:
         None
     """
 
-    merged_df = aggregate_release_data(df_releases)
+    df_merged = aggregate_release_data(df_releases)
 
-    desired_columns = ["title", "release_date",
-                       "sale_price", "avg_sentiment", "num_of_reviews"]
-    df_releases = merged_df[desired_columns].sort_values(
+    df_releases = df_merged.sort_values(
         by=["avg_sentiment"], ascending=False)
-
-    df_releases['sale_price'] = df_releases['sale_price'].apply(
-        lambda x: f"£{x:.2f}")
-    df_releases['release_date'] = df_releases['release_date'].dt.strftime(
-        '%d/%m/%Y')
 
     table_columns = ["Title:", "Release Date:",
                      "Price:", "Community Sentiment", "Number of Reviews"]
@@ -300,50 +301,39 @@ def plot_trending_games_review_table(df_releases: DataFrame) -> None:
         None
     """
 
-    review_per_title = df_releases.groupby('title')[
-        'review_text'].count().sort_values(
-        ascending=False).dropna().reset_index()
-    review_per_title.columns = ["title", "num_of_reviews"]
+    df_merged = aggregate_release_data(df_releases)
 
-    merged_df = pd.merge(review_per_title, df_releases,
-                         on='title').drop_duplicates("title")
-    desired_columns = ["title", "release_date",
-                       "sale_price", "num_of_reviews"]
-    # df_releases = merged_df[desired_columns]
+    df_releases = df_merged.sort_values(
+        by=["num_of_reviews"], ascending=False)
 
-    # df_releases['sale_price'] = df_releases['sale_price'].apply(
-    #     lambda x: f"£{x:.2f}")
-    # df_releases['release_date'] = df_releases['release_date'].dt.strftime(
-    #     '%d/%m/%Y')
+    table_columns = ["Title:", "Release Date:",
+                     "Price:", "Community Sentiment", "Number of Reviews"]
+    df_releases.columns = table_columns
+    df_releases = df_releases.reset_index(drop=True)
 
-    # table_columns = ["Title:", "Release Date:",
-    #                  "Price:", "Community Sentiment"]
-    # df_releases.columns = table_columns
-    # df_releases = df_releases.reset_index(drop=True)
-
-    # chart = alt.Chart(
-    #     df_releases.reset_index().head(5)
-    # ).mark_text().transform_fold(
-    #     df_releases.columns.tolist()
-    # ).encode(
-    #     alt.X(
-    #         "key",
-    #         type="nominal",
-    #         axis=alt.Axis(
-    #             orient="top",
-    #             labelAngle=0,
-    #             title=None,
-    #             ticks=False
-    #         ),
-    #         scale=alt.Scale(padding=10),
-    #         sort=None,
-    #     ),
-    #     alt.Y("index", type="ordinal", axis=None),
-    #     alt.Text("value", type="nominal"),
-    # ).properties(
-    #     width=1000
-    # )
-    # return chart
+    chart = alt.Chart(
+        df_releases.reset_index().head(5)
+    ).mark_text().transform_fold(
+        df_releases.columns.tolist()
+    ).encode(
+        alt.X(
+            "key",
+            type="nominal",
+            axis=alt.Axis(
+                orient="top",
+                labelAngle=0,
+                title=None,
+                ticks=False
+            ),
+            scale=alt.Scale(padding=10),
+            sort=None,
+        ),
+        alt.Y("index", type="ordinal", axis=None),
+        alt.Text("value", type="nominal"),
+    ).properties(
+        width=1000
+    )
+    return chart
 
 
 def format_trending_game_information(df_releases: DataFrame, index: int) -> str:
@@ -422,11 +412,13 @@ def create_report(df_releases: DataFrame) -> None:
 
     trending_release_sentiment_table_plot = plot_trending_games_sentiment_table(
         df_releases)
-    # trending_release_review_table_plot = plot_trending_games_review_table(
-    #     df_releases)
+    trending_release_review_table_plot = plot_trending_games_review_table(
+        df_releases)
 
     trending_release_sentiment_fig = build_figure_from_plot(
         trending_release_sentiment_table_plot, "table_one")
+    trending_release_review_fig = build_figure_from_plot(
+        trending_release_review_table_plot, "table_two")
 
     header_color = "#1b2838"
     text_color = "#f5f4f1"
@@ -473,9 +465,11 @@ def create_report(df_releases: DataFrame) -> None:
             </div>
 
 
-        <h2>Top Recommended Games by Sentiment</h2>
+        <h2>Top Releases by Sentiment</h2>
         <img src="{trending_release_sentiment_fig}" alt="Chart 1">
 
+        <h2>Top Releases by Number of Reviews</h2>
+        <img src="{trending_release_review_fig}" alt="Chart 1">
 
     </body>    
     </html>
