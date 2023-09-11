@@ -64,7 +64,7 @@ def test_all_publisher_id_commands_called(fake_game_and_publisher):
     fake_execute = fake_conn.cursor().__enter__().execute
     fake_fetch = fake_conn.cursor().__enter__().fetchall
 
-    get_all_game_genre_ids(fake_conn, fake_game_and_publisher)
+    get_all_publisher_game_ids(fake_conn, fake_game_and_publisher)
 
     assert fake_execute.call_count == 2
     assert fake_fetch.call_count == 2
@@ -76,7 +76,7 @@ def test_all_developer_id_commands_called(fake_game_and_developer):
     fake_execute = fake_conn.cursor().__enter__().execute
     fake_fetch = fake_conn.cursor().__enter__().fetchall
 
-    get_all_game_genre_ids(fake_conn, fake_game_and_developer)
+    get_all_developer_game_ids(fake_conn, fake_game_and_developer)
 
     assert fake_execute.call_count == 1
     assert fake_fetch.call_count == 1
