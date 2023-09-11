@@ -90,6 +90,8 @@ During loading, we chose to use a psycopg2 function called execute_batch which l
 
 ## Reviews ETL pipeline
 
+# TODO - talk about running nltk download
+
 ### Overview
 
 This project focuses on the systematic collection and analysis of reviews for recently released video games within a 2-week time-frame. The reviews are sourced from the Steam website and its associated APIs, primarily using the [Steam Reviews API](https://partner.steamgames.com/doc/store/getreviews) for data acquisition of the reviews. The collected data comprises essential information about each review, including:
