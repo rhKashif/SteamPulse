@@ -310,7 +310,7 @@ resource "aws_ecs_task_definition" "steampulse_game_pipeline_task_definition" {
           "value" : var.DATABASE_PASSWORD
         },
         {
-          "name" : "DATABASE_IP",
+          "name" : "DATABASE_ENDPOINT",
           "value" : "${aws_db_instance.steampulse_database.address}"
         },
         {
