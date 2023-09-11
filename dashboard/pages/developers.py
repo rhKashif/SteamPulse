@@ -598,7 +598,7 @@ def dashboard_header() -> None:
     """
 
     st.title("SteamPulse")
-    st.markdown("Community Insights for New Releases on Steam for Developers")
+    st.markdown("Developer Insights for New Releases on Steam")
 
 
 def sidebar_header() -> None:
