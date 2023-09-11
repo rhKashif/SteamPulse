@@ -113,28 +113,6 @@ def aggregate_release_data(df_releases: DataFrame) -> DataFrame:
     return df_merged
 
 
-def format_columns(df_releases: DataFrame) -> DataFrame:
-    """
-    Format columns in DataFrame for display
-
-    Args:
-        df_release (DataFrame): A DataFrame containing new release data
-
-    Returns:
-        DataFrame: A DataFrame containing data with formatted columns
-    """
-    df_releases['Price'] = df_releases['Price'].apply(
-        lambda x: f"£{x:.2f}")
-    df_releases['Release Date'] = df_releases['Release Date'].dt.strftime(
-        '%d/%m/%Y')
-    df_releases['Community Sentiment'] = df_releases['Community Sentiment'].apply(
-        lambda x: round(x, 2))
-    df_releases['Community Sentiment'] = df_releases['Community Sentiment'].fillna(
-        "No Sentiment")
-
-    return df_releases
-
-
 def get_data_for_release_date_range(df_releases: DataFrame, index: int) -> DataFrame:
     """
     Return a DataFrame for a range of dates behind the current date
@@ -623,27 +601,6 @@ def plot_price_distribution(df_releases: DataFrame) -> Chart:
     return chart
 
 
-def plot_new_games_today_table(df_releases: DataFrame) -> None:
-    """
-    Create a table for the new releases today
-
-    Args:
-        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
-
-    Returns:
-        Chart: A chart displaying plotted table
-    """
-    df_merged = aggregate_release_data(df_releases)
-
-    df_merged = df_merged.sort_values(
-        by=["Release Date"], ascending=False)
-    df_merged = format_columns(df_merged)
-
-    df_merged = df_merged.reset_index(drop=True)
-
-    return {"table_data": df_merged, "title": "All New Releases"}
-
-
 def dashboard_header() -> None:
     """
     Build header for dashboard to give it title text
@@ -890,4 +847,3 @@ if __name__ == "__main__":
 
         st.altair_chart(games_genre_distribution_plot,
                         use_container_width=True)
-
