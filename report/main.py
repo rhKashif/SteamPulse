@@ -48,8 +48,50 @@ def get_database(conn_postgres: connection) -> DataFrame:
     Returns:
         DataFrame:  A pandas DataFrame containing all relevant release data
     """
-    query = f""
+    query = f"SELECT\
+            game.game_id, title, release_date, price, sale_price,\
+            sentiment, review_text, reviewed_at, review_score,\
+            genre, user_generated,\
+            developer_name,\
+            publisher_name,\
+            mac, windows, linux\
+            FROM game\
+            LEFT JOIN review ON\
+            review.game_id=game.game_id\
+            LEFT JOIN platform ON\
+            game.platform_id=platform.platform_id\
+            LEFT JOIN game_developer_link as developer_link ON\
+            game.game_id=developer_link.game_id\
+            LEFT JOIN developer ON\
+            developer_link.developer_id=developer.developer_id\
+            LEFT JOIN game_genre_link as genre_link ON\
+            game.game_id=genre_link.game_id\
+            LEFT JOIN genre ON\
+            genre_link.genre_id=genre.genre_id\
+            LEFT JOIN game_publisher_link as publisher_link ON\
+            game.game_id=publisher_link.game_id\
+            LEFT JOIN publisher ON\
+            publisher_link.publisher_id=publisher.publisher_id;"
     df_releases = pd.read_sql_query(query, conn_postgres)
+
+    return df_releases
+
+
+def format_database_columns(df_releases: DataFrame) -> DataFrame:
+    """
+    Format columns within the database to the correct data types
+
+    Args:
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
+
+    Returns:
+        DataFrame: A DataFrame containing filtered data related to new releases 
+        with columns in the correct data types
+    """
+    df_releases["release_date"] = pd.to_datetime(
+        df_releases['release_date'], format='%d/%m/%Y')
+    df_releases["review_date"] = pd.to_datetime(
+        df_releases['reviewed_at'], format='%d/%m/%Y')
 
     return df_releases
 
@@ -522,14 +564,9 @@ def handler(event, context) -> None:
     Return:
         None
     """
-    game_df = pd.read_csv("mock_data.csv")
-    game_df["release_date"] = pd.to_datetime(
-        game_df['release_date'], format='%d/%m/%Y')
-    game_df["review_date"] = pd.to_datetime(
-        game_df['review_date'], format='%d/%m/%Y')
-
-    # conn = get_db_connection(config)
-    # game_df = get_database(conn)
+    conn = get_db_connection(config)
+    game_df = get_database(conn)
+    game_df = format_database_columns(game_df)
 
     create_report(game_df)
     print("Report created.")
