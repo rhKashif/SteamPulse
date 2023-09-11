@@ -49,7 +49,7 @@ def get_database(conn_postgres: connection) -> DataFrame:
     Returns:
         DataFrame:  A pandas DataFrame containing all relevant release data
     """
-    query = f"SELECT\
+    query = "SELECT\
             game.game_id, title, release_date, price, sale_price,\
             sentiment, review_text, reviewed_at, review_score,\
             genre, user_generated,\
@@ -517,12 +517,12 @@ def create_report(df_releases: DataFrame, dashboard_url: str) -> None:
     convert_html_to_pdf(template, environ.get("REPORT_FILE"))
 
 
-def send_email():
+def send_email(config: _Environ):
     """
     Send an email with an attached PDF report using Amazon Simple Email Service (SES).
 
     Args:
-        None
+        config (_Environ): A file containing environment variables
 
     Returns:
         None
@@ -541,9 +541,9 @@ def send_email():
     message.attach(attachment)
 
     client.send_raw_email(
-        Source='trainee.hassan.kashif@sigmalabs.co.uk',
+        Source=config["EMAIL_SENDER"],
         Destinations=[
-            'trainee.hassan.kashif@sigmalabs.co.uk',
+            config["EMAIL_RECEIVER"],
         ],
         RawMessage={
             'Data': message.as_string()
@@ -571,8 +571,8 @@ def handler(event, context) -> None:
 
     create_report(game_df, config["DASHBOARD_URL"])
     print("Report created.")
-    # send_email()
-    # print("Email sent.")
+    send_email(config)
+    print("Email sent.")
 
 
 if __name__ == "__main__":
