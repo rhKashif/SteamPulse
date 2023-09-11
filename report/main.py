@@ -138,6 +138,23 @@ def get_data_for_release_date(df_releases: DataFrame, index: int) -> DataFrame:
     return df_releases[df_releases["release_date"] == date]
 
 
+def get_data_for_release_date_range(df_releases: DataFrame) -> DataFrame:
+    """
+    Return a DataFrame for a specific date behind the current date
+
+    Args:
+        df_releases (DataFrame): A pandas DataFrame containing all relevant game data
+
+        index (int): An integer representing the number of days to go back from current date
+
+    Returns:
+        DataFrame: A pandas DataFrame containing all relevant game data for a specific date
+    """
+    date_week_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+
+    return df_releases[df_releases["release_date"] >= date_week_ago]
+
+
 def get_number_of_new_releases(df_releases: DataFrame) -> int:
     """
     Return the number of new releases for the previous day
@@ -295,7 +312,7 @@ def plot_trending_games_sentiment_table(df_releases: DataFrame) -> None:
     Returns:
         Chart: A chart displaying plotted table
     """
-
+    df_releases = get_data_for_release_date_range(df_releases)
     df_merged = aggregate_release_data(df_releases)
 
     df_releases = df_merged.sort_values(
@@ -489,7 +506,7 @@ def create_report(df_releases: DataFrame) -> None:
         <h2>Top Releases by Number of Reviews</h2>
         <img src="{trending_release_review_fig}" alt="Chart 1">
 
-        <h2>New Releases Today</h2>
+        <h2>New Releases</h2>
         <img src="{new_release_table_fig}" alt="Chart 1">
 
     </body>    
