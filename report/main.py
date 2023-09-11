@@ -12,7 +12,6 @@ import pandas as pd
 from pandas import DataFrame
 from psycopg2 import connect
 from psycopg2.extensions import connection
-import streamlit as st
 from xhtml2pdf import pisa
 
 
@@ -234,8 +233,6 @@ def plot_trending_games_table(df_releases: DataFrame) -> None:
                      "Price:", "Community Sentiment"]
     df_releases.columns = table_columns
     df_releases = df_releases.reset_index(drop=True)
-    table = st.table(df_releases.head(5).style.set_properties(
-        **{'font-size': '16px'}))
 
     chart = alt.Chart(
         df_releases.reset_index().head(5)
@@ -256,6 +253,8 @@ def plot_trending_games_table(df_releases: DataFrame) -> None:
         ),
         alt.Y("index", type="ordinal", axis=None),
         alt.Text("value", type="nominal"),
+    ).properties(
+        width=1000
     )
     return chart
 
@@ -337,22 +336,11 @@ def create_report(df_releases: DataFrame) -> None:
     trending_game_two = format_trending_game_information(df_releases, 1)
     trending_game_three = format_trending_game_information(df_releases, 1)
 
-    reviews_per_game_release_frequency_plot = plot_reviews_per_game_frequency(
+    trending_release_sentiment_table_plot = plot_trending_games_table(
         df_releases)
-    games_release_frequency_plot = plot_games_release_frequency(df_releases)
-    games_review_frequency_plot = plot_games_review_frequency(df_releases)
-    trending_games_plot = plot_top_trending_games(df_releases)
-    trending_games_table_plot = plot_trending_games_table(df_releases)
 
-    fig1 = build_figure_from_plot(
-        reviews_per_game_release_frequency_plot, "chart_one")
-    fig2 = build_figure_from_plot(
-        games_release_frequency_plot, "chart_two")
-    fig3 = build_figure_from_plot(
-        games_review_frequency_plot, "chart_three")
-    fig4 = build_figure_from_plot(
-        trending_games_plot, "chart_four")
-    fig5 = build_figure_from_plot(trending_games_table_plot, "table_one")
+    trending_release_sentiment_fig = build_figure_from_plot(
+        trending_release_sentiment_table_plot, "table_one")
 
     header_color = "#1b2838"
     text_color = "#f5f4f1"
@@ -398,32 +386,11 @@ def create_report(df_releases: DataFrame) -> None:
                 <p>Number of new releases: {new_releases}<br>Top rated release: {top_rated_release}</p>
             </div>
 
-        <h2>Number of Reviews per Release</h2>
-        <img src="{fig1}" alt="Chart 1">
-
-        <h2>New Releases per Day</h2>
-        <img src="{fig2}" alt="Chart 2">
-        
-        <h2>New Reviews per Day</h2>
-        <img src="{fig4}" alt="Chart 3">
-
-        <h2>New Reviews per Day</h2>
-        <img src="{fig3}" alt="Chart 4">
 
         <h2>Top Recommended Games by Sentiment</h2>
-        <img src="{fig5}" alt="Chart 4">
+        <img src="{trending_release_sentiment_fig}" alt="Chart 1">
 
 
-        <p>Trending games:</p>
-        <div class = "myDiv">
-            <p>{trending_game_one}</p>
-        </div>
-        <div class = "myDiv">
-            <p>{trending_game_two}</p>
-        </div>
-        <div class = "myDiv">
-            <p>{trending_game_three}</p>
-        </div>
     </body>    
     </html>
     '''
