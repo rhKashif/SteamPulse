@@ -10,7 +10,7 @@ def test_html_returns_a_string():
     """Ensure that string is returned for a generic website"""
     result = get_html("https://www.google.co.uk")
 
-    assert isinstance(result, str) is True
+    assert isinstance(result, str)
 
 
 def test_application_details_returned(fake_html):
@@ -25,8 +25,7 @@ def test_parse_game_bs(fake_html_soup):
     fake_soup = BeautifulSoup(fake_html_soup, "html.parser")
     result = parse_game_bs(fake_soup)
 
-    assert result == ['Fake_Tag 1', 'Fake_Tag 2', 'Fake_Tag 3']
-    assert isinstance(result, list) is True
+    assert result == 'Fake_Tag 1,Fake_Tag 2,Fake_Tag 3'
 
 
 def test_parse_game_bs_no_tags(html_no_tags):
@@ -34,7 +33,7 @@ def test_parse_game_bs_no_tags(html_no_tags):
     fake_soup = BeautifulSoup(html_no_tags, "html.parser")
     result = parse_game_bs(fake_soup)
 
-    assert result == []
+    assert result == ""
 
 
 def test_parse_price_bs(fake_html_soup):
@@ -42,7 +41,7 @@ def test_parse_price_bs(fake_html_soup):
     fake_soup = BeautifulSoup(fake_html_soup, "html.parser")
     result = parse_price_bs(fake_soup)
 
-    assert result == {'full price': '£1.69', 'sale price': '£1.69'}
+    assert result == {'full_price': '£1.69', 'sale_price': '£1.69'}
 
 
 def test_parse_price_for_discount(html_no_tags):
@@ -50,44 +49,43 @@ def test_parse_price_for_discount(html_no_tags):
     fake_soup = BeautifulSoup(html_no_tags, "html.parser")
     result = parse_price_bs(fake_soup)
 
-    assert result == {'full price': '£2.50', 'sale price': '£1.69'}
-
+    assert result == {'full_price': '£2.50', 'sale_price': '£1.69'}
 
 def test_system_requirements(fake_response):
     """Check system requirements are returned appropriately"""
     result = system_requirements(fake_response)
 
     assert result == {'linux': False, 'mac': False, 'windows': True}
-    assert isinstance(result, dict) is True
+    assert isinstance(result, dict)
 
 
 def test_genres_returned(fake_response):
     """Check genres returned as a list"""
     result = get_genre_from_steam(fake_response)
 
-    assert isinstance(result, list) is True
-    assert result == ['Action', 'Adventure', 'Simulation', 'Strategy']
+    assert isinstance(result, str)
+    assert result == 'Action,Adventure,Simulation,Strategy'
 
 
 def test_developer_names(fake_response):
     """Check developer returned"""
     result = get_developer_name(fake_response)
 
-    assert isinstance(result, list) is True
-    assert result == ['Fake Developer 1', 'Fake Developer 2']
+    assert isinstance(result, str)
+    assert result == 'Fake Developer 1,Fake Developer 2'
 
 
 def test_publisher_name(fake_response):
     """Check publisher name returned"""
     result = get_publisher_name(fake_response)
 
-    assert isinstance(result, list) is True
-    assert result == ['Fake Publisher']
+    assert isinstance(result, str)
+    assert result == 'Fake Publisher'
 
 
 def test_csv_created():
     """Check CSV file is created"""
-    assert os.path.exists('test.csv') is False
+    assert not os.path.exists('test.csv')
     convert_to_csv([{'fake_data': 3}, {'fake_data': 2}], 'test.csv')
-    assert os.path.exists('test.csv') is True
+    assert os.path.exists('test.csv')
     os.remove('test.csv')
