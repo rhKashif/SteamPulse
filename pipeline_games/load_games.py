@@ -73,7 +73,7 @@ def execute_batch_columns_for_games(conn: connection, data: pd.DataFrame, table:
             conn.rollback()
 
 
-def get_existing_platform_data(mac_c, windows_c, linux_c, conn: connection, cache: dict) -> int | None:
+def get_existing_platform_data(mac_c, windows_c, linux_c, conn: connection, cache: dict) -> int:
     """Retrieves the existing data for platform using cache and return platform_id"""
     value = f'{mac_c} {windows_c} {linux_c}'
     if value in cache.keys():
