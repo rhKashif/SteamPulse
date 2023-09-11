@@ -2,7 +2,6 @@
 
 from pandas import DataFrame
 from pandas.core.series import Series
-import nltk
 from nltk.corpus import stopwords
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
