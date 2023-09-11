@@ -27,4 +27,4 @@ jobs:
           pip install -r ./report/requirements.txt
       - name: Analysing push files with pylint
         run: |
-          pylint --fail-under=5 ./pipeline_games/*.py
+          pylint --fail-under=5 ./pipeline_reviews/*.py
