@@ -181,7 +181,26 @@ def get_top_rated_release(df_releases: DataFrame) -> str:
     Returns:
         str: A string relating to the title of the highest rated new game released
     """
+    df_releases = get_data_for_release_date_range(df_releases, 8)
     df_ratings = df_releases.groupby("title")["sentiment"].mean(
+    ).sort_values(ascending=False).reset_index()
+
+    return df_ratings.head(1)["title"][0]
+
+
+def get_most_reviewed_release(df_releases: DataFrame) -> str:
+    """
+    Return the name of new release with the highest overall sentiment score for the previous day
+
+    Args: 
+        df_releases (DataFrame): A pandas DataFrame containing all relevant game data
+
+    Returns:
+        str: A string relating to the title of the highest rated new game released
+    """
+    df_releases = get_data_for_release_date_range(df_releases, 8)
+
+    df_ratings = df_releases.groupby("title")["review_text"].count(
     ).sort_values(ascending=False).reset_index()
 
     return df_ratings.head(1)["title"][0]
@@ -294,7 +313,7 @@ def plot_trending_games_sentiment_table(df_releases: DataFrame) -> None:
     Returns:
         Chart: A chart displaying plotted table
     """
-    df_releases = get_data_for_release_date_range(df_releases, 7)
+    df_releases = get_data_for_release_date_range(df_releases, 8)
     df_merged = aggregate_release_data(df_releases)
 
     df_releases = df_merged.sort_values(
@@ -317,7 +336,7 @@ def plot_trending_games_review_table(df_releases: DataFrame) -> None:
     Returns:
         Chart: A chart displaying plotted table
     """
-    df_releases = get_data_for_release_date_range(df_releases, 7)
+    df_releases = get_data_for_release_date_range(df_releases, 8)
     df_merged = aggregate_release_data(df_releases)
 
     df_releases = df_merged.sort_values(
@@ -370,12 +389,14 @@ def build_figure_from_plot(plot: Chart, figure_name: str) -> str:
     return f"/tmp/{figure_name}.png"
 
 
-def create_report(df_releases: DataFrame) -> None:
+def create_report(df_releases: DataFrame, dashboard_url: str) -> None:
     """
     Create a pdf file from a html string
 
     Args:  
         df_releases (DataFrame): A DataFrame containing new release information
+
+        dashboard_url (str): A str representing a url link for the dashboard
 
     Returns:
         None
@@ -383,6 +404,7 @@ def create_report(df_releases: DataFrame) -> None:
 
     new_releases = get_number_of_new_releases(df_releases)
     top_rated_release = get_top_rated_release(df_releases)
+    most_reviewed_release = get_most_reviewed_release(df_releases)
 
     trending_release_sentiment_table_plot = plot_trending_games_sentiment_table(
         df_releases)
@@ -396,6 +418,9 @@ def create_report(df_releases: DataFrame) -> None:
         trending_release_sentiment_table_plot, "table_two")
     trending_release_review_fig = build_figure_from_plot(
         trending_release_review_table_plot, "table_three")
+
+    date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+    date_range = (datetime.now() - timedelta(days=8)).strftime("%Y-%m-%d")
 
     header_color = "#1b2838"
     text_color = "#f5f4f1"
@@ -411,11 +436,11 @@ def create_report(df_releases: DataFrame) -> None:
                     left: 50pt; width: 512pt; top: 50; height: 300pt;
                 }}
                 @frame col1_frame {{             /* Content frame 1 */
-                    left: 44pt; width: 525pt; top: 225pt; height: 365pt;
+                    left: 50pt; width: 512pt; top: 232pt; height: 365pt;
                 }}
                 @frame footer_frame {{           /* Static frame */
                     -pdf-frame-content: footer_content;
-                    left: 50pt; width: 512pt; top: 650pt; height: 330pt;
+                    left: 50pt; width: 512pt; top: 656pt; height: 200pt;
                 }}  
             }}          
             body {{
@@ -438,6 +463,14 @@ def create_report(df_releases: DataFrame) -> None:
                 font-size: 11px;
                 text-align: center;
             }} 
+            h3 {{
+                background-color: {header_color};
+                color: {text_color};
+                padding-bottom: 5px;
+                padding-top: 20px;
+                font-size: 22px;
+                text-align: center;
+                }} 
             .myDiv {{
                 border: 1px solid black; 
                 padding: 5px;
@@ -453,7 +486,9 @@ def create_report(df_releases: DataFrame) -> None:
         <div id="header_content">
             <h1>New Release Report</h1>
                 <div class = "myDiv2">
-                    <p>Number of new releases: {new_releases}<br>Top rated release: {top_rated_release}</p>
+                    <p>Number of New Releases ({date}): {new_releases}<br>
+                    Top Rated Release ({date_range} - {date}): {top_rated_release}<br>
+                    Most Reviewed Release ({date_range} - {date}): {most_reviewed_release}</p>
                 </div>
         </div>
 
@@ -467,7 +502,7 @@ def create_report(df_releases: DataFrame) -> None:
         <img src="{trending_release_review_fig}" alt="Chart 3">
         
         <div id="footer_content">
-            <h1>SteamPulse</h1>
+            <h3><a href={dashboard_url}>SteamPulse Dashboard</a></h3>
         SteamPulse - page <pdf:pagenumber>
         </div>
 
@@ -527,11 +562,14 @@ def handler(event, context) -> None:
     Return:
         None
     """
+    load_dotenv()
+    config = environ
+
     conn = get_db_connection(config)
     game_df = get_database(conn)
     game_df = format_database_columns(game_df)
 
-    create_report(game_df)
+    create_report(game_df, config["DASHBOARD_URL"])
     print("Report created.")
     # send_email()
     # print("Email sent.")
@@ -539,6 +577,4 @@ def handler(event, context) -> None:
 
 if __name__ == "__main__":
 
-    load_dotenv()
-    config = environ
     handler(None, None)
