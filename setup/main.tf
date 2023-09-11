@@ -239,7 +239,7 @@ resource "aws_ecs_task_definition" "steampulse_review_pipeline_task_definition" 
           "value" : var.DATABASE_PASSWORD
         },
         {
-          "name" : "DATABASE_IP",
+          "name" : "DATABASE_ENDPOINT",
           "value" : "${aws_db_instance.steampulse_database.address}"
         },
         {
@@ -368,6 +368,7 @@ resource "aws_ecs_task_definition" "steampulse_dashboard_task_definition" {
       essential : true,
 
       environment : [
+
         {
           "name" : "ACCESS_KEY_ID",
           "value" : var.ACCESS_KEY_ID
@@ -375,6 +376,26 @@ resource "aws_ecs_task_definition" "steampulse_dashboard_task_definition" {
         {
           "name" : "SECRET_ACCESS_KEY",
           "value" : var.SECRET_ACCESS_KEY
+        },
+        {
+          "name" : "DATABASE_NAME",
+          "value" : var.DATABASE_NAME
+        },
+        {
+          "name" : "DATABASE_USERNAME",
+          "value" : var.DATABASE_USERNAME
+        },
+        {
+          "name" : "DATABASE_PASSWORD",
+          "value" : var.DATABASE_PASSWORD
+        },
+        {
+          "name" : "DATABASE_ENDPOINT",
+          "value" : "${aws_db_instance.steampulse_database.address}"
+        },
+        {
+          "name" : "DATABASE_PORT",
+          "value" : "5432"
         }
       ]
 
@@ -420,7 +441,7 @@ resource "aws_scheduler_schedule" "steampulse_game_pipeline_schedule" {
 resource "aws_scheduler_schedule" "steampulse_review_pipeline_schedule" {
   name                = "steampulse_review_pipeline_schedule"
   description         = "Runs the steampulse review pipeline on a cron schedule"
-  schedule_expression = "cron(0 0 * * ? *)"
+  schedule_expression = "cron(30 8 * * ? *)"
 
   flexible_time_window {
     mode = "OFF"
