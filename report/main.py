@@ -419,8 +419,8 @@ def create_report(df_releases: DataFrame, dashboard_url: str) -> None:
     trending_release_review_fig = build_figure_from_plot(
         trending_release_review_table_plot, "table_three")
 
-    date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-    date_range = (datetime.now() - timedelta(days=8)).strftime("%Y-%m-%d")
+    date = (datetime.now() - timedelta(days=1)).strftime("%Y/%m/%d")
+    date_range = (datetime.now() - timedelta(days=8)).strftime("%Y/%m/%d")
 
     header_color = "#1b2838"
     text_color = "#f5f4f1"
@@ -433,10 +433,10 @@ def create_report(df_releases: DataFrame, dashboard_url: str) -> None:
                 size: letter portrait;
                 @frame header_frame {{           /* Static frame */
                     -pdf-frame-content: header_content;
-                    left: 50pt; width: 512pt; top: 50; height: 300pt;
+                    left: 50pt; width: 512pt; top: 50; height: 288pt;
                 }}
                 @frame col1_frame {{             /* Content frame 1 */
-                    left: 50pt; width: 512pt; top: 232pt; height: 365pt;
+                    left: 50pt; width: 512pt; top: 228pt; height: 365pt;
                 }}
                 @frame footer_frame {{           /* Static frame */
                     -pdf-frame-content: footer_content;
@@ -445,7 +445,7 @@ def create_report(df_releases: DataFrame, dashboard_url: str) -> None:
             }}          
             body {{
                 font-family: Arial, sans-serif;
-                font-size: 18px;
+                font-size: 14px;
                 text-align: left;
             }}
             h1 {{
