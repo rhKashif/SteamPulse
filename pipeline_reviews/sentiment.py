@@ -1,7 +1,6 @@
 """Sentiment analysis on extracted reviews"""
 
 from pandas import DataFrame
-from pandas.core.series import Series
 from nltk.corpus import stopwords
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
