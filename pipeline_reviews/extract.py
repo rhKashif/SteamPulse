@@ -19,9 +19,12 @@ class GamesNotFound(Exception):
 
 def get_number_of_reviews(game_id: int) -> dict:
     """Retrieves information about all reviews from a given game ID"""
-    request = requests.get(f"https://store.steampowered.com/appreviews/{game_id}?json=1")
-    reviews_info = request.json()
-    return reviews_info["query_summary"]["total_reviews"]
+    try:
+        request = requests.get(f"https://store.steampowered.com/appreviews/{game_id}?json=1", timeout=10)
+        reviews_info = request.json()
+        return reviews_info["query_summary"]["total_reviews"]
+    except requests.exceptions.Timeout:
+        return 0
 
 
 def get_reviews_for_game(game_id: int, cursor: str) -> dict:
@@ -73,6 +76,7 @@ def get_all_reviews(game_ids: list[int]) -> DataFrame:
                     if not cursor in cursor_list:
                         cursor_list.append(cursor)
                     all_reviews.extend(page_reviews)
+    print(DataFrame(all_reviews))
     return DataFrame(all_reviews)
 
 
