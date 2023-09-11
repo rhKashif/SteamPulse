@@ -361,23 +361,6 @@ def create_report(df_releases: DataFrame) -> None:
     <html>
     <head>
         <style>
-            @page {{
-                size: letter portrait;
-                @frame header_frame {{           /* Static frame */
-                    -pdf-frame-content: header_content;
-                    left: 50pt; width: 512pt; top: 50; height: 350pt;
-                }}
-                @frame col1_frame {{             /* Content frame 1 */
-                    left: 44pt; width: 245pt; top: 220pt; height: 365pt;
-                }}
-                @frame col2_frame {{             /* Content frame 2 */
-                    left: 323pt; width: 245pt; top: 220pt; height: 365pt;
-                }}
-                @frame footer_frame {{           /* Static frame */
-                    -pdf-frame-content: footer_content;
-                    left: 50pt; width: 512pt; top: 650pt; height: 330pt;
-                }}
-            }}
             body {{
                 font-family: Arial, sans-serif;
                 font-size: 18px;
@@ -410,16 +393,10 @@ def create_report(df_releases: DataFrame) -> None:
     </head>
 
     <body>
-        <div id="header_content">
-            <h1>New Release Report</h1>
-                <div class = "myDiv2">
-                    <p>Number of new releases: {new_releases}<br>Top rated release: {top_rated_release}</p>
-                </div>
+        <h1>New Release Report</h1>
+            <div class = "myDiv2">
+                <p>Number of new releases: {new_releases}<br>Top rated release: {top_rated_release}</p>
             </div>
-        <div id="footer_content">
-            <h1>SteamPulse</h1>
-        SteamPulse - page <pdf:pagenumber>
-        </div>
 
         <h2>Number of Reviews per Release</h2>
         <img src="{fig1}" alt="Chart 1">
