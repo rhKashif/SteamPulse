@@ -24,9 +24,8 @@ def get_db_connection(config) -> connection:
 def execute_batch_columns(conn: connection, data: pd.DataFrame, table: str, column: str, page_size=100) -> None:
     """batch execution of adding specified data to the database"""
     tuples = list(zip(data.unique()))
-    cols = column
-    query = sql.SQL("INSERT INTO {table}({cols}) VALUES(%s) ON CONFLICT ({cols}) DO NOTHING;").format(
-        table=sql.Identifier(table), cols=sql.Identifier(cols))
+    query = sql.SQL("INSERT INTO {table}({column}) VALUES(%s) ON CONFLICT ({column}) DO NOTHING;").format(
+        table=sql.Identifier(table), column=sql.Identifier(column))
     with conn.cursor() as cur:
         try:
             execute_batch(cur, query, tuples, page_size)
@@ -45,7 +44,7 @@ def execute_batch_columns_for_genres(conn: connection, data: pd.DataFrame, table
     query = sql.SQL("""INSERT INTO {table}({cols}) SELECT %s,%s WHERE NOT EXISTS
             (SELECT genre_id FROM genre
             WHERE genre = %s AND user_generated = %s);""").format(
-        table=sql.Identifier(table), cols=sql.Identifier(cols))
+        table=sql.Identifier(table), cols=sql.SQL(cols))
     with conn.cursor() as cur:
         try:
             execute_batch(cur, query, tuples, page_size)
@@ -62,8 +61,8 @@ def execute_batch_columns_for_games(conn: connection, data: pd.DataFrame, table:
     cols = ','.join(list(data.columns))
 
     query = sql.SQL("""INSERT INTO {table}({cols}) VALUES (%s,%s,%s,%s,%s,%s)
-            ON CONFLICT (app_id) DO NOTHING;""").format(
-        table=sql.Identifier(table), cols=sql.Identifier(cols))
+            ON CONFLICT (app_id) DO NOTHING RETURNING game_id;""").format(
+        table=sql.Identifier(table), cols=sql.SQL(cols))
     with conn.cursor() as cur:
         try:
             execute_batch(cur, query, tuples, page_size)
@@ -104,6 +103,36 @@ def get_all_game_genre_ids(conn: connection, data: list) -> list[tuple]:
     return all_ids
 
 
+def get_all_publisher_game_ids(conn: connection, data: list) -> list[tuple]:
+    """Returns all game_publisher ids for linking table"""
+    tuples = [tuple(x) for x in data.to_numpy()]
+    query = """SELECT game.game_id, publisher.publisher_id FROM publisher CROSS JOIN game
+            WHERE game.app_id = %s AND publisher.publisher_name = %s;"""
+    all_ids = []
+    for line in tuples:
+        with conn.cursor() as cur:
+            cur.execute(query, line)
+            game_genre = cur.fetchall()
+            all_ids.append(
+                (game_genre[0]['game_id'], game_genre[0]['publisher_id'], game_genre[0]['game_id'], game_genre[0]['publisher_id']))
+    return all_ids
+
+
+def get_all_developer_game_ids(conn: connection, data: list) -> list[tuple]:
+    """Returns all game_developer ids for linking table"""
+    tuples = [tuple(x) for x in data.to_numpy()]
+    query = """SELECT game.game_id, developer.developer_id FROM developer CROSS JOIN game
+            WHERE game.app_id = %s AND developer.developer_name = %s;"""
+    all_ids = []
+    for line in tuples:
+        with conn.cursor() as cur:
+            cur.execute(query, line)
+            game_genre = cur.fetchall()
+            all_ids.append(
+                (game_genre[0]['game_id'], game_genre[0]['developer_id'], game_genre[0]['game_id'], game_genre[0]['developer_id']))
+    return all_ids
+
+
 def add_to_genre_link_table(conn: connection, tuples: list, page_size=100) -> None:
     """Updates genre link table"""
     query = """INSERT INTO game_genre_link(game_id, genre_id) SELECT %s, %s WHERE NOT EXISTS (SELECT game_id, genre_id 
@@ -118,53 +147,32 @@ def add_to_genre_link_table(conn: connection, tuples: list, page_size=100) -> No
             conn.rollback()
 
 
-
-
-
-def add_to_publisher_link_table(conn: connection, data: list) -> None:
+def add_to_publisher_link_table(conn: connection, tuples: list, page_size=100) -> None:
     """Updates publisher link table"""
+    query = """INSERT INTO game_publisher_link(game_id, publisher_id) SELECT %s, %s WHERE NOT EXISTS (SELECT game_id, publisher_id 
+                FROM game_publisher_link WHERE game_id = %s AND publisher_id = %s);"""
     with conn.cursor() as cur:
-        cur.execute(
-            """SELECT publisher_id FROM publisher WHERE publisher_name = %s;""",
-            [data[-3]])
-        publisher_id = cur.fetchone()['publisher_id']
-        cur.execute(
-            """SELECT game_id FROM game WHERE app_id = %s;""",
-            [data[-12]])
-        game_id = cur.fetchone()['game_id']
-        cur.execute(
-            """SELECT exists (SELECT 1 FROM game_publisher_link 
-            WHERE game_id = %s AND publisher_id = %s LIMIT 1);""",
-            [game_id, publisher_id])
-        result = cur.fetchone()
-        if result['exists'] is False:
-            cur.execute(
-                """INSERT INTO game_publisher_link(game_id, publisher_id)
-                VALUES (%s, %s);""", [game_id, publisher_id])
-        conn.commit()
+        try:
+            execute_batch(cur, query, tuples, page_size)
+            conn.commit()
+            print("execute_batch() done")
+        except Error as err:
+            print(f"Error: {err}")
+            conn.rollback()
 
 
-def add_to_developer_link_table(conn: connection, data: list) -> None:
-    """Updates link table"""
+def add_to_developer_link_table(conn: connection, tuples: list, page_size=100) -> None:
+    """Updates developer link table"""
+    query = """INSERT INTO game_developer_link(game_id, developer_id) SELECT %s, %s WHERE NOT EXISTS (SELECT game_id, developer_id 
+                FROM game_developer_link WHERE game_id = %s AND developer_id = %s);"""
     with conn.cursor() as cur:
-        cur.execute(
-            """SELECT developer_id FROM developer WHERE developer_name = %s;""",
-            [data[-4]])
-        developer_id = cur.fetchone()['developer_id']
-        cur.execute(
-            """SELECT game_id FROM game WHERE app_id = %s;""",
-            [data[-12]])
-        game_id = cur.fetchone()['game_id']
-        cur.execute(
-            """SELECT exists (SELECT 1 FROM game_developer_link 
-            WHERE game_id = %s AND developer_id = %s LIMIT 1);""",
-            [game_id, developer_id])
-        result = cur.fetchone()
-        if result['exists'] is False:
-            cur.execute(
-                """INSERT INTO game_developer_link(game_id, developer_id)
-                VALUES (%s, %s);""", [game_id, developer_id])
-        conn.commit()
+        try:
+            execute_batch(cur, query, tuples, page_size)
+            conn.commit()
+            print("execute_batch() done")
+        except Error as err:
+            print(f"Error: {err}")
+            conn.rollback()
 
 
 def upload_developers(data: pd.DataFrame, conn: connection) -> None:
@@ -206,8 +214,22 @@ def upload_games(data: pd.DataFrame, conn: connection) -> None:
 def upload_game_genre_link(data: pd.DataFrame, conn: connection) -> None:
     """Uploads to game_genre_linking table"""
     game_genre = data[["app_id", "genre", "user_generated"]]
-    id_tuples = get_all_game_genre_ids(connect_d, game_genre)
-    add_to_genre_link_table(connect_d, id_tuples, page_size=100)
+    id_tuples = get_all_game_genre_ids(conn, game_genre)
+    add_to_genre_link_table(conn, id_tuples, page_size=100)
+
+
+def upload_game_publisher_link(data: pd.DataFrame, conn: connection) -> None:
+    """Uploads to game_publisher table"""
+    game_publisher = data[["app_id", "publishers"]].drop_duplicates()
+    id_tuples = get_all_publisher_game_ids(conn, game_publisher)
+    add_to_publisher_link_table(conn, id_tuples, page_size=100)
+
+
+def upload_game_developer_link(data: pd.DataFrame, conn: connection) -> None:
+    """Uploads to game_publisher table"""
+    game_developer = data[["app_id", "developers"]].drop_duplicates()
+    id_tuples = get_all_developer_game_ids(conn, game_developer)
+    add_to_developer_link_table(conn, id_tuples, page_size=100)
 
 
 if __name__ == "__main__":
@@ -219,15 +241,13 @@ if __name__ == "__main__":
     game_data = pd.read_csv("final_games.csv")
 
     try:
-        # upload_publishers(final_df, connect_d)
-        # upload_developers(final_df, connect_d)
-        # upload_genres(final_df, connect_d)
-        # upload_games(game_data, connect_d)
-        #upload_game_genre_link(final_df, connect_d)
-
-        # for row in final_df.itertuples():
-        # add_to_developer_link_table(connect_d, row)
-        # add_to_publisher_link_table(connect_d, row)
+        upload_publishers(final_df, connect_d)
+        upload_developers(final_df, connect_d)
+        upload_genres(final_df, connect_d)
+        upload_games(game_data, connect_d)
+        upload_game_genre_link(final_df, connect_d)
+        upload_game_publisher_link(final_df, connect_d)
+        upload_game_developer_link(final_df, connect_d)
 
     finally:
         connect_d.close()
