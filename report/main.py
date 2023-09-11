@@ -181,8 +181,8 @@ def get_top_rated_release(df_releases: DataFrame) -> str:
     Returns:
         str: A string relating to the title of the highest rated new game released
     """
-    df_releases = get_data_for_release_date(df_releases, 1)
-    df_ratings = df_releases.groupby("title")["sentiment"].mean().reset_index()
+    df_ratings = df_releases.groupby("title")["sentiment"].mean(
+    ).sort_values(ascending=False).reset_index()
 
     return df_ratings.head(1)["title"][0]
 
@@ -298,7 +298,7 @@ def plot_table(df_releases: DataFrame, rows: int) -> Chart:
         alt.Y("index", type="ordinal", axis=None),
         alt.Text("value", type="nominal"),
     ).properties(
-        width=1000
+        width=1000,
     )
     return chart
 
@@ -358,6 +358,7 @@ def plot_new_games_today_table(df_releases: DataFrame) -> None:
         Chart: A chart displaying plotted table
     """
     df_releases = get_data_for_release_date(df_releases, 1)
+    num_new_releases = get_number_of_new_releases(df_releases)
     df_merged = aggregate_release_data(df_releases)
 
     df_releases = df_merged.sort_values(
@@ -365,7 +366,7 @@ def plot_new_games_today_table(df_releases: DataFrame) -> None:
 
     df_releases = df_releases.reset_index(drop=True)
 
-    chart = plot_table(df_releases, 5)
+    chart = plot_table(df_releases, num_new_releases)
     return chart
 
 
@@ -449,12 +450,12 @@ def create_report(df_releases: DataFrame) -> None:
         df_releases)
     new_release_table_plot = plot_new_games_today_table(df_releases)
 
-    trending_release_sentiment_fig = build_figure_from_plot(
-        trending_release_sentiment_table_plot, "table_one")
-    trending_release_review_fig = build_figure_from_plot(
-        trending_release_review_table_plot, "table_two")
     new_release_table_fig = build_figure_from_plot(
-        new_release_table_plot, "table_three")
+        new_release_table_plot, "table_one")
+    trending_release_sentiment_fig = build_figure_from_plot(
+        trending_release_sentiment_table_plot, "table_two")
+    trending_release_review_fig = build_figure_from_plot(
+        trending_release_review_table_plot, "table_three")
 
     header_color = "#1b2838"
     text_color = "#f5f4f1"
@@ -500,15 +501,15 @@ def create_report(df_releases: DataFrame) -> None:
                 <p>Number of new releases: {new_releases}<br>Top rated release: {top_rated_release}</p>
             </div>
 
-
-        <h2>Top Releases by Sentiment</h2>
-        <img src="{trending_release_sentiment_fig}" alt="Chart 1">
-
-        <h2>Top Releases by Number of Reviews</h2>
-        <img src="{trending_release_review_fig}" alt="Chart 1">
-
         <h2>New Releases</h2>
         <img src="{new_release_table_fig}" alt="Chart 1">
+
+        <h2>Top Releases by Sentiment</h2>
+        <img src="{trending_release_sentiment_fig}" alt="Chart 2">
+
+        <h2>Top Releases by Number of Reviews</h2>
+        <img src="{trending_release_review_fig}" alt="Chart 3">
+
 
     </body>    
     </html>
