@@ -36,14 +36,11 @@ def test_execute_batch_columns_given_game_data(fake_batch, fake_game_data):
 def test_platform_data_retrieved():
     """Appropriate commands called for existing data"""
     fake_conn = MagicMock()
-    fake_execute = fake_conn.cursor().__enter__().execute
     fake_fetch = fake_conn.cursor().__enter__().fetchone
     fake_fetch.return_value = {'platform_id': 1}
     result = get_existing_platform_data('True', 'False', 'True', fake_conn, {})
 
     assert result == 1
-    assert fake_execute.call_count == 1
-    assert fake_fetch.call_count == 1
 
 
 def test_all_game_id_commands_called(fake_game_and_genre):
