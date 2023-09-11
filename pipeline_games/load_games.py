@@ -2,7 +2,7 @@
 from os import environ
 from dotenv import load_dotenv
 import pandas as pd
-from psycopg2 import connect, Error
+from psycopg2 import connect, Error, sql
 from psycopg2.extensions import connection
 from psycopg2.extras import RealDictCursor, execute_batch
 
@@ -25,8 +25,8 @@ def execute_batch_columns(conn: connection, data: pd.DataFrame, table: str, colu
     """batch execution of adding specified data to the database"""
     tuples = list(zip(data.unique()))
     cols = column
-    query = """INSERT INTO %s(%s) VALUES(%%s) ON CONFLICT (%s) DO NOTHING;""" % (
-        table, cols, cols)
+    query = sql.SQL("INSERT INTO {table}({cols}) VALUES(%s) ON CONFLICT ({cols}) DO NOTHING;").format(
+        table=sql.Identifier(table), cols=sql.Identifier(cols))
     with conn.cursor() as cur:
         try:
             execute_batch(cur, query, tuples, page_size)
@@ -42,9 +42,10 @@ def execute_batch_columns_for_genres(conn: connection, data: pd.DataFrame, table
     tuples = [tuple(x) for x in data.to_numpy()]
     cols = 'genre,user_generated'
 
-    query = """INSERT INTO %s(%s) SELECT %%s,%%s WHERE NOT EXISTS
+    query = sql.SQL("""INSERT INTO {table}({cols}) SELECT %s,%s WHERE NOT EXISTS
             (SELECT genre_id FROM genre
-              WHERE genre = %%s AND user_generated = %%s);""" % (table, cols)
+            WHERE genre = %s AND user_generated = %s);""").format(
+        table=sql.Identifier(table), cols=sql.Identifier(cols))
     with conn.cursor() as cur:
         try:
             execute_batch(cur, query, tuples, page_size)
@@ -60,8 +61,9 @@ def execute_batch_columns_for_games(conn: connection, data: pd.DataFrame, table:
     tuples = [tuple(x) for x in data.to_numpy()]
     cols = ','.join(list(data.columns))
 
-    query = """INSERT INTO %s(%s) VALUES (%%s,%%s,%%s,%%s,%%s,%%s)
-            ON CONFLICT (app_id) DO NOTHING""" % (table, cols)
+    query = sql.SQL("""INSERT INTO {table}({cols}) VALUES (%s,%s,%s,%s,%s,%s)
+            ON CONFLICT (app_id) DO NOTHING;""").format(
+        table=sql.Identifier(table), cols=sql.Identifier(cols))
     with conn.cursor() as cur:
         try:
             execute_batch(cur, query, tuples, page_size)
