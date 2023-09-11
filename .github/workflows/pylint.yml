@@ -27,4 +27,4 @@ jobs:
           pip install -r ./report/requirements.txt
       - name: Analysing push files with pylint
         run: |
-          pylint --fail-under=5 ./report/*.py
+          pylint --fail-under=5 $(git ls-files '*.py')
