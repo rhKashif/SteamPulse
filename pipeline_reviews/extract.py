@@ -76,7 +76,6 @@ def get_all_reviews(game_ids: list[int]) -> DataFrame:
                     if not cursor in cursor_list:
                         cursor_list.append(cursor)
                     all_reviews.extend(page_reviews)
-    print(DataFrame(all_reviews))
     return DataFrame(all_reviews)
 
 
