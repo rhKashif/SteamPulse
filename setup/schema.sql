@@ -82,7 +82,7 @@ CREATE TABLE review(
     playtime_last_2_weeks INT NOT NULL,
     game_id INT NOT NULL,
     PRIMARY KEY (review_id),
-    UNIQUE(game_id, review_text, review_score, reviewed_at, playtime_last_2_weeks, sentiment),
+    UNIQUE(game_id, review_text, review_score, reviewed_at, sentiment),
     FOREIGN KEY (game_id) REFERENCES game(game_id) 
 
 );
