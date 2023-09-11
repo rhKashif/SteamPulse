@@ -13,7 +13,7 @@ def get_db_connection(config) -> connection:
         return connect(
             user=config['DATABASE_USERNAME'],
             password=config['DATABASE_PASSWORD'],
-            host=config['DATABASE_IP'],
+            host=config['DATABASE_ENDPOINT'],
             port=config['DATABASE_PORT'],
             database=config['DATABASE_NAME'],
             cursor_factory=RealDictCursor)
