@@ -147,9 +147,9 @@ def get_number_of_new_releases(df_releases: DataFrame) -> int:
     Returns:
         int: An integer relating to the number of new games released
     """
-    date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+    df_releases = get_data_for_release_date(df_releases, 1)
 
-    return df_releases[df_releases["release_date"] == date].reset_index().shape[0]
+    return df_releases.drop_duplicates("title").shape[0]
 
 
 def get_top_rated_release(df_releases: DataFrame) -> str:
