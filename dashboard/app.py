@@ -74,6 +74,23 @@ def get_database(conn_postgres: connection) -> DataFrame:
     return df_releases
 
 
+def format_database_columns(df_releases: DataFrame) -> DataFrame:
+    """
+    Format columns within the database to the correct data types
+    Args:
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
+    Returns:
+        DataFrame: A DataFrame containing filtered data related to new releases 
+        with columns in the correct data types
+    """
+    df_releases["release_date"] = pd.to_datetime(
+        df_releases['release_date'], format='%d/%m/%Y')
+    df_releases["review_date"] = pd.to_datetime(
+        df_releases['reviewed_at'], format='%d/%m/%Y')
+
+    return df_releases
+
+
 def build_sidebar_title(df_releases: DataFrame) -> list:
     """
     Build sidebar with dropdown menu options
@@ -743,16 +760,11 @@ if __name__ == "__main__":
     conn = get_db_connection(config)
 
     game_df = get_database(conn)
-
-    game_df["release_date"] = pd.to_datetime(
-        game_df['release_date'], format='%d/%m/%Y')
-    game_df["review_date"] = pd.to_datetime(
-        game_df['reviewed_at'], format='%d/%m/%Y')
+    game_df = format_database_columns(game_df)
 
     st.set_page_config(layout="wide")
 
     dashboard_header()
-
     sidebar_header()
 
     selected_releases = build_sidebar_title(game_df)
@@ -768,35 +780,44 @@ if __name__ == "__main__":
     filtered_df = filter_data(game_df, selected_releases, selected_release_dates, selected_review_dates,
                               selected_genre, selected_developer, selected_publisher, selected_platform, min_price, max_price, min_sentiment, max_sentiment)
 
-    headline_figures(filtered_df)
+    print(filtered_df)
 
-    sub_headline_figures(filtered_df)
+    if filtered_df.empty:
+        st.markdown(
+            "### Invalid Filters\n There are no releases which fit your options")
+    else:
+        headline_figures(filtered_df)
 
-    games_release_frequency_plot = plot_games_release_frequency(filtered_df)
-    games_review_frequency_plot = plot_games_review_frequency(filtered_df)
-    games_platform_distribution_plot = plot_platform_distribution(filtered_df)
+        sub_headline_figures(filtered_df)
 
-    reviews_per_game_release_frequency_plot = plot_reviews_per_game_frequency(
-        filtered_df)
-    average_sentiment_per_game_plot = plot_average_sentiment_per_game(
-        filtered_df)
+        games_release_frequency_plot = plot_games_release_frequency(
+            filtered_df)
+        games_review_frequency_plot = plot_games_review_frequency(filtered_df)
+        games_platform_distribution_plot = plot_platform_distribution(
+            filtered_df)
 
-    average_sentiment_per_developer_plot = plot_average_sentiment_per_developer(
-        filtered_df)
-    average_sentiment_per_publisher_plot = plot_average_sentiment_per_publisher(
-        filtered_df)
+        reviews_per_game_release_frequency_plot = plot_reviews_per_game_frequency(
+            filtered_df)
+        average_sentiment_per_game_plot = plot_average_sentiment_per_game(
+            filtered_df)
 
-    games_genre_distribution_plot = plot_genre_distribution(filtered_df)
+        average_sentiment_per_developer_plot = plot_average_sentiment_per_developer(
+            filtered_df)
+        average_sentiment_per_publisher_plot = plot_average_sentiment_per_publisher(
+            filtered_df)
 
-    plot_trending_games_table(filtered_df)
+        games_genre_distribution_plot = plot_genre_distribution(filtered_df)
 
-    first_row_figures(games_release_frequency_plot,
-                      games_review_frequency_plot, games_platform_distribution_plot)
-    second_row_figures(
-        average_sentiment_per_game_plot,  reviews_per_game_release_frequency_plot)
-    third_row_figures(average_sentiment_per_developer_plot,
-                      average_sentiment_per_publisher_plot)
+        plot_trending_games_table(filtered_df)
 
-    games_price_distribution_plot = plot_price_distribution(filtered_df)
+        first_row_figures(games_release_frequency_plot,
+                          games_review_frequency_plot, games_platform_distribution_plot)
+        second_row_figures(
+            average_sentiment_per_game_plot,  reviews_per_game_release_frequency_plot)
+        third_row_figures(average_sentiment_per_developer_plot,
+                          average_sentiment_per_publisher_plot)
 
-    st.altair_chart(games_price_distribution_plot, use_container_width=True)
+        games_price_distribution_plot = plot_price_distribution(filtered_df)
+
+        st.altair_chart(games_price_distribution_plot,
+                        use_container_width=True)
