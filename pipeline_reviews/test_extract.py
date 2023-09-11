@@ -19,7 +19,6 @@ def test_get_game_ids_passes():
     assert get_game_ids(fake_connection) == [1, 2]
 
 
-
 def test_get_game_ids_fails():
     """Verifies that extract script raises GamesNotFound
     error if no games were returned"""
