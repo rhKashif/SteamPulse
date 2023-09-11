@@ -2,6 +2,8 @@ FROM python
 
 WORKDIR /app
 
+COPY .streamlit ./.streamlit
+
 COPY requirements.txt .
 
 RUN pip install -r requirements.txt
