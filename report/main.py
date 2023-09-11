@@ -12,6 +12,7 @@ import pandas as pd
 from pandas import DataFrame
 from psycopg2 import connect
 from psycopg2.extensions import connection
+import streamlit as st
 from xhtml2pdf import pisa
 
 
@@ -202,6 +203,63 @@ def get_release_information(df_releases: DataFrame, index: int) -> dict:
     return game_information
 
 
+def plot_trending_games_table(df_releases: DataFrame) -> None:
+    """
+    Create a table for the top 5 recommended games
+
+    Args:
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
+
+    Returns:
+        None
+    """
+
+    average_sentiment_per_title = df_releases.groupby('title')[
+        'sentiment'].mean().sort_values(
+        ascending=False).dropna().reset_index()
+    average_sentiment_per_title.columns = ["title", "avg_sentiment"]
+
+    merged_df = pd.merge(average_sentiment_per_title, df_releases,
+                         on='title').drop_duplicates("title")
+    desired_columns = ["title", "release_date",
+                       "sale_price", "avg_sentiment"]
+    df_releases = merged_df[desired_columns]
+
+    df_releases['sale_price'] = df_releases['sale_price'].apply(
+        lambda x: f"£{x:.2f}")
+    df_releases['release_date'] = df_releases['release_date'].dt.strftime(
+        '%d/%m/%Y')
+
+    table_columns = ["Title:", "Release Date:",
+                     "Price:", "Community Sentiment"]
+    df_releases.columns = table_columns
+    df_releases = df_releases.reset_index(drop=True)
+    table = st.table(df_releases.head(5).style.set_properties(
+        **{'font-size': '16px'}))
+
+    chart = alt.Chart(
+        df_releases.reset_index().head(5)
+    ).mark_text().transform_fold(
+        df_releases.columns.tolist()
+    ).encode(
+        alt.X(
+            "key",
+            type="nominal",
+            axis=alt.Axis(
+                orient="top",
+                labelAngle=0,
+                title=None,
+                ticks=False
+            ),
+            scale=alt.Scale(padding=10),
+            sort=None,
+        ),
+        alt.Y("index", type="ordinal", axis=None),
+        alt.Text("value", type="nominal"),
+    )
+    return chart
+
+
 def format_trending_game_information(df_releases: DataFrame, index: int) -> str:
     """
     Return information of new releases with the highest overall sentiment score for the previous day
@@ -214,8 +272,6 @@ def format_trending_game_information(df_releases: DataFrame, index: int) -> str:
     Returns:
         str: A string relating to the information of selected trending new game released in html format
     """
-    df_releases = get_data_for_release_date(df_releases, 1)
-
     release_information = get_release_information(df_releases, index)
 
     html_template = f"""
@@ -286,6 +342,7 @@ def create_report(df_releases: DataFrame) -> None:
     games_release_frequency_plot = plot_games_release_frequency(df_releases)
     games_review_frequency_plot = plot_games_review_frequency(df_releases)
     trending_games_plot = plot_top_trending_games(df_releases)
+    trending_games_table_plot = plot_trending_games_table(df_releases)
 
     fig1 = build_figure_from_plot(
         reviews_per_game_release_frequency_plot, "chart_one")
@@ -295,6 +352,7 @@ def create_report(df_releases: DataFrame) -> None:
         games_review_frequency_plot, "chart_three")
     fig4 = build_figure_from_plot(
         trending_games_plot, "chart_four")
+    fig5 = build_figure_from_plot(trending_games_table_plot, "table_one")
 
     header_color = "#1b2838"
     text_color = "#f5f4f1"
@@ -310,10 +368,10 @@ def create_report(df_releases: DataFrame) -> None:
                     left: 50pt; width: 512pt; top: 50; height: 350pt;
                 }}
                 @frame col1_frame {{             /* Content frame 1 */
-                    left: 44pt; width: 245pt; top: 200pt; height: 365pt;
+                    left: 44pt; width: 245pt; top: 220pt; height: 365pt;
                 }}
                 @frame col2_frame {{             /* Content frame 2 */
-                    left: 323pt; width: 245pt; top: 200pt; height: 365pt;
+                    left: 323pt; width: 245pt; top: 220pt; height: 365pt;
                 }}
                 @frame footer_frame {{           /* Static frame */
                     -pdf-frame-content: footer_content;
@@ -355,7 +413,7 @@ def create_report(df_releases: DataFrame) -> None:
         <div id="header_content">
             <h1>New Release Report</h1>
                 <div class = "myDiv2">
-                    <p>Number of new releases: {new_releases}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Top rated release: {top_rated_release}</p>
+                    <p>Number of new releases: {new_releases}<br>Top rated release: {top_rated_release}</p>
                 </div>
             </div>
         <div id="footer_content">
@@ -374,6 +432,10 @@ def create_report(df_releases: DataFrame) -> None:
 
         <h2>New Reviews per Day</h2>
         <img src="{fig3}" alt="Chart 4">
+
+        <h2>Top Recommended Games by Sentiment</h2>
+        <img src="{fig5}" alt="Chart 4">
+
 
         <p>Trending games:</p>
         <div class = "myDiv">
