@@ -6,7 +6,7 @@ from psycopg2 import Error
 
 from extract import get_db_connection, get_game_ids, get_all_reviews, GamesNotFound
 from transform import transform_reviews, remove_unnamed
-from sentiment import isolate_non_stop_words, get_sentiment_per_game, get_sentiment_values
+from sentiment import isolate_non_stop_words, get_sentiment_values
 from load import get_game_ids_foreign_key_values, move_reviews_to_db
 
 if __name__ == "__main__":
@@ -30,7 +30,6 @@ if __name__ == "__main__":
         print("Getting sentiment values...")
         reviews = isolate_non_stop_words(reviews)
         reviews = get_sentiment_values(reviews)
-        each_game_sentiment = get_sentiment_per_game(reviews)
         reviews = remove_unnamed(reviews)
         time_finished_sent = datetime.now()
         time_taken = time_finished_sent - time_finished_transform
