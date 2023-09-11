@@ -17,11 +17,14 @@ class GamesNotFound(Exception):
         super().__init__(message)
 
 
-def get_number_of_reviews(game_id: int) -> dict:
-    """Retrieves information about all reviews from a given game ID"""
-    request = requests.get(f"https://store.steampowered.com/appreviews/{game_id}?json=1")
-    reviews_info = request.json()
-    return reviews_info["query_summary"]["total_reviews"]
+def get_number_of_reviews(game_id: int) -> int:
+    """Retrieves total number of all reviews from a given game ID"""
+    try:
+        request = requests.get(f"https://store.steampowered.com/appreviews/{game_id}?json=1", timeout=10)
+        reviews_info = request.json()
+        return reviews_info["query_summary"]["total_reviews"]
+    except requests.exceptions.Timeout:
+        return 0
 
 
 def get_reviews_for_game(game_id: int, cursor: str) -> dict:
