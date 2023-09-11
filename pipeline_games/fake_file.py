@@ -1,2 +1,2 @@
 """just a file saying hi"""
-print('hi')
+print('hello')
