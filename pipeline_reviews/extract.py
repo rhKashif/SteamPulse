@@ -17,8 +17,8 @@ class GamesNotFound(Exception):
         super().__init__(message)
 
 
-def get_number_of_reviews(game_id: int) -> dict:
-    """Retrieves information about all reviews from a given game ID"""
+def get_number_of_reviews(game_id: int) -> int:
+    """Retrieves total number of all reviews from a given game ID"""
     try:
         request = requests.get(f"https://store.steampowered.com/appreviews/{game_id}?json=1", timeout=10)
         reviews_info = request.json()
