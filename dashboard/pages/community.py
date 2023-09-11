@@ -570,18 +570,17 @@ def plot_trending_games_table(df_releases: DataFrame) -> None:
     df_merged = format_columns(df_merged)
 
     df_merged = df_merged.reset_index(drop=True)
-    st.markdown("Top Recommended Games by Sentiment")
-    st.table(df_merged.head(5).style.set_properties(
-        **{'font-size': '16px'}))
+
+    return {"table_data": df_merged, "title": "Top 5 Recommended Games by Sentiment"}
 
 
-def plot_trending_games_review_table(df_releases: DataFrame) -> None:
+def plot_trending_games_review_table(df_releases: DataFrame) -> dict:
     """
     Create a table for the top recommended games by number of reviews 
     Args:
         df_releases (DataFrame): A DataFrame containing filtered data related to new releases
     Returns:
-        Chart: A chart displaying plotted table
+        dict: A Python dictionary containing a DataFrame with table formatted data and a table title
     """
     df_merged = aggregate_release_data(df_releases)
 
@@ -591,9 +590,7 @@ def plot_trending_games_review_table(df_releases: DataFrame) -> None:
 
     df_merged = df_merged.reset_index(drop=True)
 
-    st.markdown("Top Recommended Games by Sentiment")
-    st.table(df_merged.head(5).style.set_properties(
-        **{'font-size': '16px'}))
+    return {"table_data": df_merged, "title": "Top 5 Recommended Games by Sentiment"}
 
 
 def dashboard_header() -> None:
@@ -753,7 +750,7 @@ def second_row_figures(plot_one: Chart, plot_two: Chart) -> None:
     st.markdown("---")
 
 
-def third_row_figures(plot_one: Chart, plot_two: Chart) -> None:
+def table_rows(table_one: Chart, table_two: Chart) -> None:
     """
     Build figures relating to release and review frequency for dashboard
 
@@ -767,10 +764,13 @@ def third_row_figures(plot_one: Chart, plot_two: Chart) -> None:
     """
     cols = st.columns(2)
     with cols[0]:
-        st.altair_chart(plot_one, use_container_width=True)
+        st.markdown(f"{table_one['title']}")
+        st.table(table_one["table_data"].head(5).style.set_properties(
+            **{'font-size': '16px'}))
     with cols[1]:
-        st.altair_chart(plot_two,
-                        use_container_width=True)
+        st.markdown(f"{table_two['title']}")
+        st.table(table_two["table_data"].head(5).style.set_properties(
+            **{'font-size': '16px'}))
 
     st.markdown("---")
 
@@ -827,10 +827,13 @@ if __name__ == "__main__":
 
         games_genre_distribution_plot = plot_genre_distribution(filtered_df, 5)
 
+        trending_games_by_sentiment = plot_trending_games_table(filtered_df)
+        trending_game_by_reviews = plot_trending_games_review_table(
+            filtered_df)
+
+        table_rows(trending_games_by_sentiment,
+                   trending_game_by_reviews)
         first_row_figures(trending_sentiment_per_game_plot,
                           trending_reviews_per_game_plot, games_genre_distribution_plot)
         second_row_figures(trending_sentiment_per_developer_plot,
                            trending_sentiment_per_publisher_plot)
-
-        plot_trending_games_table(filtered_df)
-        plot_trending_games_review_table(filtered_df)
