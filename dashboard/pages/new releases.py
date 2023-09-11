@@ -535,8 +535,6 @@ if __name__ == "__main__":
 
         sub_headline_figures(filtered_df)
 
-        st.markdown("---")
-
         game_table = plot_new_games_today_table(filtered_df)
 
         st.markdown(f"{game_table['title']}")
