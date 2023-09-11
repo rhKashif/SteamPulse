@@ -1,6 +1,6 @@
 """Testing script for load_games script"""
 from unittest.mock import MagicMock, patch
-from load_games import execute_batch_columns, execute_batch_columns_for_genres, execute_batch_columns_for_games, get_existing_platform_data, add_to_genre_link_table, add_to_publisher_link_table, add_to_developer_link_table, upload_developers, upload_publishers, upload_genres, upload_games
+from load_games import execute_batch_columns, execute_batch_columns_for_genres, execute_batch_columns_for_games, get_existing_platform_data, add_to_genre_link_table, add_to_publisher_link_table, add_to_developer_link_table, upload_developers, upload_publishers, upload_genres, upload_games, get_all_game_genre_ids, get_all_developer_game_ids, get_all_publisher_game_ids
 
 
 @patch("load_games.execute_batch")
@@ -46,40 +46,70 @@ def test_platform_data_retrieved():
     assert fake_fetch.call_count == 1
 
 
-def test_genre_link_table_commands(fake_row):
+def test_all_game_id_commands_called(fake_game_and_genre):
+    """Test appropriate commands called to get game id data"""
+    fake_conn = MagicMock()
+    fake_execute = fake_conn.cursor().__enter__().execute
+    fake_fetch = fake_conn.cursor().__enter__().fetchall
+
+    get_all_game_genre_ids(fake_conn, fake_game_and_genre)
+
+    assert fake_execute.call_count == 2
+    assert fake_fetch.call_count == 2
+
+
+def test_all_publisher_id_commands_called(fake_game_and_publisher):
+    """Test appropriate commands called to get game id data"""
+    fake_conn = MagicMock()
+    fake_execute = fake_conn.cursor().__enter__().execute
+    fake_fetch = fake_conn.cursor().__enter__().fetchall
+
+    get_all_game_genre_ids(fake_conn, fake_game_and_publisher)
+
+    assert fake_execute.call_count == 2
+    assert fake_fetch.call_count == 2
+
+
+def test_all_developer_id_commands_called(fake_game_and_developer):
+    """Test appropriate commands called to get game id data"""
+    fake_conn = MagicMock()
+    fake_execute = fake_conn.cursor().__enter__().execute
+    fake_fetch = fake_conn.cursor().__enter__().fetchall
+
+    get_all_game_genre_ids(fake_conn, fake_game_and_developer)
+
+    assert fake_execute.call_count == 1
+    assert fake_fetch.call_count == 1
+
+
+@patch("load_games.execute_batch")
+def test_genre_link_table_commands(fake_batch, fake_tuples):
     """Test appropriate commands called for genre link table"""
     fake_conn = MagicMock()
-    fake_execute = fake_conn.cursor().__enter__().execute
-    fake_fetch = fake_conn.cursor().__enter__().fetchone
 
-    add_to_genre_link_table(fake_conn, fake_row)
+    add_to_genre_link_table(fake_conn, fake_tuples, 100)
 
-    assert fake_fetch.call_count == 3
-    assert fake_execute.call_count == 3
+    assert fake_batch.call_count == 1
 
 
-def test_publisher_link_table_commands(fake_row):
+@patch("load_games.execute_batch")
+def test_publisher_link_table_commands(fake_batch, fake_tuples):
     """Test appropriate commands called for publisher link table"""
     fake_conn = MagicMock()
-    fake_execute = fake_conn.cursor().__enter__().execute
-    fake_fetch = fake_conn.cursor().__enter__().fetchone
 
-    add_to_publisher_link_table(fake_conn, fake_row)
+    add_to_publisher_link_table(fake_conn, fake_tuples, 100)
 
-    assert fake_fetch.call_count == 3
-    assert fake_execute.call_count == 3
+    assert fake_batch.call_count == 1
 
 
-def test_developer_link_table_commands(fake_row):
+@patch("load_games.execute_batch")
+def test_developer_link_table_commands(fake_batch, fake_tuples):
     """Test appropriate commands called for developer link table"""
     fake_conn = MagicMock()
-    fake_execute = fake_conn.cursor().__enter__().execute
-    fake_fetch = fake_conn.cursor().__enter__().fetchone
 
-    add_to_developer_link_table(fake_conn, fake_row)
+    add_to_developer_link_table(fake_conn, fake_tuples, 100)
 
-    assert fake_fetch.call_count == 3
-    assert fake_execute.call_count == 3
+    assert fake_batch.call_count == 1
 
 
 @patch("load_games.execute_batch_columns")

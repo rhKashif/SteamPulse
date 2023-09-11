@@ -154,6 +154,36 @@ def fake_genre_data():
 
 
 @pytest.fixture
+def fake_game_and_genre():
+    """Fake game and genre data for testing"""
+    game_genre = pd.DataFrame(
+        [[123, 'solo', True], [234, 'multi', False]],
+        columns=['app_id', 'genre', 'user_generated']
+    )
+    return game_genre[['app_id', 'genre', 'user_generated']]
+
+
+@pytest.fixture
+def fake_game_and_publisher():
+    """Fake game and publisher data for testing"""
+    game_genre = pd.DataFrame(
+        [[123, 'publisher'], [234, 'fake_publisher']],
+        columns=['app_id', 'publishers']
+    )
+    return game_genre[['app_id', 'publishers']]
+
+
+@pytest.fixture
+def fake_game_and_developer():
+    """Fake game and developer data for testing"""
+    game_genre = pd.DataFrame(
+        [[123, 'developer']],
+        columns=['app_id', 'developers']
+    )
+    return game_genre[['app_id', 'developers']]
+
+
+@pytest.fixture
 def fake_game_data():
     """Fake game dataframe columns"""
     genre = pd.DataFrame(
@@ -164,10 +194,9 @@ def fake_game_data():
 
 
 @pytest.fixture
-def fake_row():
-    """Fake row from csv file"""
-    return ['', 0, 1837620, 'Sans Logique', '2023-09-07', 0.0, 0.0,
-            True, False, False, 'Gamagora ICOM', 'Gamagora ICOM', 'Adventure', False]
+def fake_tuples():
+    """Fake tuples of id"""
+    return [(1, 2), (3, 4)]
 
 
 @pytest.fixture
