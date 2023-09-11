@@ -4,7 +4,7 @@ import pandas as pd
 
 
 @pytest.fixture
-def fake_html():
+def fake_html() -> str:
     """Fake html scraping for testing"""
     return """<a class="search_result_row ds_collapse_flag" data-ds-appid="12345"
                 data-ds-itemkey="App_2501550" data-ds-steam-deck-compat-handled="true" 
@@ -34,7 +34,7 @@ def fake_html():
 
 
 @pytest.fixture
-def fake_html_soup():
+def fake_html_soup() -> str:
     """Fake html after it has been passed through soup"""
     return """<html>
         <body>
@@ -68,7 +68,7 @@ def fake_html_soup():
 
 
 @pytest.fixture
-def html_no_tags():
+def html_no_tags() -> str:
     """Fake html containing tag and price data"""
     return """<html>
         <body>
@@ -99,7 +99,7 @@ def html_no_tags():
 
 
 @pytest.fixture
-def fake_response():
+def fake_response() -> dict:
     """Fake API response"""
     return {'type': 'game', 'name': 'Just fighting', 'steam_appid': 2545170, 'required_age': 0,
             'is_free': False, 'developers': ['Fake Developer 1', 'Fake Developer 2'],
@@ -116,7 +116,7 @@ def fake_response():
 
 
 @pytest.fixture
-def fake_raw_data():
+def fake_raw_data() -> pd.DataFrame:
     """Fake raw data from pretend dataframe"""
     return pd.DataFrame([[2246030, "Fake: Escape", "5 Sep, 2023", "Early Access,Clicker,Strategy",
                           '£3.39', '£2.54', True, False, False, "Adventure,Early Access",
@@ -127,7 +127,7 @@ def fake_raw_data():
 
 
 @pytest.fixture
-def fake_data_with_tags():
+def fake_data_with_tags() -> pd.DataFrame:
     """Fake dataframe data with tags """
     return pd.DataFrame([[2246030, "Fake: Escape", "5 Sep, 2023", "Early Access,Clicker,Strategy",
                          '£3.39', '£2.54', True, False, False, "Adventure,Early Access",
@@ -138,7 +138,7 @@ def fake_data_with_tags():
 
 
 @pytest.fixture
-def fake_publisher_data():
+def fake_publisher_data() -> pd.DataFrame:
     """Fake publisher data columns"""
     publisher = pd.DataFrame(
         [['fake publisher 1'], ['fake_publisher 2']], columns=['publishers'])
@@ -146,7 +146,7 @@ def fake_publisher_data():
 
 
 @pytest.fixture
-def fake_genre_data():
+def fake_genre_data() -> pd.DataFrame:
     """Fake genre data columns"""
     genre = pd.DataFrame(
         [['fake_genre', True], ['fake 2', False]], columns=['genre', 'user_generated'])
@@ -154,7 +154,7 @@ def fake_genre_data():
 
 
 @pytest.fixture
-def fake_game_and_genre():
+def fake_game_and_genre() -> pd.DataFrame:
     """Fake game and genre data for testing"""
     game_genre = pd.DataFrame(
         [[123, 'solo', True], [234, 'multi', False]],
@@ -164,7 +164,7 @@ def fake_game_and_genre():
 
 
 @pytest.fixture
-def fake_game_and_publisher():
+def fake_game_and_publisher() -> pd.DataFrame:
     """Fake game and publisher data for testing"""
     game_genre = pd.DataFrame(
         [[123, 'publisher'], [234, 'fake_publisher']],
@@ -174,7 +174,7 @@ def fake_game_and_publisher():
 
 
 @pytest.fixture
-def fake_game_and_developer():
+def fake_game_and_developer() -> pd.DataFrame:
     """Fake game and developer data for testing"""
     game_genre = pd.DataFrame(
         [[123, 'developer']],
@@ -184,7 +184,7 @@ def fake_game_and_developer():
 
 
 @pytest.fixture
-def fake_game_data():
+def fake_game_data() -> pd.DataFrame:
     """Fake game dataframe columns"""
     genre = pd.DataFrame(
         [[1, 'fake_title 1', '2023-09-05', 5.30, 5.30, 1],
@@ -194,13 +194,13 @@ def fake_game_data():
 
 
 @pytest.fixture
-def fake_tuples():
+def fake_tuples() -> list[tuple]:
     """Fake tuples of id"""
     return [(1, 2), (3, 4)]
 
 
 @pytest.fixture
-def fake_complete_data():
+def fake_complete_data() -> pd.DataFrame:
     """Fake final game dataframe"""
     return pd.DataFrame(
         [[1, 'fake_title 1', '2023-09-05', 5.30, 5.30, True, False, True,
