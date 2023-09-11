@@ -1,0 +1,33 @@
+name: Pytest
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "pipeline_games/**"
+      - "pipeline_reviews/**"
+jobs:
+  test:
+    name: Run Pytest
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.11.3
+
+    - name: Install dependencies
+      run: |
+       folders_with_tests=("pipeline_reviews" "pipeline_games")
+       for folder in "${folders_with_tests[@]}"; do
+          if [ -f "requirements/${folder}.txt" ]; then
+            pip install -r "requirements/${folder}.txt"
+          fi
+        done
+
+    - name: Run pytest
+      run: pytest
