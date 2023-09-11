@@ -244,27 +244,16 @@ def aggregate_release_data(df_releases: DataFrame) -> DataFrame:
     return df_merged
 
 
-def plot_trending_games_sentiment_table(df_releases: DataFrame) -> None:
+def plot_table(df_releases: DataFrame) -> Chart:
     """
-    Create a table for the top 5 recommended games by sentiment
+    Create a table from a given DataFrame
 
     Args:
-        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
+        df_releases (DataFrame): A DataFrame containing filtered data for a chart
 
     Returns:
         None
     """
-
-    df_merged = aggregate_release_data(df_releases)
-
-    df_releases = df_merged.sort_values(
-        by=["avg_sentiment"], ascending=False)
-
-    table_columns = ["Title:", "Release Date:",
-                     "Price:", "Community Sentiment", "Number of Reviews"]
-    df_releases.columns = table_columns
-    df_releases = df_releases.reset_index(drop=True)
-
     chart = alt.Chart(
         df_releases.reset_index().head(5)
     ).mark_text().transform_fold(
@@ -290,6 +279,31 @@ def plot_trending_games_sentiment_table(df_releases: DataFrame) -> None:
     return chart
 
 
+def plot_trending_games_sentiment_table(df_releases: DataFrame) -> None:
+    """
+    Create a table for the top 5 recommended games by sentiment
+
+    Args:
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
+
+    Returns:
+        None
+    """
+
+    df_merged = aggregate_release_data(df_releases)
+
+    df_releases = df_merged.sort_values(
+        by=["avg_sentiment"], ascending=False)
+
+    table_columns = ["Title:", "Release Date:",
+                     "Price:", "Community Sentiment", "Number of Reviews"]
+    df_releases.columns = table_columns
+    df_releases = df_releases.reset_index(drop=True)
+
+    chart = plot_table(df_releases)
+    return chart
+
+
 def plot_trending_games_review_table(df_releases: DataFrame) -> None:
     """
     Create a table for the top 5 recommended games by number of reviews 
@@ -311,28 +325,7 @@ def plot_trending_games_review_table(df_releases: DataFrame) -> None:
     df_releases.columns = table_columns
     df_releases = df_releases.reset_index(drop=True)
 
-    chart = alt.Chart(
-        df_releases.reset_index().head(5)
-    ).mark_text().transform_fold(
-        df_releases.columns.tolist()
-    ).encode(
-        alt.X(
-            "key",
-            type="nominal",
-            axis=alt.Axis(
-                orient="top",
-                labelAngle=0,
-                title=None,
-                ticks=False
-            ),
-            scale=alt.Scale(padding=10),
-            sort=None,
-        ),
-        alt.Y("index", type="ordinal", axis=None),
-        alt.Text("value", type="nominal"),
-    ).properties(
-        width=1000
-    )
+    chart = plot_table(df_releases)
     return chart
 
 
