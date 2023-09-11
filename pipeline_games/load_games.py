@@ -2,7 +2,7 @@
 from os import environ
 from dotenv import load_dotenv
 import pandas as pd
-from psycopg2 import connect, Error, sql
+from psycopg2 import connect, Error
 from psycopg2.extensions import connection
 from psycopg2.extras import RealDictCursor, execute_batch
 
@@ -42,7 +42,7 @@ def execute_batch_columns_for_genres(conn: connection, data: pd.DataFrame, table
     tuples = [tuple(x) for x in data.to_numpy()]
     cols = 'genre,user_generated'
 
-    query = sql.SQL("""INSERT INTO {table}({cols}) SELECT %s,%s WHERE NOT EXISTS
+    query = """INSERT INTO %s(%s) SELECT %%s,%%s WHERE NOT EXISTS
             (SELECT genre_id FROM genre
             WHERE genre = %s AND user_generated = %s);""").format(
         table=sql.Identifier(table), cols=sql.SQL(cols))
@@ -60,7 +60,6 @@ def execute_batch_columns_for_games(conn: connection, data: pd.DataFrame, table:
     """batch execution of adding games into the database"""
     tuples = [tuple(x) for x in data.to_numpy()]
     cols = ','.join(list(data.columns))
-
     query = sql.SQL("""INSERT INTO {table}({cols}) VALUES (%s,%s,%s,%s,%s,%s)
             ON CONFLICT (app_id) DO NOTHING RETURNING game_id;""").format(
         table=sql.Identifier(table), cols=sql.SQL(cols))
