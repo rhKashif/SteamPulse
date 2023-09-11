@@ -558,7 +558,7 @@ def plot_price_distribution(df_releases: DataFrame) -> Chart:
         alt.X('price:Q', bin=alt.Bin(maxbins=20), title='Game Price Range'),
         alt.Y('count():Q', title='Number of Games')
     ).properties(
-        title='Game Price Range Histogram'
+        title='Game Price Range Histogram',
     )
 
     return chart
@@ -674,7 +674,7 @@ def sub_headline_figures(df_releases: DataFrame) -> None:
     st.markdown("---")
 
 
-def first_row_figures(plot_one: Chart, plot_two: Chart, plot_three: Chart) -> None:
+def first_row_figures(plot_one: Chart, plot_two: Chart, plot_three: Chart, plot_four: Chart) -> None:
     """
     Build figures relating to release and review frequency for dashboard
 
@@ -688,14 +688,15 @@ def first_row_figures(plot_one: Chart, plot_two: Chart, plot_three: Chart) -> No
     Returns:
         None
     """
-    cols = st.columns(3)
+    cols = st.columns(4)
     with cols[0]:
         st.altair_chart(plot_one, use_container_width=True)
     with cols[1]:
         st.altair_chart(plot_two, use_container_width=True)
     with cols[2]:
         st.altair_chart(plot_three, use_container_width=True)
-
+    with cols[3]:
+        st.altair_chart(plot_four, use_container_width=True)
     st.markdown("---")
 
 
@@ -786,6 +787,7 @@ if __name__ == "__main__":
             filtered_df)
         games_platform_distribution_plot = plot_platform_distribution(
             filtered_df)
+        games_price_distribution_plot = plot_price_distribution(filtered_df)
 
         trending_sentiment_per_game_plot = plot_average_sentiment_per_game(
             filtered_df)
@@ -800,15 +802,11 @@ if __name__ == "__main__":
         games_genre_distribution_plot = plot_genre_distribution(filtered_df, 5)
 
         first_row_figures(games_release_frequency_plot,
-                          games_review_frequency_plot, games_platform_distribution_plot)
+                          games_review_frequency_plot, games_platform_distribution_plot, games_price_distribution_plot)
         second_row_figures(
             trending_sentiment_per_game_plot,  trending_reviews_per_game_plot)
         third_row_figures(trending_sentiment_per_developer_plot,
                           trending_sentiment_per_publisher_plot)
 
-        games_price_distribution_plot = plot_price_distribution(filtered_df)
-
-        st.altair_chart(games_price_distribution_plot,
-                        use_container_width=True)
         st.altair_chart(games_genre_distribution_plot,
                         use_container_width=True)
