@@ -138,9 +138,9 @@ def get_data_for_release_date(df_releases: DataFrame, index: int) -> DataFrame:
     return df_releases[df_releases["release_date"] == date]
 
 
-def get_data_for_release_date_range(df_releases: DataFrame) -> DataFrame:
+def get_data_for_release_date_range(df_releases: DataFrame, index: int) -> DataFrame:
     """
-    Return a DataFrame for a specific date behind the current date
+    Return a DataFrame for a range of dates behind the current date
 
     Args:
         df_releases (DataFrame): A pandas DataFrame containing all relevant game data
@@ -150,7 +150,8 @@ def get_data_for_release_date_range(df_releases: DataFrame) -> DataFrame:
     Returns:
         DataFrame: A pandas DataFrame containing all relevant game data for a specific date
     """
-    date_week_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+    date_week_ago = (datetime.now() - timedelta(days=index)
+                     ).strftime("%Y-%m-%d")
 
     return df_releases[df_releases["release_date"] >= date_week_ago]
 
@@ -312,7 +313,7 @@ def plot_trending_games_sentiment_table(df_releases: DataFrame) -> None:
     Returns:
         Chart: A chart displaying plotted table
     """
-    df_releases = get_data_for_release_date_range(df_releases)
+    df_releases = get_data_for_release_date_range(df_releases, 7)
     df_merged = aggregate_release_data(df_releases)
 
     df_releases = df_merged.sort_values(
@@ -334,7 +335,7 @@ def plot_trending_games_review_table(df_releases: DataFrame) -> None:
     Returns:
         Chart: A chart displaying plotted table
     """
-
+    df_releases = get_data_for_release_date_range(df_releases, 7)
     df_merged = aggregate_release_data(df_releases)
 
     df_releases = df_merged.sort_values(
