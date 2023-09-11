@@ -485,45 +485,6 @@ def plot_average_sentiment_per_publisher(df_releases: DataFrame, rows: int) -> C
     return chart
 
 
-def plot_platform_distribution(df_releases: DataFrame) -> Chart:
-    """
-    Create a bar chart for the platform compatibility of games
-
-    Args:
-        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
-
-    Returns:
-        Chart: A chart displaying plotted data
-    """
-    try:
-        mac_compatibility = df_releases.groupby("mac")['title'].nunique()[True]
-    except KeyError:
-        mac_compatibility = 0
-    try:
-        windows_compatibility = df_releases.groupby(
-            "windows")['title'].nunique()[True]
-    except KeyError:
-        windows_compatibility = 0
-    try:
-        linux_compatibility = df_releases.groupby(
-            "linux")['title'].nunique()[True]
-    except KeyError:
-        linux_compatibility = 0
-
-    compatibility_df = pd.DataFrame({"platform": ['mac', 'windows', "linux"],
-                                     "compatibility": [mac_compatibility, windows_compatibility, linux_compatibility]})
-
-    chart = alt.Chart(compatibility_df).mark_bar().encode(
-        x=alt.X("compatibility", title="Compatible Games"),
-        y=alt.Y("platform", title="Platform", sort="-x"),
-    ).properties(
-        title="Releases Compatibility per Platform",
-        height=250
-    )
-
-    return chart
-
-
 def plot_genre_distribution(df_releases: DataFrame, rows: int) -> Chart:
     """
     Create a line chart for the number of games released per day
@@ -812,24 +773,20 @@ if __name__ == "__main__":
 
         sub_headline_figures(filtered_df)
 
+        trending_games_by_sentiment = plot_trending_games_table(filtered_df)
+        trending_game_by_reviews = plot_trending_games_review_table(
+            filtered_df)
+
         trending_sentiment_per_game_plot = plot_average_sentiment_per_game(
             filtered_df, 5)
         trending_reviews_per_game_plot = plot_reviews_per_game_frequency(
             filtered_df, 5)
-        games_platform_distribution_plot = plot_platform_distribution(
-            filtered_df)
         games_genre_distribution_plot = plot_genre_distribution(filtered_df, 5)
 
         trending_sentiment_per_developer_plot = plot_average_sentiment_per_developer(
             filtered_df, 5)
         trending_sentiment_per_publisher_plot = plot_average_sentiment_per_publisher(
             filtered_df, 5)
-
-        games_genre_distribution_plot = plot_genre_distribution(filtered_df, 5)
-
-        trending_games_by_sentiment = plot_trending_games_table(filtered_df)
-        trending_game_by_reviews = plot_trending_games_review_table(
-            filtered_df)
 
         table_rows(trending_games_by_sentiment,
                    trending_game_by_reviews)
