@@ -190,7 +190,7 @@ def build_sidebar_price(df_releases: DataFrame) -> tuple:
     max_price = df_releases["price"].max()
     min_price = df_releases["price"].min()
     price = st.sidebar.slider(
-        "Price:", min_value=min_price, max_value=max_price, value=(min_price, max_price), step=1.0)
+        "Price (£):", min_value=min_price, max_value=max_price, value=(min_price, max_price), step=1.0)
     return price
 
 
@@ -312,14 +312,14 @@ def plot_games_review_frequency(df_releases: DataFrame) -> Chart:
         Chart: A chart displaying plotted data
     """
     df_releases = df_releases.groupby(
-        "release_date")["review_text"].nunique().reset_index()
+        "review_date")["review_text"].nunique().reset_index()
 
-    df_releases.columns = ["release_date", "num_of_reviews"]
+    df_releases.columns = ["review_date", "num_of_reviews"]
 
     chart = alt.Chart(df_releases).mark_line(
         color="#44bd4f"
     ).encode(
-        x=alt.X("release_date:O", title="Release Date",
+        x=alt.X("review_date:O", title="Review Date",
                 timeUnit="yearmonthdate"),
         y=alt.Y("num_of_reviews:Q", title="Number of Reviews"),
     ).properties(
@@ -788,13 +788,14 @@ if __name__ == "__main__":
 
     games_genre_distribution_plot = plot_genre_distribution(filtered_df)
 
+    plot_trending_games_table(filtered_df)
+
     first_row_figures(games_release_frequency_plot,
                       games_review_frequency_plot, games_platform_distribution_plot)
     second_row_figures(
         average_sentiment_per_game_plot,  reviews_per_game_release_frequency_plot)
     third_row_figures(average_sentiment_per_developer_plot,
                       average_sentiment_per_publisher_plot)
-    plot_trending_games_table(filtered_df)
 
     games_price_distribution_plot = plot_price_distribution(filtered_df)
 
