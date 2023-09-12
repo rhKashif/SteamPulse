@@ -4,3 +4,5 @@ streamlit
 ironpdf
 psycopg2-binary
 streamlit
+wordcloud
+nltk

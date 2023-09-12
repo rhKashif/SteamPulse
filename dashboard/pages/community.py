@@ -17,6 +17,9 @@ from pandas.core.common import flatten
 import streamlit as st
 from psycopg2 import connect
 from psycopg2.extensions import connection
+from wordcloud import WordCloud
+
+import matplotlib.pyplot as plt
 
 
 def get_db_connection(config_file: _Environ) -> connection:
@@ -395,7 +398,7 @@ def plot_average_sentiment_per_game(df_releases: DataFrame, rows: int) -> Chart:
         x=alt.X("average_sentiment", title="Average Sentiment"),
         y=alt.Y("title", title="Release Title", sort="-x")
     ).properties(
-        title="Top 5 Releases: Highest Sentiment Score",
+        title="Top Releases: Highest Sentiment Score",
         height=250
     )
 
@@ -425,7 +428,7 @@ def plot_reviews_per_game_frequency(df_releases: DataFrame, rows: int) -> Chart:
         x=alt.X("num_of_reviews", title="Number of Reviews"),
         y=alt.Y("title", title="Release Title", sort="-x")
     ).properties(
-        title="Top 5 Releases: Most Reviewed",
+        title="Top Releases: Most Reviewed",
         height=250
     )
 
@@ -454,7 +457,7 @@ def plot_average_sentiment_per_developer(df_releases: DataFrame, rows: int) -> C
         x=alt.X("average_sentiment", title="Average Sentiment"),
         y=alt.Y("developer", title="Release Title", sort="-x")
     ).properties(
-        title="Top 5 Developers: Highest Sentiment Score",
+        title="Top Developers: Highest Sentiment Score",
         height=250
     )
 
@@ -483,7 +486,7 @@ def plot_average_sentiment_per_publisher(df_releases: DataFrame, rows: int) -> C
         x=alt.X("average_sentiment", title="Average Sentiment"),
         y=alt.Y("publisher", title="Release Title", sort="-x")
     ).properties(
-        title="Top 5 Publishers: Highest Sentiment Score",
+        title="Top Publishers: Highest Sentiment Score",
         height=250
 
     )
@@ -513,7 +516,7 @@ def plot_genre_distribution(df_releases: DataFrame, rows: int) -> Chart:
                 title="Number of Releases"),
         y=alt.X("genre:N", title="Genre", sort="-x")
     ).properties(
-        title="Top 5 Genres: New Releases",
+        title="Top Genres: New Releases",
         height=250
     )
 
@@ -522,7 +525,7 @@ def plot_genre_distribution(df_releases: DataFrame, rows: int) -> Chart:
 
 def plot_trending_games_table(df_releases: DataFrame) -> None:
     """
-    Create a table for the top 5 recommended games
+    Create a table for the top recommended games
 
     Args:
         df_releases (DataFrame): A DataFrame containing filtered data related to new releases
@@ -538,7 +541,7 @@ def plot_trending_games_table(df_releases: DataFrame) -> None:
 
     df_merged = df_merged.reset_index(drop=True)
 
-    return {"table_data": df_merged, "title": "Top 5 Recommended Games by Sentiment"}
+    return {"table_data": df_merged, "title": "Top Recommended Games by Sentiment"}
 
 
 def plot_trending_games_review_table(df_releases: DataFrame) -> dict:
@@ -557,7 +560,7 @@ def plot_trending_games_review_table(df_releases: DataFrame) -> dict:
 
     df_merged = df_merged.reset_index(drop=True)
 
-    return {"table_data": df_merged, "title": "Top 5 Recommended Games by Sentiment"}
+    return {"table_data": df_merged, "title": "Top Recommended Games by Sentiment"}
 
 
 def tokenize_review_text(df_releases: DataFrame) -> DataFrame:
@@ -634,7 +637,7 @@ def get_filtered_tokens(tokens):
     """
     stops = stopwords.words("english")
 
-    stops.extend(["n't"])
+    stops.extend(["n't", "play", "get", "still", "game", "like"])
 
     important_words = ["pm", "us", "uk", "gb"]
 
@@ -676,8 +679,43 @@ def plot_word_cloud_all_releases(df_releases: DataFrame) -> None:
     df_releases = tokenize_review_text(df_releases)
     df_releases = lemmatize_tokens(df_releases)
     df_releases = filter_tokens(df_releases)
+
     review_keywords = flatten(df_releases["keywords"])
-    print(df_releases)
+    review_keywords = pd.Series(review_keywords)
+    review_keywords_counts = review_keywords.value_counts()
+
+    word_cloud = WordCloud(
+        width=1000,
+        height=600,
+        background_color="#171a21"
+    )
+    word_cloud.generate_from_frequencies(review_keywords_counts)
+
+    return word_cloud
+
+
+def plot_word_cloud_all_releases_genre(df_releases: DataFrame) -> None:
+    """
+    Generate a word cloud plot based on genres for each release
+
+    Args:
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
+
+    Returns:
+        None
+    """
+    genre_keywords = flatten(df_releases["genre"])
+    genre_keywords = pd.Series(genre_keywords)
+    genre_keywords_counts = genre_keywords.value_counts()
+
+    word_cloud = WordCloud(
+        width=1000,
+        height=600,
+        background_color="#171a21"
+    )
+    word_cloud.generate_from_frequencies(genre_keywords_counts)
+
+    return word_cloud
 
 
 def dashboard_header() -> None:
@@ -862,6 +900,29 @@ def table_rows(table_one: Chart, table_two: Chart) -> None:
     st.markdown("---")
 
 
+def wordcloud_rows(wordcloud_one: Chart, wordcloud_two: Chart) -> None:
+    """
+    Build figures relating to release and review frequency for dashboard
+
+    Args:
+        plot_one (Chart): A chart displaying plotted data
+
+        plot_two (Chart): A chart displaying plotted data
+
+    Returns:
+        None
+    """
+    cols = st.columns(2)
+    with cols[0]:
+        st.markdown(f"Word Map: Review Text")
+        st.image(wordcloud_one.to_array())
+    with cols[1]:
+        st.markdown(f"Word Map: Genre")
+        st.image(wordcloud_two.to_array())
+
+    st.markdown("---")
+
+
 if __name__ == "__main__":
 
     load_dotenv()
@@ -914,11 +975,13 @@ if __name__ == "__main__":
         trending_sentiment_per_publisher_plot = plot_average_sentiment_per_publisher(
             filtered_df, 5)
 
+        review_word_cloud_plot = plot_word_cloud_all_releases(filtered_df)
+        genre_word_cloud_plot = plot_word_cloud_all_releases_genre(filtered_df)
+
         table_rows(trending_games_by_sentiment,
                    trending_game_by_reviews)
         first_row_figures(trending_sentiment_per_game_plot,
                           trending_reviews_per_game_plot, games_genre_distribution_plot)
         second_row_figures(trending_sentiment_per_developer_plot,
                            trending_sentiment_per_publisher_plot)
-
-        review_word_cloud_plot = plot_word_cloud_all_releases(filtered_df)
+        wordcloud_rows(review_word_cloud_plot, genre_word_cloud_plot)
