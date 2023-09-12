@@ -5,12 +5,6 @@ import streamlit as st
 def dashboard_header() -> None:
     """
     Build header for dashboard to give it title text
-
-    Args:
-        None
-
-    Returns:
-        None
     """
     st.title("SteamPulse")
     st.markdown("Community Insights for New Releases on Steam")
@@ -20,12 +14,6 @@ def dashboard_header() -> None:
 def sidebar_header() -> None:
     """
     Add text to the dashboard side bar
-
-    Args:
-        None
-
-    Returns:
-        None
     """
     with st.sidebar:
         st.image("logo_one.png")
@@ -34,12 +22,6 @@ def sidebar_header() -> None:
 def dashboard_content() -> None:
     """
     Build content body for dashboard to help users navigate
-
-    Args:
-        None
-
-    Returns:
-        None
     """
     st.markdown("### Dashboard Overview")
     st.markdown(
