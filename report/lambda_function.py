@@ -511,7 +511,7 @@ def create_report(df_releases: DataFrame, dashboard_url: str) -> None:
     </html>
     '''
 
-    with open("test.html", "w", encoding='utf-8') as file:
+    with open("/tmp/test.html", "w", encoding='utf-8') as file:
         file.write(template)
 
     convert_html_to_pdf(template, environ.get("REPORT_FILE"))
@@ -529,8 +529,8 @@ def send_email(config: _Environ):
     """
     client = boto3.client("ses",
                           region_name="eu-west-2",
-                          aws_access_key_id=environ["AWS_ACCESS_KEY_ID"],
-                          aws_secret_access_key=environ["AWS_SECRET_ACCESS_KEY"])
+                          aws_access_key_id=environ["ACCESS_KEY_ID"],
+                          aws_secret_access_key=environ["SECRET_ACCESS_KEY"])
 
     message = MIMEMultipart()
     message["Subject"] = "Local Test"

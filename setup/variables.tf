@@ -25,4 +25,25 @@ variable "DATABASE_USERNAME" {
 
 variable "DASHBOARD_IMAGE" {
   type = string
+
+}
+
+variable "DASHBOARD_URL" {
+  type = string
+
+}
+
+variable "EMAIL_SENDER" {
+  type = string
+
+}
+
+variable "EMAIL_RECEIVER" {
+  type = string
+
+}
+
+variable "REPORT_FILE" {
+  type = string
+
 }
