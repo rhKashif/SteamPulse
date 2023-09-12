@@ -1,0 +1,4 @@
+streamlit
+smtplib
+PIL
+win32com.client
