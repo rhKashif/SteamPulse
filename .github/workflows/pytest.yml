@@ -20,15 +20,16 @@ jobs:
       with:
         python-version: 3.11
 
-    - name: Install dependencies
-      run: |
-       folders_with_tests=("pipeline_reviews" "pipeline_games")
-       for folder in "${folders_with_tests[@]}"; do
-          if [ -f "requirements/${folder}.txt" ]; then
-            pip install -r "requirements/${folder}.txt"
-          fi
-        done
+    - name: Install and upgrade pytest
+      run: python -m pip install --upgrade pytest
 
-    - name: Run pytest
+    - name: Install requirements pipeline_reviews
+      run: python -m pip install -r pipeline_reviews/requirements.txt
+
+    - name: Install requirements pipeline_games
+      run: python -m pip install -r pipeline_games/requirements.txt
+
+    - name: Run pytest on pipeline_games
       run: pytest pipeline_games/
-       pytest pipeline_reviews/
+    - name: Run pytest on pipeline_reviews
+      run: pytest pipeline_reviews/
