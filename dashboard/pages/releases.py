@@ -220,8 +220,10 @@ def build_sidebar_genre(df_releases: DataFrame) -> list:
     Returns:
         list: A list with game genres that the user selected
     """
-    genre = st.sidebar.multiselect(
-        "Genre:", options=df_releases["genre"].unique())
+    df_releases = df_releases[df_releases["genre"].notna()]
+    selection = df_releases["genre"].unique()
+
+    genre = st.sidebar.multiselect("Genre:", options=selection)
     return genre
 
 
@@ -235,8 +237,10 @@ def build_sidebar_developer(df_releases: DataFrame) -> list:
     Returns:
         list: A list with game genres that the user selected
     """
-    developer = st.sidebar.multiselect(
-        "Developer:", options=df_releases["developer_name"].unique())
+    df_releases = df_releases[df_releases["developer_name"].notna()]
+    selection = df_releases["developer_name"].unique()
+
+    developer = st.sidebar.multiselect("Developer:", options=selection)
     return developer
 
 
@@ -250,9 +254,11 @@ def build_sidebar_publisher(df_releases: DataFrame) -> list:
     Returns:
         list: A list with game genres that the user selected
     """
-    publisher = st.sidebar.multiselect(
-        "Publisher:", options=df_releases["publisher_name"].unique())
-    return publisher
+    df_releases = df_releases[df_releases["publisher_name"].notna()]
+    selection = df_releases["publisher_name"].unique()
+
+    publisher = st.sidebar.multiselect("Publisher:", options=selection)
+    return publisherç
 
 
 def build_sidebar_platforms() -> list:
