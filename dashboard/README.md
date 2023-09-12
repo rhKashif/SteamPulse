@@ -45,10 +45,13 @@ docker run --env-file .env name_of_file
 ## Folders
 pages - directory containing additional pages for streamlit dashboard
 ## Files 
-home.py - script containing streamlit dashboard home page
-pages/community.py - script containing streamlit dashboard "community" page with visualizations relevant for users
-pages/developers.py - script containing streamlit dashboard "developers" page with visualizations relevant for developers
-pages/releases.py - script containing streamlit dashboard "releases" page with a table displaying all releases powering the visualizations
+`home.py` - script containing streamlit dashboard home page
+
+pages/`community.py` - script containing streamlit dashboard "community" page with visualizations relevant for users
+
+pages/`developers.py` - script containing streamlit dashboard "developers" page with visualizations relevant for developers
+
+pages/`releases.py` - script containing streamlit dashboard "releases" page with a table displaying all releases powering the visualizations
 
 #### Assumptions and design decisions
 N/A
