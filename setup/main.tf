@@ -520,7 +520,7 @@ resource "aws_lambda_function" "steampulse_email_lambda" {
   package_type  = "Image"
   function_name = "steampulse_email_lambda"
   role          = aws_iam_role.steampulse_lambda_iam.arn
-  timeout       = 30
+  timeout       = 300
   memory_size   = 256
 
   environment {
