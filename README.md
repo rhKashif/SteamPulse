@@ -149,3 +149,7 @@ Even though it was assumed that the same cursor received from the endpoint with 
 ## Email Report
 
 #### Assumptions and design decisions
+
+### Continuous Integration and Continuous Deployment
+
+We have implemented continuous integration in our project by creating automated github workflows when code is pulled and pushed from the main branch. All code is maintained over a pylint score of 8 and has been tested with pytest.
