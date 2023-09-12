@@ -1,6 +1,6 @@
-# Live_pipeline
+# Pipeline_games
 
-This is for live_pipeline
+This pipeline is used to extract data by web scraping both newly released games and game-specific data from Steam and further supplementing this with data from the Steam API. The raw data is then transformed to standardise each category and remove unnecessary or inaccurate data using the pandas library. Following this, the transformed data is uploaded using SQL to an AWS RDS database.
 
 ## Configure environment
 
@@ -50,16 +50,16 @@ Run the docker image locally
 docker run --env-file .env name_of_file
 ```
 
-## File explained
+## Files explained
 
-extract_games.py -- script containing the code to scrape game metric data from both the Steam website and API.
-transform_games.py -- script containing code transforming raw data into atomic rows.
-load_games.py -- script containing code to load data into the database.
+`extract_games.py` -- script containing the code to scrape game metric data from both the Steam website and API.
+`transform_games.py` -- script containing code transforming raw data into atomic rows.
+`load_games.py` -- script containing code to load data into the database.
 
-conftest.py -- contains a few pytest fixtures required for testing
-test_extract_games.py -- testing script for the functions in extract_games
-test_transform_games.py -- testing script for function in transform_games
-test_load_games.py -- testing script for function in load_games
+`conftest.py` -- contains a few pytest fixtures required for testing
+`test_extract_games.py` -- testing script for the functions in extract_games
+`test_transform_games.py` -- testing script for function in transform_games
+`test_load_games.py` -- testing script for function in load_games
 
 #### Assumptions and design decisions
 
