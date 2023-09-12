@@ -1,15 +1,5 @@
 """Python Script: Build a dashboard for data visualization"""
-from datetime import datetime
-from os import environ, _Environ
-
-import altair as alt
-from altair.vegalite.v5.api import Chart
-from dotenv import load_dotenv
-import pandas as pd
-from pandas import DataFrame
 import streamlit as st
-from psycopg2 import connect
-from psycopg2.extensions import connection
 
 
 def dashboard_header() -> None:
@@ -63,20 +53,24 @@ def dashboard_content() -> None:
 
     st.markdown("#### Quick Tips:")
     st.markdown("- Use the filters to narrow down your search")
-    st.markdown("- Hover over charts for additional details")
+    st.markdown("- Hover over charts for full details")
 
     st.markdown("##### Sources:")
     st.markdown("- Steam Web Pages")
     st.markdown("- Steam Public API's")
+
+    kausi_github = "https://github.com/gawsalya"
+    hassan_github = "https://github.com/rhKashif"
 
     st.markdown("<br><br><br><br>",
                 unsafe_allow_html=True)
     st.markdown("##### About us: Developers")
     st.markdown(
         "This Dashboard has been build as part of the Sigma Labs final project:")
-    st.markdown("- Daniel McCallion & Angela Vilde - Project Managers")
-    st.markdown("- Kausi Mahasivam - Quality Assurance")
-    st.markdown("- Hassan Kashif - Architect")
+    st.markdown(
+        "- [Daniel McCallion](https://github.com/DMcCallion) & [Angela Vilde](https://github.com/angelikavilde) - Project Managers")
+    st.markdown("- [Kausi Mahasivam](%s) - Quality Assurance" % kausi_github)
+    st.markdown("- [Hassan Kashif](%s) - Architect" % hassan_github)
 
 
 if __name__ == "__main__":
