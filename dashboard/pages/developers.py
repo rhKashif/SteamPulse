@@ -1,15 +1,16 @@
-"""Python Script: Build a dashboard for data visualization"""
-from datetime import datetime
+"""Python Script: Build a dashboard for data visualization (developer page)"""
+from datetime import datetime, timedelta
 from os import environ, _Environ
 
 import altair as alt
 from altair.vegalite.v5.api import Chart
 from dotenv import load_dotenv
+from functools import reduce
 import pandas as pd
 from pandas import DataFrame
-import streamlit as st
 from psycopg2 import connect
 from psycopg2.extensions import connection
+import streamlit as st
 
 
 def get_db_connection(config_file: _Environ) -> connection:
@@ -70,6 +71,76 @@ def get_database(conn_postgres: connection) -> DataFrame:
             LEFT JOIN publisher ON\
             publisher_link.publisher_id=publisher.publisher_id;"
     df_releases = pd.read_sql_query(query, conn_postgres)
+
+    return df_releases
+
+
+def aggregate_release_data(df_releases: DataFrame) -> DataFrame:
+    """
+    Return key information related to a new release
+    Transform data in releases DataFrame to find aggregated data from individual releases
+    Args:
+        df_release (DataFrame): A DataFrame containing new release data
+        index (int): A int associated with a number index within the trending game list
+    Returns:
+        DataFrame: A DataFrame containing new release data with aggregated data for each release
+    """
+    average_sentiment_per_title = df_releases.groupby('title')[
+        'sentiment'].mean().sort_values(
+        ascending=False).dropna().reset_index()
+    average_sentiment_per_title.columns = ["title", "avg_sentiment"]
+
+    review_per_title = df_releases.groupby('title')[
+        'review_text'].count().sort_values(
+        ascending=False).dropna().reset_index()
+    review_per_title.columns = ["title", "num_of_reviews"]
+
+    data_frames = [df_releases, average_sentiment_per_title, review_per_title]
+
+    df_merged = reduce(lambda left, right: pd.merge(left, right, on=['title'],
+                                                    how='outer'), data_frames)
+
+    df_merged = df_merged.drop_duplicates("title")
+
+    desired_columns = ["title", "release_date",
+                       "sale_price", "avg_sentiment", "num_of_reviews"]
+    df_merged = df_merged[desired_columns]
+
+    table_columns = ["Title", "Release Date",
+                     "Price", "Community Sentiment", "Number of Reviews"]
+    df_merged.columns = table_columns
+
+    return df_merged
+
+
+def get_data_for_release_date_range(df_releases: DataFrame, index: int) -> DataFrame:
+    """
+    Return a DataFrame for a range of dates behind the current date
+    Args:
+        df_releases (DataFrame): A pandas DataFrame containing all relevant game data
+        index (int): An integer representing the number of days to go back from current date
+    Returns:
+        DataFrame: A pandas DataFrame containing all relevant game data for a specific date
+    """
+    date_week_ago = (datetime.now() - timedelta(days=index)
+                     ).strftime("%Y-%m-%d")
+
+    return df_releases[df_releases["release_date"] >= date_week_ago]
+
+
+def format_database_columns(df_releases: DataFrame) -> DataFrame:
+    """
+    Format columns within the database to the correct data types
+    Args:
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
+    Returns:
+        DataFrame: A DataFrame containing filtered data related to new releases 
+        with columns in the correct data types
+    """
+    df_releases["release_date"] = pd.to_datetime(
+        df_releases['release_date'], format='%d/%m/%Y')
+    df_releases["review_date"] = pd.to_datetime(
+        df_releases['reviewed_at'], format='%d/%m/%Y')
 
     return df_releases
 
@@ -329,32 +400,6 @@ def plot_games_review_frequency(df_releases: DataFrame) -> Chart:
     return chart
 
 
-def plot_reviews_per_game_frequency(df_releases: DataFrame) -> Chart:
-    """
-    Create a bar chart for the number of reviews per game
-
-    Args:
-        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
-
-    Returns:
-        Chart: A chart displaying plotted data
-    """
-    df_releases = df_releases.dropna().groupby(
-        "title")["review_text"].nunique().reset_index().sort_values(by=["review_text"]).tail(5)
-
-    df_releases.columns = ["title", "num_of_reviews"]
-
-    chart = alt.Chart(df_releases).mark_bar(
-    ).encode(
-        x=alt.X("num_of_reviews", title="Number of Reviews"),
-        y=alt.Y("title", title="Release Title", sort="-x")
-    ).properties(
-        title="Top 5 Releases: Most Reviewed",
-    )
-
-    return chart
-
-
 def plot_average_sentiment_per_game(df_releases: DataFrame) -> Chart:
     """
     Create a bar chart for the average sentiment per game
@@ -362,20 +407,51 @@ def plot_average_sentiment_per_game(df_releases: DataFrame) -> Chart:
     Args:
         df_releases (DataFrame): A DataFrame containing filtered data related to new releases
 
+        rows (int): An integer value representing the number of rows to be displayed
+
     Returns:
         Chart: A chart displaying plotted data
     """
     df_releases = df_releases.groupby(
-        "title")["sentiment"].mean().reset_index().dropna().sort_values(by=["sentiment"]).tail(5)
+        "title")["sentiment"].mean().reset_index().dropna()
 
     df_releases.columns = ["title", "average_sentiment"]
 
     chart = alt.Chart(df_releases).mark_bar(
     ).encode(
         x=alt.X("average_sentiment", title="Average Sentiment"),
-        y=alt.Y("title", title="Release Title", sort="-x")
+        y=alt.Y("title", title="Release Title")
     ).properties(
-        title="Top 5 Releases: Highest Sentiment Score",
+        title="Releases: Sentiment Score",
+    )
+
+    return chart
+
+
+def plot_reviews_per_game_frequency(df_releases: DataFrame) -> Chart:
+    """
+    Create a bar chart for the number of reviews per game
+
+    Args:
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
+
+        rows (int): An integer value representing the number of rows to be displayed
+
+
+    Returns:
+        Chart: A chart displaying plotted data
+    """
+    df_releases = df_releases.dropna().groupby(
+        "title")["review_text"].nunique().reset_index()
+
+    df_releases.columns = ["title", "num_of_reviews"]
+
+    chart = alt.Chart(df_releases).mark_bar(
+    ).encode(
+        x=alt.X("num_of_reviews", title="Number of Reviews"),
+        y=alt.Y("title", title="Release Title")
+    ).properties(
+        title="Releases: Most Reviewed",
     )
 
     return chart
@@ -388,11 +464,13 @@ def plot_average_sentiment_per_developer(df_releases: DataFrame) -> Chart:
     Args:
         df_releases (DataFrame): A DataFrame containing filtered data related to new releases
 
+        rows (int): An integer value representing the number of rows to be displayed
+
     Returns:
         Chart: A chart displaying plotted data
     """
     df_releases = df_releases.groupby(
-        "developer_name")["sentiment"].mean().reset_index().dropna().sort_values(by=["sentiment"]).tail(5)
+        "developer_name")["sentiment"].mean().reset_index().dropna().sort_values(by=["sentiment"])
 
     df_releases.columns = ["developer", "average_sentiment"]
 
@@ -401,7 +479,7 @@ def plot_average_sentiment_per_developer(df_releases: DataFrame) -> Chart:
         x=alt.X("average_sentiment", title="Average Sentiment"),
         y=alt.Y("developer", title="Release Title", sort="-x")
     ).properties(
-        title="Top 5 Developers: Highest Sentiment Score",
+        title="Developers: Sentiment Score",
     )
 
     return chart
@@ -414,11 +492,13 @@ def plot_average_sentiment_per_publisher(df_releases: DataFrame) -> Chart:
     Args:
         df_releases (DataFrame): A DataFrame containing filtered data related to new releases
 
+        rows (int): An integer value representing the number of rows to be displayed
+
     Returns:
         Chart: A chart displaying plotted data
     """
     df_releases = df_releases.groupby(
-        "publisher_name")["sentiment"].mean().reset_index().dropna().sort_values(by=["sentiment"]).tail(5)
+        "publisher_name")["sentiment"].mean().reset_index().dropna().sort_values(by=["sentiment"])
 
     df_releases.columns = ["publisher", "average_sentiment"]
 
@@ -427,7 +507,7 @@ def plot_average_sentiment_per_publisher(df_releases: DataFrame) -> Chart:
         x=alt.X("average_sentiment", title="Average Sentiment"),
         y=alt.Y("publisher", title="Release Title", sort="-x")
     ).properties(
-        title="Top 5 Publishers: Highest Sentiment Score",
+        title="Publishers: Sentiment Score",
     )
 
     return chart
@@ -484,7 +564,7 @@ def plot_genre_distribution(df_releases: DataFrame) -> Chart:
         Chart: A chart displaying plotted data
     """
     df_releases = df_releases.groupby(
-        "genre").size().reset_index().sort_values(by=[0]).tail(5)
+        "genre").size().reset_index().sort_values(by=[0])
 
     df_releases.columns = ["genre", "releases_per_genres"]
 
@@ -497,41 +577,6 @@ def plot_genre_distribution(df_releases: DataFrame) -> Chart:
     )
 
     return chart
-
-
-def plot_trending_games_table(df_releases: DataFrame) -> None:
-    """
-    Create a table for the top 5 recommended games
-
-    Args:
-        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
-
-    Returns:
-        None
-    """
-    average_sentiment_per_title = df_releases.groupby('title')[
-        'sentiment'].mean().sort_values(
-        ascending=False).dropna().reset_index()
-    average_sentiment_per_title.columns = ["title", "avg_sentiment"]
-
-    merged_df = pd.merge(average_sentiment_per_title, df_releases,
-                         on='title').drop_duplicates("title")
-    desired_columns = ["title", "release_date",
-                       "sale_price", "avg_sentiment"]
-    df_releases = merged_df[desired_columns]
-
-    df_releases['sale_price'] = df_releases['sale_price'].apply(
-        lambda x: f"£{x:.2f}")
-    df_releases['release_date'] = df_releases['release_date'].dt.strftime(
-        '%d/%m/%Y')
-
-    table_columns = ["Title:", "Release Date:",
-                     "Price:", "Community Sentiment"]
-    df_releases.columns = table_columns
-    df_releases = df_releases.reset_index(drop=True)
-    st.markdown("Top Recommended Games by Sentiment")
-    st.table(df_releases.head(5).style.set_properties(
-        **{'font-size': '16px'}))
 
 
 def plot_price_distribution(df_releases: DataFrame) -> Chart:
@@ -550,7 +595,7 @@ def plot_price_distribution(df_releases: DataFrame) -> Chart:
         alt.X('price:Q', bin=alt.Bin(maxbins=20), title='Game Price Range'),
         alt.Y('count():Q', title='Number of Games')
     ).properties(
-        title='Game Price Range Histogram'
+        title='Game Price Range Histogram',
     )
 
     return chart
@@ -559,27 +604,15 @@ def plot_price_distribution(df_releases: DataFrame) -> Chart:
 def dashboard_header() -> None:
     """
     Build header for dashboard to give it title text
-
-    Args:
-        None
-
-    Returns:
-        None
     """
 
     st.title("SteamPulse")
-    st.markdown("Community Insights for New Releases on Steam")
+    st.markdown("Developer Insights for New Releases on Steam")
 
 
 def sidebar_header() -> None:
     """
     Add text to the dashboard side bar
-
-    Args:
-        None
-
-    Returns:
-        None
     """
     with st.sidebar:
         st.markdown("Filter Options\n---")
@@ -591,9 +624,6 @@ def headline_figures(df_releases: DataFrame) -> None:
 
     Args:
         df_releases (DataFrame): A DataFrame containing filtered data related to new releases
-
-    Returns:
-        None
     """
     cols = st.columns(3)
     st.markdown(
@@ -622,9 +652,6 @@ def sub_headline_figures(df_releases: DataFrame) -> None:
 
     Args:
         df_releases (DataFrame): A DataFrame containing filtered data related to new releases
-
-    Returns:
-        None
     """
     try:
         mac_compatibility = df_releases.groupby("mac")['title'].nunique()[True]
@@ -666,7 +693,7 @@ def sub_headline_figures(df_releases: DataFrame) -> None:
     st.markdown("---")
 
 
-def first_row_figures(plot_one: Chart, plot_two: Chart, plot_three: Chart) -> None:
+def first_row_figures(plot_one: Chart, plot_two: Chart, plot_three: Chart, plot_four: Chart) -> None:
     """
     Build figures relating to release and review frequency for dashboard
 
@@ -676,18 +703,16 @@ def first_row_figures(plot_one: Chart, plot_two: Chart, plot_three: Chart) -> No
         plot_two (Chart): A chart displaying plotted data
 
         plot_three (Chart): A chart displaying plotted data
-
-    Returns:
-        None
     """
-    cols = st.columns(3)
+    cols = st.columns(4)
     with cols[0]:
         st.altair_chart(plot_one, use_container_width=True)
     with cols[1]:
         st.altair_chart(plot_two, use_container_width=True)
     with cols[2]:
         st.altair_chart(plot_three, use_container_width=True)
-
+    with cols[3]:
+        st.altair_chart(plot_four, use_container_width=True)
     st.markdown("---")
 
 
@@ -699,9 +724,6 @@ def second_row_figures(plot_one: Chart, plot_two: Chart) -> None:
         plot_one (Chart): A chart displaying plotted data
 
         plot_two (Chart): A chart displaying plotted data
-
-    Returns:
-        None
     """
     cols = st.columns(2)
     with cols[0]:
@@ -721,9 +743,6 @@ def third_row_figures(plot_one: Chart, plot_two: Chart) -> None:
         plot_one (Chart): A chart displaying plotted data
 
         plot_two (Chart): A chart displaying plotted data
-
-    Returns:
-        None
     """
     cols = st.columns(2)
     with cols[0]:
@@ -743,16 +762,12 @@ if __name__ == "__main__":
     conn = get_db_connection(config)
 
     game_df = get_database(conn)
-
-    game_df["release_date"] = pd.to_datetime(
-        game_df['release_date'], format='%d/%m/%Y')
-    game_df["review_date"] = pd.to_datetime(
-        game_df['reviewed_at'], format='%d/%m/%Y')
+    game_df = format_database_columns(game_df)
+    game_df = get_data_for_release_date_range(game_df, 14)
 
     st.set_page_config(layout="wide")
 
     dashboard_header()
-
     sidebar_header()
 
     selected_releases = build_sidebar_title(game_df)
@@ -768,35 +783,40 @@ if __name__ == "__main__":
     filtered_df = filter_data(game_df, selected_releases, selected_release_dates, selected_review_dates,
                               selected_genre, selected_developer, selected_publisher, selected_platform, min_price, max_price, min_sentiment, max_sentiment)
 
-    headline_figures(filtered_df)
+    if filtered_df.empty:
+        st.markdown(
+            "### Invalid:\n No releases to display")
+    else:
+        headline_figures(filtered_df)
 
-    sub_headline_figures(filtered_df)
+        sub_headline_figures(filtered_df)
 
-    games_release_frequency_plot = plot_games_release_frequency(filtered_df)
-    games_review_frequency_plot = plot_games_review_frequency(filtered_df)
-    games_platform_distribution_plot = plot_platform_distribution(filtered_df)
+        games_release_frequency_plot = plot_games_release_frequency(
+            filtered_df)
+        games_review_frequency_plot = plot_games_review_frequency(
+            filtered_df)
+        games_platform_distribution_plot = plot_platform_distribution(
+            filtered_df)
+        games_price_distribution_plot = plot_price_distribution(filtered_df)
 
-    reviews_per_game_release_frequency_plot = plot_reviews_per_game_frequency(
-        filtered_df)
-    average_sentiment_per_game_plot = plot_average_sentiment_per_game(
-        filtered_df)
+        trending_sentiment_per_game_plot = plot_average_sentiment_per_game(
+            filtered_df)
+        trending_reviews_per_game_plot = plot_reviews_per_game_frequency(
+            filtered_df)
 
-    average_sentiment_per_developer_plot = plot_average_sentiment_per_developer(
-        filtered_df)
-    average_sentiment_per_publisher_plot = plot_average_sentiment_per_publisher(
-        filtered_df)
+        trending_sentiment_per_developer_plot = plot_average_sentiment_per_developer(
+            filtered_df)
+        trending_sentiment_per_publisher_plot = plot_average_sentiment_per_publisher(
+            filtered_df)
 
-    games_genre_distribution_plot = plot_genre_distribution(filtered_df)
+        games_genre_distribution_plot = plot_genre_distribution(filtered_df)
 
-    plot_trending_games_table(filtered_df)
+        first_row_figures(games_release_frequency_plot,
+                          games_review_frequency_plot, games_platform_distribution_plot, games_price_distribution_plot)
+        second_row_figures(
+            trending_sentiment_per_game_plot,  trending_reviews_per_game_plot)
+        third_row_figures(trending_sentiment_per_developer_plot,
+                          trending_sentiment_per_publisher_plot)
 
-    first_row_figures(games_release_frequency_plot,
-                      games_review_frequency_plot, games_platform_distribution_plot)
-    second_row_figures(
-        average_sentiment_per_game_plot,  reviews_per_game_release_frequency_plot)
-    third_row_figures(average_sentiment_per_developer_plot,
-                      average_sentiment_per_publisher_plot)
-
-    games_price_distribution_plot = plot_price_distribution(filtered_df)
-
-    st.altair_chart(games_price_distribution_plot, use_container_width=True)
+        st.altair_chart(games_genre_distribution_plot,
+                        use_container_width=True)

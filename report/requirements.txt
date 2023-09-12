@@ -6,4 +6,5 @@ psycopg2-binary
 python-dotenv
 reportlab
 streamlit
+vl-convert-python
 xhtml2pdf
