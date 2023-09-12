@@ -2,17 +2,19 @@
 
 An integrated dashboard displaying trend analysis for new releases on steam
 
-## Configure environment
+## Overview
 
-```sh
-python3 -m venv venv
-source ./venv/bin/activate
-pip3 install -r requirements.txt
-```
+## Setup
 
-## Configure environment variables
+This project is designed to be hosted on AWS, although it could be run fully locally with minimal modifications.
 
-The following environment variables must be supplied in a `.env` file in the root directory, and a `terraform.tfvars` file in the setup directory:
+### Initial setup
+
+1. Clone this repo
+
+2. Configure environment variables
+
+The following environment variables should be supplied in a `.env` file in each of the dashboard, pipeline_games, pipeline_reviews, and report directories, and a `terraform.tfvars` file in the setup directory:
 
 ```sh
 ACCESS_KEY_ID     = XXXXXXXXXXX
@@ -25,11 +27,21 @@ DATABASE_ENDPOINT = XXXXXXXXXXX
 
 If hosting this service on AWS, you'll need to create your RDS to get the database endpoint.
 
-## Setup cloud resources
+3. Configure environment
+
+   Note: each section of this project has its own requirements.txt file. To run an individual part of the pipeline, navigate to the correct directory, then configure your environment.
+
+```sh
+python3 -m venv venv
+source ./venv/bin/activate
+pip3 install -r requirements.txt
+```
+
+### Setup cloud resources
 
 **Warning** - AWS can incur unexpected costs, be sure you know what you're doing before replicating this section.
 
-0. If you haven't already, setup [terraform](https://developer.hashicorp.com/terraform/downloads) and [docker](https://docs.docker.com/engine/install/).
+0. If you haven't already, download and install [terraform](https://developer.hashicorp.com/terraform/downloads) and [docker](https://docs.docker.com/engine/install/).
 
 1. Navigate to the setup directory.
 
@@ -37,7 +49,7 @@ If hosting this service on AWS, you'll need to create your RDS to get the databa
 
 3. `terraform apply` to construct AWS resources.
 
-4. TODO(I haven't set this up yet, but we output should give us the db endpoint) -> add it to your env file.
+4. You should receive the database endpoint as an output. This can now be passed to the `.env` files
 
 5. Use `psql` to run `schema.sql` targetting your cloud database.
 
@@ -53,7 +65,7 @@ If hosting this service on AWS, you'll need to create your RDS to get the databa
 
 11. You should now have an automated pair of pipelines, a Streamlit dashboard service, and a lambda function which emails reports to users.
 
-### Docker image
+#### Aside: Docker image
 
 Build the docker image
 
@@ -67,9 +79,9 @@ Run the docker image locally
 docker run --env-file .env name_of_file
 ```
 
-### Games ETL Pipeline
+## Games ETL Pipeline
 
-## File explained
+### File explained
 
 - extract_games.py -- script containing the code to scrape game metric data from both the Steam website and API.
 - transform_games.py -- script containing code transforming raw data into atomic rows.
