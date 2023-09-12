@@ -2,7 +2,7 @@
 
 This is for dashboard
 
-## Configure environment
+## Configure environment and setup requirements 
 
 ```sh
 python3 -m venv venv
