@@ -1,6 +1,6 @@
 """Python Script: Build a report for email attachment"""
 from datetime import datetime, timedelta
-from os import environ, _Environ, mkdir
+from os import environ, _Environ
 
 from functools import reduce
 from email.mime.multipart import MIMEMultipart
