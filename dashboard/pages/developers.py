@@ -604,12 +604,6 @@ def plot_price_distribution(df_releases: DataFrame) -> Chart:
 def dashboard_header() -> None:
     """
     Build header for dashboard to give it title text
-
-    Args:
-        None
-
-    Returns:
-        None
     """
 
     st.title("SteamPulse")
@@ -619,12 +613,6 @@ def dashboard_header() -> None:
 def sidebar_header() -> None:
     """
     Add text to the dashboard side bar
-
-    Args:
-        None
-
-    Returns:
-        None
     """
     with st.sidebar:
         st.markdown("Filter Options\n---")
@@ -636,9 +624,6 @@ def headline_figures(df_releases: DataFrame) -> None:
 
     Args:
         df_releases (DataFrame): A DataFrame containing filtered data related to new releases
-
-    Returns:
-        None
     """
     cols = st.columns(3)
     st.markdown(
@@ -667,9 +652,6 @@ def sub_headline_figures(df_releases: DataFrame) -> None:
 
     Args:
         df_releases (DataFrame): A DataFrame containing filtered data related to new releases
-
-    Returns:
-        None
     """
     try:
         mac_compatibility = df_releases.groupby("mac")['title'].nunique()[True]
@@ -721,9 +703,6 @@ def first_row_figures(plot_one: Chart, plot_two: Chart, plot_three: Chart, plot_
         plot_two (Chart): A chart displaying plotted data
 
         plot_three (Chart): A chart displaying plotted data
-
-    Returns:
-        None
     """
     cols = st.columns(4)
     with cols[0]:
@@ -745,9 +724,6 @@ def second_row_figures(plot_one: Chart, plot_two: Chart) -> None:
         plot_one (Chart): A chart displaying plotted data
 
         plot_two (Chart): A chart displaying plotted data
-
-    Returns:
-        None
     """
     cols = st.columns(2)
     with cols[0]:
@@ -767,9 +743,6 @@ def third_row_figures(plot_one: Chart, plot_two: Chart) -> None:
         plot_one (Chart): A chart displaying plotted data
 
         plot_two (Chart): A chart displaying plotted data
-
-    Returns:
-        None
     """
     cols = st.columns(2)
     with cols[0]:
