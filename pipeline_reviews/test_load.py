@@ -8,11 +8,10 @@ from load import get_game_ids_foreign_key_values, get_game_ids, move_reviews_to_
 def test_get_game_ids_foreign_key_values(monkeypatch, fake_df_load):
     """Verifies that data-frame gets correctly modified with nan
     cell values taken out for the full row and correct game_ids replaced"""
-    monkeypatch.setattr("extract.get_db_connection", lambda x: None)
     monkeypatch.setattr("load.get_game_ids", lambda *args: 1)
     assumed_result_df = fake_df_load.assign(game_id=1)
     assumed_result_df = assumed_result_df[assumed_result_df["test"].notna()]
-    returned_df = get_game_ids_foreign_key_values(fake_df_load)
+    returned_df = get_game_ids_foreign_key_values("", fake_df_load)
     assert returned_df.equals(assumed_result_df)
 
 
