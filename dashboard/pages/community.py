@@ -930,11 +930,16 @@ if __name__ == "__main__":
             filtered_df, 5)
         games_genre_distribution_plot = plot_genre_distribution(filtered_df, 5)
 
-        review_word_cloud_plot = plot_word_cloud_all_releases(filtered_df)
-        genre_word_cloud_plot = plot_word_cloud_all_releases_genre(filtered_df)
-
         table_rows(trending_games_by_sentiment,
                    trending_game_by_reviews)
         first_row_figures(trending_sentiment_per_developer_plot,
                           trending_sentiment_per_publisher_plot, games_genre_distribution_plot)
-        wordcloud_rows(review_word_cloud_plot, genre_word_cloud_plot)
+
+        if not filtered_df["review_text"].dropna().empty:
+            review_word_cloud_plot = plot_word_cloud_all_releases(filtered_df)
+            genre_word_cloud_plot = plot_word_cloud_all_releases_genre(
+                filtered_df)
+
+            wordcloud_rows(review_word_cloud_plot, genre_word_cloud_plot)
+        else:
+            st.markdown("### Insufficient data for word cloud plots")
