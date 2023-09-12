@@ -36,7 +36,7 @@ if __name__ == "__main__":
         print(f"Total sentiment value retrieval time: {time_taken.total_seconds()} seconds.")
 
         print("Loading...")
-        reviews = get_game_ids_foreign_key_values(reviews)
+        reviews = get_game_ids_foreign_key_values(db_connection, reviews)
         move_reviews_to_db(db_connection, reviews)
         time_finished_pipeline = datetime.now()
         time_taken = time_finished_pipeline - time_started
