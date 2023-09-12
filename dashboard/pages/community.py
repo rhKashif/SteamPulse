@@ -577,25 +577,7 @@ def tokenize_review_text(df_releases: DataFrame) -> DataFrame:
     return df_releases
 
 
-def build_tag_map() -> dict:
-    """
-    Create a dictionary which maps tags to ones that the lemmatizer can interpret
-
-    Args:
-        None
-
-    Returns:
-        dict: A Python dict for mapping tags
-    """
-    tag_map = defaultdict(lambda: "n")
-    tag_map['J'] = "a"
-    tag_map['V'] = "v"
-    tag_map['R'] = "r"
-
-    return tag_map
-
-
-def get_wordnet_tags(tokens: list, tag_map: dict):
+def get_wordnet_tags(tokens: list) -> list:
     """
     Get the pos tags for a set of tokens, and return the tokens in a way the 
     lemmatizer can interpret
@@ -603,11 +585,13 @@ def get_wordnet_tags(tokens: list, tag_map: dict):
     Args:
         tokens (list): A list containing tokens extracted from review text
 
-        tag_map (dict): A dict containing mappings for tags
-
     Returns:
         list: A list of tags which the lemmatizer can interpret
     """
+    tag_map = defaultdict(lambda: "n")
+    tag_map['J'] = "a"
+    tag_map['V'] = "v"
+    tag_map['R'] = "r"
 
     tagged_tokens = pos_tag(tokens)
 
@@ -628,9 +612,11 @@ def lemmatise_review_text(df_releases: DataFrame) -> DataFrame:
         DataFrame: A DataFrame containing filtered data related to new releases with a lemmatization
         applied to the tokenized review_text column
     """
+    lemma = WordNetLemmatizer()
 
-    tag_map = build_tag_map()
-    df_releases["keywords"] = df_releases["keywords"]
+    df_releases["keywords"] = df_releases["keywords"].apply(get_wordnet_tags)
+    df_releases["keywords"] = df_releases["keywords"].apply(
+        lambda tokens: [lemma.lemmatize(word=token[0], pos=token[1]) for token in tokens])
 
     return df_releases
 
@@ -647,6 +633,8 @@ def plot_word_cloud_all_releases(df_releases: DataFrame) -> None:
     """
     df_releases = tokenize_review_text(df_releases)
     df_releases = lemmatise_review_text(df_releases)
+
+    print(df_releases)
 
 
 def dashboard_header() -> None:
