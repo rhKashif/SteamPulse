@@ -19,8 +19,6 @@ from psycopg2 import connect
 from psycopg2.extensions import connection
 from wordcloud import WordCloud
 
-import matplotlib.pyplot as plt
-
 
 def get_db_connection(config_file: _Environ) -> connection:
     """
@@ -316,42 +314,62 @@ def filter_data(df_releases: DataFrame, titles: list[str], release_dates: list[d
     return df_releases
 
 
-def aggregate_release_data(df_releases: DataFrame) -> DataFrame:
+def aggregate_data(df_releases: DataFrame) -> DataFrame:
     """
-    Return key information related to a new release
-    Transform data in releases DataFrame to find aggregated data from individual releases
+    Transform data in releases DataFrame to find aggregated sentiment from individual reviews
     Args:
         df_release (DataFrame): A DataFrame containing new release data
-        index (int): A int associated with a number index within the trending game list
     Returns:
         DataFrame: A DataFrame containing new release data with aggregated data for each release
     """
-    average_sentiment_per_title = df_releases.groupby('title')[
+    df_releases["weighted_sentiment"] = df_releases.sentiment * \
+        df_releases.review_score
+    total_weighted_scores = df_releases.groupby(
+        'game_id')['weighted_sentiment'].sum().reset_index()
+    total_weights = df_releases.groupby(
+        'game_id')['review_score'].sum().reset_index()
+    total_weighted_scores['user_weighted_sentiment'] = total_weighted_scores['weighted_sentiment'] / \
+        total_weights['review_score']
+    total_weighted_scores = total_weighted_scores.drop(
+        columns=["weighted_sentiment"])
+
+    average_sentiment_per_title = df_releases.groupby('game_id')[
         'sentiment'].mean().sort_values(
         ascending=False).dropna().reset_index()
-    average_sentiment_per_title.columns = ["title", "avg_sentiment"]
+    average_sentiment_per_title.columns = ["game_id", "avg_sentiment"]
 
-    review_per_title = df_releases.groupby('title')[
+    review_per_title = df_releases.groupby('game_id')[
         'review_text'].count().sort_values(
         ascending=False).dropna().reset_index()
-    review_per_title.columns = ["title", "num_of_reviews"]
+    review_per_title.columns = ["game_id", "num_of_reviews"]
 
-    data_frames = [df_releases, average_sentiment_per_title, review_per_title]
+    data_frames = [df_releases, average_sentiment_per_title,
+                   review_per_title, total_weighted_scores]
 
-    df_merged = reduce(lambda left, right: pd.merge(left, right, on=['title'],
+    df_merged = reduce(lambda left, right: pd.merge(left, right, on=['game_id'],
                                                     how='outer'), data_frames)
+    return df_merged
 
-    df_merged = df_merged.drop_duplicates("title")
 
+def format_data_for_table(df_releases: DataFrame) -> DataFrame:
+    """
+    Return key information related to a new release in a format ready for table plotting 
+
+    Args:
+        df_release (DataFrame): A DataFrame containing new release data
+    Returns:
+        DataFrame: A DataFrame containing new release data with aggregated data for each release
+    """
+    df_releases = df_releases.drop_duplicates("title")
     desired_columns = ["title", "release_date",
                        "sale_price", "avg_sentiment", "num_of_reviews"]
-    df_merged = df_merged[desired_columns]
+    df_releases = df_releases[desired_columns]
 
     table_columns = ["Title", "Release Date",
                      "Price", "Community Sentiment", "Number of Reviews"]
-    df_merged.columns = table_columns
+    df_releases.columns = table_columns
 
-    return df_merged
+    return df_releases
 
 
 def format_columns(df_releases: DataFrame) -> DataFrame:
@@ -374,65 +392,6 @@ def format_columns(df_releases: DataFrame) -> DataFrame:
         "No Sentiment")
 
     return df_releases
-
-
-def plot_average_sentiment_per_game(df_releases: DataFrame, rows: int) -> Chart:
-    """
-    Create a bar chart for the average sentiment per game
-
-    Args:
-        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
-
-        rows (int): An integer value representing the number of rows to be displayed
-
-    Returns:
-        Chart: A chart displaying plotted data
-    """
-    df_releases = df_releases.groupby(
-        "title")["sentiment"].mean().reset_index().dropna().sort_values(by=["sentiment"]).tail(rows)
-
-    df_releases.columns = ["title", "average_sentiment"]
-
-    chart = alt.Chart(df_releases).mark_bar(
-    ).encode(
-        x=alt.X("average_sentiment", title="Average Sentiment"),
-        y=alt.Y("title", title="Release Title", sort="-x")
-    ).properties(
-        title="Top Releases: Highest Sentiment Score",
-        height=250
-    )
-
-    return chart
-
-
-def plot_reviews_per_game_frequency(df_releases: DataFrame, rows: int) -> Chart:
-    """
-    Create a bar chart for the number of reviews per game
-
-    Args:
-        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
-
-        rows (int): An integer value representing the number of rows to be displayed
-
-
-    Returns:
-        Chart: A chart displaying plotted data
-    """
-    df_releases = df_releases.dropna().groupby(
-        "title")["review_text"].nunique().reset_index().sort_values(by=["review_text"]).tail(rows)
-
-    df_releases.columns = ["title", "num_of_reviews"]
-
-    chart = alt.Chart(df_releases).mark_bar(
-    ).encode(
-        x=alt.X("num_of_reviews", title="Number of Reviews"),
-        y=alt.Y("title", title="Release Title", sort="-x")
-    ).properties(
-        title="Top Releases: Most Reviewed",
-        height=250
-    )
-
-    return chart
 
 
 def plot_average_sentiment_per_developer(df_releases: DataFrame, rows: int) -> Chart:
@@ -533,7 +492,7 @@ def plot_trending_games_table(df_releases: DataFrame) -> None:
     Returns:
         None
     """
-    df_merged = aggregate_release_data(df_releases)
+    df_merged = format_data_for_table(df_releases)
 
     df_merged = df_merged.sort_values(
         by=["Community Sentiment"], ascending=False)
@@ -552,7 +511,7 @@ def plot_trending_games_review_table(df_releases: DataFrame) -> dict:
     Returns:
         dict: A Python dictionary containing a DataFrame with table formatted data and a table title
     """
-    df_merged = aggregate_release_data(df_releases)
+    df_merged = format_data_for_table(df_releases)
 
     df_merged = df_merged.sort_values(
         by=["Number of Reviews"], ascending=False)
@@ -931,6 +890,7 @@ if __name__ == "__main__":
     conn = get_db_connection(config)
 
     game_df = get_database(conn)
+    game_df = aggregate_data(game_df)
     game_df = format_database_columns(game_df)
     game_df = get_data_for_release_date_range(game_df, 14)
 
@@ -964,24 +924,17 @@ if __name__ == "__main__":
         trending_game_by_reviews = plot_trending_games_review_table(
             filtered_df)
 
-        trending_sentiment_per_game_plot = plot_average_sentiment_per_game(
-            filtered_df, 5)
-        trending_reviews_per_game_plot = plot_reviews_per_game_frequency(
-            filtered_df, 5)
-        games_genre_distribution_plot = plot_genre_distribution(filtered_df, 5)
-
         trending_sentiment_per_developer_plot = plot_average_sentiment_per_developer(
             filtered_df, 5)
         trending_sentiment_per_publisher_plot = plot_average_sentiment_per_publisher(
             filtered_df, 5)
+        games_genre_distribution_plot = plot_genre_distribution(filtered_df, 5)
 
         review_word_cloud_plot = plot_word_cloud_all_releases(filtered_df)
         genre_word_cloud_plot = plot_word_cloud_all_releases_genre(filtered_df)
 
         table_rows(trending_games_by_sentiment,
                    trending_game_by_reviews)
-        first_row_figures(trending_sentiment_per_game_plot,
-                          trending_reviews_per_game_plot, games_genre_distribution_plot)
-        second_row_figures(trending_sentiment_per_developer_plot,
-                           trending_sentiment_per_publisher_plot)
+        first_row_figures(trending_sentiment_per_developer_plot,
+                          trending_sentiment_per_publisher_plot, games_genre_distribution_plot)
         wordcloud_rows(review_word_cloud_plot, genre_word_cloud_plot)
