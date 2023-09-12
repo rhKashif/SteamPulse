@@ -1,8 +1,7 @@
 altair
+ironpdf
+nltk
+psycopg2-binary
 python-dotenv
 streamlit
-ironpdf
-psycopg2-binary
-streamlit
 wordcloud
-nltk

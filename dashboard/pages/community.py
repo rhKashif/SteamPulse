@@ -598,13 +598,11 @@ def get_filtered_tokens(tokens):
     """
     stops = stopwords.words("english")
 
-    stops.extend(["n't", "play", "get", "still", "game", "like"])
-
-    important_words = ["pm", "us", "uk", "gb"]
+    stops.extend(["play", "get", "still", "game"])
 
     return [t for t in tokens
             if t not in stops
-            and (len(t) > 2 or t in important_words)]
+            and (len(t) > 2)]
 
 
 def filter_tokens(df_releases: DataFrame) -> DataFrame:

@@ -54,6 +54,9 @@ pages/`developers.py` - script containing streamlit dashboard "developers" page 
 pages/`releases.py` - script containing streamlit dashboard "releases" page with a table displaying all releases powering the visualizations
 
 #### Assumptions and design decisions
-Assumption that the necessary data is available, accurate, and up-to-date. This includes assumptions about data format, structure, and quality.
+Assumption that the necessary data is available, accurate, and up-to-date. This includes assumptions about data format, structure, and quality:
 - Returns an error message if connection to the database fails
-- If there is no data within the last two weeks the dashboard, a message will be displayed to relay. 
+- If there is no data within the last two weeks the dashboard, a message will be displayed to relay
+
+Assumption that the current word map will for review text will be useful and interesting for community members to see:
+- More comprehensive language processing is required to increase the relevancy of words on the word map but given time constraints, this has not been implemented
