@@ -27,11 +27,11 @@ def get_db_connection(config_file: _Environ) -> connection:
     """
     try:
         return connect(
-            database=config_file["DB_NAME"],
-            user=config_file["DB_USER"],
-            password=config_file["DB_PASSWORD"],
-            port=config_file["DB_PORT"],
-            host=config_file["DB_HOST"]
+            database=config_file["DATABASE_NAME"],
+            user=config_file["DATABASE_USERNAME"],
+            password=config_file["DATABASE_PASSWORD"],
+            port=config_file["DATABASE_PORT"],
+            host=config_file["DATABASE_ENDPOINT"]
         )
     except Exception as err:
         print("Error connecting to database.")
