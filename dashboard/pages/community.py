@@ -13,6 +13,7 @@ from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 import pandas as pd
 from pandas import DataFrame
+from pandas.core.common import flatten
 import streamlit as st
 from psycopg2 import connect
 from psycopg2.extensions import connection
@@ -601,7 +602,7 @@ def get_wordnet_tags(tokens: list) -> list:
     return tagged_tokens
 
 
-def lemmatise_review_text(df_releases: DataFrame) -> DataFrame:
+def lemmatize_tokens(df_releases: DataFrame) -> DataFrame:
     """
     Lemmatize tokens text for each tokenized review
 
@@ -621,6 +622,47 @@ def lemmatise_review_text(df_releases: DataFrame) -> DataFrame:
     return df_releases
 
 
+def get_filtered_tokens(tokens):
+    """
+    Filter out punctuation, stop words, and very short words 
+
+    Args:
+        tokens (list): A list containing lemmatized tokens 
+
+    Returns:
+        list: A list containing filtered tokens
+    """
+    stops = stopwords.words("english")
+
+    stops.extend(["n't"])
+
+    important_words = ["pm", "us", "uk", "gb"]
+
+    return [t for t in tokens
+            if t not in stops
+            and (len(t) > 2 or t in important_words)]
+
+
+def filter_tokens(df_releases: DataFrame) -> DataFrame:
+    """
+    Filter out punctuation, stop words, and very short words
+
+    Args:
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
+
+    Returns:
+        DataFrame: A DataFrame containing filtered data related to new releases with filtered
+        keywords
+    """
+
+    df_releases["keywords"] = df_releases["keywords"].apply(
+        get_filtered_tokens)
+    df_releases["keywords"] = df_releases["keywords"].apply(
+        lambda tokens: [x.replace("'", "") for x in tokens])
+
+    return df_releases
+
+
 def plot_word_cloud_all_releases(df_releases: DataFrame) -> None:
     """
     Generate a word cloud plot based on key words from individual review text
@@ -632,8 +674,9 @@ def plot_word_cloud_all_releases(df_releases: DataFrame) -> None:
         None
     """
     df_releases = tokenize_review_text(df_releases)
-    df_releases = lemmatise_review_text(df_releases)
-
+    df_releases = lemmatize_tokens(df_releases)
+    df_releases = filter_tokens(df_releases)
+    review_keywords = flatten(df_releases["keywords"])
     print(df_releases)
 
 
