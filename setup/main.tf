@@ -570,25 +570,20 @@ resource "aws_iam_role" "steampulse_lambda_iam" {
   })
 }
 
-resource "aws_scheduler_schedule" "steampulse_email_lambda_schedule" {
-  name                = "steampulse_email_lambda_schedule"
-  description         = "Runs the steampulse email lambda function cron schedule"
-  schedule_expression = "cron(*/5 * * * ? *)"
+# resource "aws_scheduler_schedule" "steampulse_email_lambda_schedule" {
+#   name                = "steampulse_email_lambda_schedule"
+#   description         = "Runs the steampulse email lambda function cron schedule"
+#   schedule_expression = "cron(*/5 * * * ? *)"
 
-  flexible_time_window {
-    mode = "OFF"
-  }
+#   flexible_time_window {
+#     mode = "OFF"
+#   }
 
-  target {
-    arn      = aws_lambda_function.steampulse_email_lambda.arn
-    role_arn = aws_iam_role.steampulse_lambda_iam.arn
+#   target {
+#     arn      = aws_lambda_function.steampulse_email_lambda.arn
+#     role_arn = aws_iam_role.steampulse_lambda_iam.arn
 
 
 
-    # network_configuration {
-    #   assign_public_ip = true
-    #   security_groups  = [aws_security_group.steampulse_pipeline_ecs_sg.id]
-    #   subnets          = ["subnet-03b1a3e1075174995", "subnet-0667517a2a13e2a6b", "subnet-0cec5bdb9586ed3c4"]
-    # }
-  }
-}
+#   }
+# }
