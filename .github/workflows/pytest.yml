@@ -29,6 +29,9 @@ jobs:
     - name: Install requirements pipeline_games
       run: python -m pip install -r pipeline_games/requirements.txt
 
+    - name: Download nltk additions
+      run: python pipeline_reviews/nltk_download.py
+
     - name: Run pytest on pipeline_games
       run: pytest pipeline_games/
     - name: Run pytest on pipeline_reviews
