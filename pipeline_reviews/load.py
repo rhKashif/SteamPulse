@@ -5,14 +5,12 @@ from psycopg2 import Error
 from psycopg2.extensions import connection
 from psycopg2.extras import execute_batch
 
-from extract import get_db_connection
 from transform import remove_empty_rows
 
 
-def get_game_ids_foreign_key_values(reviews_df: DataFrame) -> DataFrame:
+def get_game_ids_foreign_key_values(conn: connection, reviews_df: DataFrame) -> DataFrame:
     """Returns data-frame with game_ids from db for
     foreign keys"""
-    conn = get_db_connection()
     cache_dict = {}
     reviews_df["game_id"] = reviews_df["game_id"].apply(
         lambda row: get_game_ids(conn, row, cache_dict))
