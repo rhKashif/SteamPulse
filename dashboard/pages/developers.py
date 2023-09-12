@@ -785,7 +785,7 @@ if __name__ == "__main__":
 
     if filtered_df.empty:
         st.markdown(
-            "### Invalid Filters\n There are no releases which fit your options")
+            "### Invalid:\n No releases to display")
     else:
         headline_figures(filtered_df)
 

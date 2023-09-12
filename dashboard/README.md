@@ -54,4 +54,6 @@ pages/`developers.py` - script containing streamlit dashboard "developers" page 
 pages/`releases.py` - script containing streamlit dashboard "releases" page with a table displaying all releases powering the visualizations
 
 #### Assumptions and design decisions
-N/A
+Database is running and contains data with release dates within the last two weeks
+- Returns an error message if connection to the database fails
+- If there is no data within the last two weeks the dashboard, a message will be displayed to relay. 
