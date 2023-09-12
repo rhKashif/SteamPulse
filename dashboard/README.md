@@ -54,6 +54,6 @@ pages/`developers.py` - script containing streamlit dashboard "developers" page 
 pages/`releases.py` - script containing streamlit dashboard "releases" page with a table displaying all releases powering the visualizations
 
 #### Assumptions and design decisions
-Database is running and contains data with release dates within the last two weeks
+Assumption that the necessary data is available, accurate, and up-to-date. This includes assumptions about data format, structure, and quality.
 - Returns an error message if connection to the database fails
 - If there is no data within the last two weeks the dashboard, a message will be displayed to relay. 
