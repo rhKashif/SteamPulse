@@ -81,6 +81,10 @@ docker run --env-file .env name_of_file
 
 ## Games ETL Pipeline
 
+### Overview
+
+This pipeline is used to extract data by web scraping both newly released games and game-specific data from Steam and further supplementing this with data from the Steam API. The raw data is then transformed to standardise each category and remove unnecessary or inaccurate data using the pandas library. Following this, the transformed data is uploaded using SQL to an AWS RDS database.
+
 ### Files explained
 
 - `extract_games.py` -- script containing the code to scrape game metric data from both the Steam website and API.
