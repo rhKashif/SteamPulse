@@ -2,8 +2,6 @@
 from datetime import datetime, timedelta
 from os import environ, _Environ
 
-import altair as alt
-from altair.vegalite.v5.api import Chart
 from dotenv import load_dotenv
 from functools import reduce
 import pandas as pd
@@ -373,9 +371,6 @@ def plot_new_games_today_table(df_releases: DataFrame) -> None:
 
     Args:
         df_releases (DataFrame): A DataFrame containing filtered data related to new releases
-
-    Returns:
-        Chart: A chart displaying plotted table
     """
     df_merged = aggregate_release_data(df_releases)
 
@@ -391,12 +386,6 @@ def plot_new_games_today_table(df_releases: DataFrame) -> None:
 def dashboard_header() -> None:
     """
     Build header for dashboard to give it title text
-
-    Args:
-        None
-
-    Returns:
-        None
     """
 
     st.title("SteamPulse")
@@ -406,12 +395,6 @@ def dashboard_header() -> None:
 def sidebar_header() -> None:
     """
     Add text to the dashboard side bar
-
-    Args:
-        None
-
-    Returns:
-        None
     """
     with st.sidebar:
         st.markdown("Filter Options\n---")
@@ -423,9 +406,6 @@ def headline_figures(df_releases: DataFrame) -> None:
 
     Args:
         df_releases (DataFrame): A DataFrame containing filtered data related to new releases
-
-    Returns:
-        None
     """
     cols = st.columns(3)
     st.markdown(
@@ -454,9 +434,6 @@ def sub_headline_figures(df_releases: DataFrame) -> None:
 
     Args:
         df_releases (DataFrame): A DataFrame containing filtered data related to new releases
-
-    Returns:
-        None
     """
     try:
         mac_compatibility = df_releases.groupby("mac")['title'].nunique()[True]
