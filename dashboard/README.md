@@ -46,6 +46,7 @@ docker run --env-file .env name_of_file
 pages - directory containing additional pages for streamlit dashboard
 ## Files 
 `home.py` - script containing streamlit dashboard home page
+`setup_nltk.py` - script containing installation for all nltk datasets
 
 pages/`community.py` - script containing streamlit dashboard "community" page with visualizations relevant for users
 
