@@ -32,6 +32,7 @@ def test_get_game_ids_fails():
 
 def test_get_db_connection(monkeypatch):
     """Mocks PSQL connection and checks that it was returned"""
+    monkeypatch.setattr("extract.environ", MagicMock())
     monkeypatch.setattr("extract.connect", lambda **kwargs: None)
     assert get_db_connection() is None
 
