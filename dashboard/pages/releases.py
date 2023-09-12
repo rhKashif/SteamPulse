@@ -6,9 +6,9 @@ from dotenv import load_dotenv
 from functools import reduce
 import pandas as pd
 from pandas import DataFrame
-import streamlit as st
 from psycopg2 import connect
 from psycopg2.extensions import connection
+import streamlit as st
 
 
 def get_db_connection(config_file: _Environ) -> connection:

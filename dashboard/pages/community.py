@@ -14,9 +14,9 @@ from nltk.tokenize import word_tokenize
 import pandas as pd
 from pandas import DataFrame
 from pandas.core.common import flatten
-import streamlit as st
 from psycopg2 import connect
 from psycopg2.extensions import connection
+import streamlit as st
 from wordcloud import WordCloud
 
 
