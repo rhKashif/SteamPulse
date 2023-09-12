@@ -1,4 +1,4 @@
-"""Python Script: Build a dashboard for data visualization"""
+"""Python Script: Build a dashboard for data visualization (home page)"""
 import streamlit as st
 
 

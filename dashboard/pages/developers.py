@@ -1,4 +1,4 @@
-"""Python Script: Build a dashboard for data visualization"""
+"""Python Script: Build a dashboard for data visualization (developer page)"""
 from datetime import datetime, timedelta
 from os import environ, _Environ
 
