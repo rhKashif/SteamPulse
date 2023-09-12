@@ -507,38 +507,57 @@ resource "aws_ecs_service" "steampulse_streamlit_service" {
 
 
 
-# resource "aws_lambda_permission" "steampulse_lambda_allow_eventbridge" {
-#   statement_id  = "AllowExecutionFromEventBridge"
-#   action        = "lambda:InvokeFunction"
-#   function_name = aws_lambda_function.steampulse_email_lambda.function_name
-#   principal     = "events.amazonaws.com"
+resource "aws_lambda_permission" "steampulse_lambda_allow_eventbridge" {
+  statement_id  = "AllowExecutionFromEventBridge"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.steampulse_email_lambda.function_name
+  principal     = "events.amazonaws.com"
 
-# }
+}
 
-# resource "aws_lambda_function" "steampulse_email_lambda" {
-#   image_uri      = "${aws_ecr_repository.steampulse_lambda_ecr.repository_url}:latest"
-#   package_type = "Image"
-#   function_name = "steampulse_email_lambda"
-#   role          = aws_iam_role.steampulse_lambda_iam.arn
-#   timeout = 5
+resource "aws_lambda_function" "steampulse_email_lambda" {
+  image_uri     = "${aws_ecr_repository.steampulse_lambda_ecr.repository_url}:latest"
+  package_type  = "Image"
+  function_name = "steampulse_email_lambda"
+  role          = aws_iam_role.steampulse_lambda_iam.arn
+  timeout       = 30
+  memory_size   = 256
 
-# }
+  environment {
+    variables = {
+      ACCESS_KEY_ID     = var.ACCESS_KEY_ID,
+      SECRET_ACCESS_KEY = var.SECRET_ACCESS_KEY,
+      DATABASE_NAME     = var.DATABASE_NAME,
+      DATABASE_USERNAME = var.DATABASE_USERNAME,
+      DATABASE_PASSWORD = var.DATABASE_PASSWORD,
+      DATABASE_ENDPOINT = "${aws_db_instance.steampulse_database.address}"
+      DATABASE_PORT     = "5432",
+      DASHBOARD_URL     = var.DASHBOARD_URL,
+      DASHBOARD_IMAGE   = var.DASHBOARD_IMAGE,
+      EMAIL_SENDER      = var.EMAIL_SENDER,
+      EMAIL_RECEIVER    = var.EMAIL_RECEIVER,
+      REPORT_FILE       = var.REPORT_FILE
+
+    }
+  }
+
+}
 
 
-# resource "aws_iam_role" "steampulse_lambda_iam" {
-#   name = "steampulse_lambda_iam"
+resource "aws_iam_role" "steampulse_lambda_iam" {
+  name = "steampulse_lambda_iam"
 
-#   assume_role_policy = jsonencode({
-#     Version = "2012-10-17"
-#     Statement = [
-#       {
-#         Action = "sts:AssumeRole"
-#         Effect = "Allow"
-#         Sid    = ""
-#         Principal = {
-#           Service = "lambda.amazonaws.com"
-#         }
-#       },
-#     ]
-#   })
-# }
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
