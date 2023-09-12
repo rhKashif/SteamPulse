@@ -4,8 +4,13 @@ from os import environ, _Environ
 
 import altair as alt
 from altair.vegalite.v5.api import Chart
+from collections import defaultdict
 from dotenv import load_dotenv
 from functools import reduce
+from nltk import pos_tag
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
 import pandas as pd
 from pandas import DataFrame
 import streamlit as st
@@ -554,6 +559,56 @@ def plot_trending_games_review_table(df_releases: DataFrame) -> dict:
     return {"table_data": df_merged, "title": "Top 5 Recommended Games by Sentiment"}
 
 
+def tokenize_review_text(df_releases: DataFrame) -> DataFrame:
+    """
+    Normalize and tokenize review text for each review and add this data to a new column
+
+    Args:
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
+
+    Returns:
+        DataFrame: A DataFrame containing filtered data related to new releases with a new
+        column for tokenized review_text
+    """
+    df_releases.dropna(subset=["review_text"], inplace=True)
+    df_releases["keywords"] = df_releases["review_text"].str.lower()
+    df_releases["keywords"] = df_releases["keywords"].apply(word_tokenize)
+
+    return df_releases
+
+
+def lemmatise_review_text(df_releases: DataFrame) -> DataFrame:
+    """
+    Lemmatize tokens text for each tokenized review
+
+    Args:
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
+
+    Returns:
+        DataFrame: A DataFrame containing filtered data related to new releases with a lemmatization
+        applied to the tokenized review_text column
+    """
+    df_releases.dropna(subset=["review_text"], inplace=True)
+    df_releases["keywords"] = df_releases["review_text"].str.lower()
+    df_releases["keywords"] = df_releases["keywords"].apply(word_tokenize)
+
+    return df_releases
+
+
+def plot_word_cloud_all_releases(df_releases: DataFrame) -> None:
+    """
+    Generate a word cloud plot based on key words from individual review text
+
+    Args:
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
+
+    Returns:
+        None
+    """
+    df_releases = tokenize_review_text(df_releases)
+    df_releases = lemmatise_review_text(df_releases)
+
+
 def dashboard_header() -> None:
     """
     Build header for dashboard to give it title text
@@ -794,3 +849,5 @@ if __name__ == "__main__":
                           trending_reviews_per_game_plot, games_genre_distribution_plot)
         second_row_figures(trending_sentiment_per_developer_plot,
                            trending_sentiment_per_publisher_plot)
+
+        review_word_cloud_plot = plot_word_cloud_all_releases(filtered_df)
