@@ -83,14 +83,14 @@ docker run --env-file .env name_of_file
 
 ### File explained
 
-extract_games.py -- script containing the code to scrape game metric data from both the Steam website and API.
-transform_games.py -- script containing code transforming raw data into atomic rows.
-load_games.py -- script containing code to load data into the database.
+- extract_games.py -- script containing the code to scrape game metric data from both the Steam website and API.
+- transform_games.py -- script containing code transforming raw data into atomic rows.
+- load_games.py -- script containing code to load data into the database.
 
-conftest.py -- contains a few pytest fixtures required for testing
-test_extract_games.py -- testing script for the functions in extract_games
-test_transform_games.py -- testing script for function in transform_games
-test_load_games.py -- testing script for function in load_games
+- conftest.py -- contains a few pytest fixtures required for testing
+- test_extract_games.py -- testing script for the functions in extract_games
+- test_transform_games.py -- testing script for function in transform_games
+- test_load_games.py -- testing script for function in load_games
 
 #### Assumptions and design decisions
 
@@ -101,6 +101,8 @@ During transformation, we decided to create unique atomic rows for the data whic
 During loading, we chose to use a psycopg2 function called execute_batch which loaded data quickly into the database. In addition we have chosen to use our schema design of 'UNIQUE' categories to prevent duplication of existing data.
 
 ## Reviews ETL pipeline
+
+# TODO - talk about running nltk download
 
 ### Overview
 

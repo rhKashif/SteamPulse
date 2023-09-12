@@ -13,15 +13,21 @@ import requests
 
 
 class GamesNotFound(Exception):
+    """Exception class for when a game is not found. Returns a message"""
+
     def __init__(self, message="No new games were found in the last 2 weeks!"):
         super().__init__(message)
 
 
-def get_number_of_reviews(game_id: int) -> dict:
-    """Retrieves information about all reviews from a given game ID"""
-    request = requests.get(f"https://store.steampowered.com/appreviews/{game_id}?json=1")
-    reviews_info = request.json()
-    return reviews_info["query_summary"]["total_reviews"]
+def get_number_of_reviews(game_id: int) -> int:
+    """Retrieves total number of all reviews from a given game ID"""
+    try:
+        request = requests.get(
+            f"https://store.steampowered.com/appreviews/{game_id}?json=1", timeout=10)
+        reviews_info = request.json()
+        return reviews_info["query_summary"]["total_reviews"]
+    except requests.exceptions.Timeout:
+        return 0
 
 
 def get_reviews_for_game(game_id: int, cursor: str) -> dict:
@@ -40,7 +46,7 @@ def get_reviews_for_game(game_id: int, cursor: str) -> dict:
     page_reviews = []
 
     for review in reviews["reviews"]:
-        review_dict = dict()
+        review_dict = {}
         review_dict["game_id"] = game_id
         review_dict["review"] = review["review"]
         review_dict["review_score"] = review["votes_up"]
@@ -80,10 +86,10 @@ def get_db_connection() -> connection:
     """Returns PSQL database connection"""
     load_dotenv()
     return connect(dbname=environ["DATABASE_NAME"],
-                    user=environ["DATABASE_USERNAME"],
-                    host=environ["DATABASE_ENDPOINT"],
-                    password=environ["DATABASE_PASSWORD"],
-                    cursor_factory=RealDictCursor)
+                   user=environ["DATABASE_USERNAME"],
+                   host=environ["DATABASE_ENDPOINT"],
+                   password=environ["DATABASE_PASSWORD"],
+                   cursor_factory=RealDictCursor)
 
 
 def get_game_ids(conn: connection) -> list[int] | None:
@@ -96,4 +102,3 @@ def get_game_ids(conn: connection) -> list[int] | None:
         return [game_id["app_id"] for game_id in game_ids]
     else:
         raise GamesNotFound()
-
