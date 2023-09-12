@@ -7,3 +7,4 @@ python-dotenv
 reportlab
 streamlit
 xhtml2pdf
+vl-convert-python

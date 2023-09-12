@@ -529,8 +529,8 @@ def send_email(config: _Environ):
     """
     client = boto3.client("ses",
                           region_name="eu-west-2",
-                          aws_access_key_id=environ["AWS_ACCESS_KEY_ID"],
-                          aws_secret_access_key=environ["AWS_SECRET_ACCESS_KEY"])
+                          aws_access_key_id=environ["ACCESS_KEY_ID"],
+                          aws_secret_access_key=environ["SECRET_ACCESS_KEY"])
 
     message = MIMEMultipart()
     message["Subject"] = "Local Test"
