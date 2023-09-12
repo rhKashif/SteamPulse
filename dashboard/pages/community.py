@@ -482,7 +482,7 @@ def plot_genre_distribution(df_releases: DataFrame, rows: int) -> Chart:
     return chart
 
 
-def plot_trending_games_table(df_releases: DataFrame) -> None:
+def plot_trending_games_table(df_releases: DataFrame) -> dict:
     """
     Create a table for the top recommended games
 
@@ -490,7 +490,8 @@ def plot_trending_games_table(df_releases: DataFrame) -> None:
         df_releases (DataFrame): A DataFrame containing filtered data related to new releases
 
     Returns:
-        None
+        dict: A Python dictionary containing a formatted Dataframe for table plot
+        and an associated title for the table
     """
     df_merged = format_data_for_table(df_releases)
 
@@ -509,7 +510,8 @@ def plot_trending_games_review_table(df_releases: DataFrame) -> dict:
     Args:
         df_releases (DataFrame): A DataFrame containing filtered data related to new releases
     Returns:
-        dict: A Python dictionary containing a DataFrame with table formatted data and a table title
+        dict: A Python dictionary containing a formatted Dataframe for table plot
+        and an associated title for the table
     """
     df_merged = format_data_for_table(df_releases)
 
@@ -625,7 +627,7 @@ def filter_tokens(df_releases: DataFrame) -> DataFrame:
     return df_releases
 
 
-def plot_word_cloud_all_releases(df_releases: DataFrame) -> None:
+def plot_word_cloud_all_releases(df_releases: DataFrame) -> WordCloud:
     """
     Generate a word cloud plot based on key words from individual review text
 
@@ -633,7 +635,7 @@ def plot_word_cloud_all_releases(df_releases: DataFrame) -> None:
         df_releases (DataFrame): A DataFrame containing filtered data related to new releases
 
     Returns:
-        None
+        WordCloud: A word cloud object 
     """
     df_releases = tokenize_review_text(df_releases)
     df_releases = lemmatize_tokens(df_releases)
@@ -653,7 +655,7 @@ def plot_word_cloud_all_releases(df_releases: DataFrame) -> None:
     return word_cloud
 
 
-def plot_word_cloud_all_releases_genre(df_releases: DataFrame) -> None:
+def plot_word_cloud_all_releases_genre(df_releases: DataFrame) -> WordCloud:
     """
     Generate a word cloud plot based on genres for each release
 
@@ -661,7 +663,7 @@ def plot_word_cloud_all_releases_genre(df_releases: DataFrame) -> None:
         df_releases (DataFrame): A DataFrame containing filtered data related to new releases
 
     Returns:
-        None
+        WordCloud: A word cloud object 
     """
     genre_keywords = flatten(df_releases["genre"])
     genre_keywords = pd.Series(genre_keywords)
@@ -680,12 +682,6 @@ def plot_word_cloud_all_releases_genre(df_releases: DataFrame) -> None:
 def dashboard_header() -> None:
     """
     Build header for dashboard to give it title text
-
-    Args:
-        None
-
-    Returns:
-        None
     """
 
     st.title("SteamPulse")
@@ -695,12 +691,6 @@ def dashboard_header() -> None:
 def sidebar_header() -> None:
     """
     Add text to the dashboard side bar
-
-    Args:
-        None
-
-    Returns:
-        None
     """
     with st.sidebar:
         st.markdown("Filter Options\n---")
@@ -712,9 +702,6 @@ def headline_figures(df_releases: DataFrame) -> None:
 
     Args:
         df_releases (DataFrame): A DataFrame containing filtered data related to new releases
-
-    Returns:
-        None
     """
     cols = st.columns(3)
     st.markdown(
@@ -743,9 +730,6 @@ def sub_headline_figures(df_releases: DataFrame) -> None:
 
     Args:
         df_releases (DataFrame): A DataFrame containing filtered data related to new releases
-
-    Returns:
-        None
     """
     try:
         mac_compatibility = df_releases.groupby("mac")['title'].nunique()[True]
@@ -797,9 +781,6 @@ def first_row_figures(plot_one: Chart, plot_two: Chart, plot_three: Chart) -> No
         plot_two (Chart): A chart displaying plotted data
 
         plot_three (Chart): A chart displaying plotted data
-
-    Returns:
-        None
     """
     cols = st.columns(3)
     with cols[0]:
@@ -820,9 +801,6 @@ def second_row_figures(plot_one: Chart, plot_two: Chart) -> None:
         plot_one (Chart): A chart displaying plotted data
 
         plot_two (Chart): A chart displaying plotted data
-
-    Returns:
-        None
     """
     cols = st.columns(2)
     with cols[0]:
@@ -842,9 +820,6 @@ def table_rows(table_one: Chart, table_two: Chart) -> None:
         plot_one (Chart): A chart displaying plotted data
 
         plot_two (Chart): A chart displaying plotted data
-
-    Returns:
-        None
     """
     cols = st.columns(2)
     with cols[0]:
@@ -867,9 +842,6 @@ def wordcloud_rows(wordcloud_one: Chart, wordcloud_two: Chart) -> None:
         plot_one (Chart): A chart displaying plotted data
 
         plot_two (Chart): A chart displaying plotted data
-
-    Returns:
-        None
     """
     cols = st.columns(2)
     with cols[0]:
