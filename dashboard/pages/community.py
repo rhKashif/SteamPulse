@@ -577,6 +577,46 @@ def tokenize_review_text(df_releases: DataFrame) -> DataFrame:
     return df_releases
 
 
+def build_tag_map() -> dict:
+    """
+    Create a dictionary which maps tags to ones that the lemmatizer can interpret
+
+    Args:
+        None
+
+    Returns:
+        dict: A Python dict for mapping tags
+    """
+    tag_map = defaultdict(lambda: "n")
+    tag_map['J'] = "a"
+    tag_map['V'] = "v"
+    tag_map['R'] = "r"
+
+    return tag_map
+
+
+def get_wordnet_tags(tokens: list, tag_map: dict):
+    """
+    Get the pos tags for a set of tokens, and return the tokens in a way the 
+    lemmatizer can interpret
+
+    Args:
+        tokens (list): A list containing tokens extracted from review text
+
+        tag_map (dict): A dict containing mappings for tags
+
+    Returns:
+        list: A list of tags which the lemmatizer can interpret
+    """
+
+    tagged_tokens = pos_tag(tokens)
+
+    tagged_tokens = [(token[0], tag_map[token[1][0]])
+                     for token in tagged_tokens]
+
+    return tagged_tokens
+
+
 def lemmatise_review_text(df_releases: DataFrame) -> DataFrame:
     """
     Lemmatize tokens text for each tokenized review
@@ -588,9 +628,9 @@ def lemmatise_review_text(df_releases: DataFrame) -> DataFrame:
         DataFrame: A DataFrame containing filtered data related to new releases with a lemmatization
         applied to the tokenized review_text column
     """
-    df_releases.dropna(subset=["review_text"], inplace=True)
-    df_releases["keywords"] = df_releases["review_text"].str.lower()
-    df_releases["keywords"] = df_releases["keywords"].apply(word_tokenize)
+
+    tag_map = build_tag_map()
+    df_releases["keywords"] = df_releases["keywords"]
 
     return df_releases
 
