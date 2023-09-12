@@ -2,13 +2,13 @@
 from datetime import datetime, timedelta
 from os import environ, _Environ
 
+from functools import reduce
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
 import altair as alt
 from altair.vegalite.v5.api import Chart
 import boto3
 from dotenv import load_dotenv
-from email.mime.multipart import MIMEMultipart
-from email.mime.application import MIMEApplication
-from functools import reduce
 import pandas as pd
 from pandas import DataFrame
 from psycopg2 import connect
@@ -511,7 +511,7 @@ def create_report(df_releases: DataFrame, dashboard_url: str) -> None:
     </html>
     '''
 
-    with open("test.html", "w") as file:
+    with open("test.html", "w", encoding='utf-8') as file:
         file.write(template)
 
     convert_html_to_pdf(template, environ.get("REPORT_FILE"))

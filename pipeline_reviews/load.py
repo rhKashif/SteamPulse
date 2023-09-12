@@ -13,7 +13,7 @@ def get_game_ids_foreign_key_values(reviews_df: DataFrame) -> DataFrame:
     """Returns data-frame with game_ids from db for
     foreign keys"""
     conn = get_db_connection()
-    cache_dict = dict()
+    cache_dict = {}
     reviews_df["game_id"] = reviews_df["game_id"].apply(
         lambda row: get_game_ids(conn, row, cache_dict))
     reviews_df = remove_empty_rows(reviews_df)
@@ -26,12 +26,13 @@ def get_game_ids(conn: connection, app_id: int, cache: dict) -> int | None:
         return cache[str(app_id)]
     try:
         with conn.cursor() as cur:
-            cur.execute("""SELECT game_id FROM game WHERE app_id = %s""", (app_id,))
+            cur.execute(
+                """SELECT game_id FROM game WHERE app_id = %s""", (app_id,))
             game_id = cur.fetchone()
         game_id = game_id["game_id"]
         cache[str(app_id)] = game_id
-    except (Error, TypeError) as e:
-        print("Error at load: ", e)
+    except (Error, TypeError) as err:
+        print("Error at load: ", err)
         return None
     return game_id
 
@@ -44,7 +45,7 @@ def move_reviews_to_db(conn: connection, reviews_df: DataFrame) -> None:
             execute_batch(cur, """INSERT INTO review (game_id, review_text, review_score, reviewed_at,
         playtime_last_2_weeks, sentiment) VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT DO NOTHING""", data_to_insert)
             conn.commit()
-    except Error as e:
-        print("Error at load: ", e)
+    except Error as err:
+        print("Error at load: ", err)
     finally:
         conn.close()

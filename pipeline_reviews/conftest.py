@@ -8,7 +8,7 @@ from pandas import DataFrame
 def fake_df_load():
     """Returns data-frame used for testing"""
     return DataFrame([{"game_id": 2, "test": 9},
-        {"game_id": 3, "test": 5}, {"game_id": 8, "test": None}], index=[1,2,3])
+                      {"game_id": 3, "test": 5}, {"game_id": 8, "test": None}], index=[1, 2, 3])
 
 
 @fixture
@@ -33,5 +33,6 @@ def time_string() -> str:
 def fake_df_transform(time_string: str) -> DataFrame:
     """Returns data-frame used for testing"""
     return DataFrame([{"playtime_last_2_weeks": 0, "review_score": 1,
-                    "last_timestamp": time_string, "game_id": 1}, {"playtime_last_2_weeks": 2,
-                    "review_score": 1, "last_timestamp": time_string, "game_id": 2}])
+                       "last_timestamp": time_string, "game_id": 1},
+                      {"playtime_last_2_weeks": 2, "review_score": 1,
+                       "last_timestamp": time_string, "game_id": 2}])

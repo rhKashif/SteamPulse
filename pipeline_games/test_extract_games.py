@@ -1,6 +1,5 @@
 """Script for testing extract_games functions"""
 import os
-import pytest
 from bs4 import BeautifulSoup
 
 from extract_games import get_html, parse_app_id_bs, parse_game_bs, parse_price_bs, system_requirements, get_genre_from_steam, get_developer_name, get_publisher_name, convert_to_csv
