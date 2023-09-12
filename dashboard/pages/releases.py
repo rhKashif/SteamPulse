@@ -258,7 +258,7 @@ def build_sidebar_publisher(df_releases: DataFrame) -> list:
     selection = df_releases["publisher_name"].unique()
 
     publisher = st.sidebar.multiselect("Publisher:", options=selection)
-    return publisherç
+    return publisher
 
 
 def build_sidebar_platforms() -> list:
