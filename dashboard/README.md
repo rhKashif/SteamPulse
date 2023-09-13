@@ -61,3 +61,5 @@ Assumption that the necessary data is available, accurate, and up-to-date. This 
 
 Assumption that the current word map will for review text will be useful and interesting for community members to see:
 - More comprehensive language processing is required to increase the relevancy of words on the word map but given time constraints, this has not been implemented
+
+Design decision - use of `format_sentiment_significant_figures` to format sentiment.
