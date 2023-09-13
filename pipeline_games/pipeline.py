@@ -5,7 +5,7 @@ import pandas as pd
 
 from extract_games import get_html, parse_app_id_bs, update_game_information
 from transform_games import identify_unique_genre, create_user_generated_column, drop_unnecessary_columns, convert_date_to_datetime, convert_price_to_float, check_data_is_not_null, explode_column_to_individual_rows
-from load_games import get_db_connection, upload_publishers, upload_developers, upload_genres, upload_games, add_to_genre_link_table, add_to_developer_link_table, add_to_publisher_link_table
+from load_games import get_db_connection, upload_publishers, upload_developers, upload_genres, upload_games, upload_game_genre_link, upload_game_publisher_link, upload_game_developer_link
 
 if __name__ == "__main__":
 
@@ -61,11 +61,9 @@ if __name__ == "__main__":
         upload_developers(final_df, connect_d)
         upload_genres(final_df, connect_d)
         upload_games(games_only, connect_d)
-
-        for row in final_df.itertuples():
-            add_to_genre_link_table(connect_d, row)
-            add_to_developer_link_table(connect_d, row)
-            add_to_publisher_link_table(connect_d, row)
+        upload_game_genre_link(final_df, connect_d)
+        upload_game_publisher_link(final_df, connect_d)
+        upload_game_developer_link(final_df, connect_d)
 
     finally:
         connect_d.close()

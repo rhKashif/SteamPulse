@@ -81,6 +81,10 @@ docker run --env-file .env name_of_file
 
 ## Games ETL Pipeline
 
+### Overview
+
+This pipeline is used to extract data by web scraping both newly released games and game-specific data from Steam and further supplementing this with data from the Steam API. The raw data is then transformed to standardise each category and remove unnecessary or inaccurate data using the pandas library. Following this, the transformed data is uploaded using SQL to an AWS RDS database.
+
 ### Files explained
 
 - `extract_games.py` -- script containing the code to scrape game metric data from both the Steam website and API.
@@ -96,7 +100,7 @@ docker run --env-file .env name_of_file
 
 We have chosen to supplement the initially scraped data from the Steam website with the Game API information to collect more data on each game which will be necessary for our pipeline.
 
-During transformation, we decided to create unique atomic rows for the data which would be in line with our normalised schema. We have chosen not to modify the game titles as we did not want to lose data on games that are in different languages and hence would have different characters to the English alphabet. We combined the genres (from API) and user_tags (from web scraping) information to have a complete list of all associated genres and created a separate column so we could see which ones were assigned by the user. If a tag was in both genres and user-tags this would be classified as not user-generated. Any duplicate rows are removed during the transformation process.
+During transformation, we decided to create unique atomic rows for the data which would be in line with our normalised schema. We have chosen not to modify the game titles as we did not want to lose data on games that are in different languages and hence would have different characters to the English alphabet. We combined the **genres** (from API) and **user_tags** (from web scraping) information to have a complete list of all associated genres and created a separate column so we could see which ones were assigned by the user. If a tag was in both genres and user-tags this would be classified as not **user-generated**. Any duplicate rows are removed during the transformation process.
 
 During loading, we chose to use a psycopg2 function called execute_batch which loaded data quickly into the database. In addition we have chosen to use our schema design of 'UNIQUE' categories to prevent duplication of existing data.
 
