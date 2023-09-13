@@ -716,13 +716,13 @@ resource "aws_sfn_state_machine" "steampulse_state_machine" {
       "Type": "Task",
       "Resource": "arn:aws:states:::ecs:runTask",
       "Parameters": {
+        "LaunchType": "FARGATE",
         "Cluster": "${aws_ecs_cluster.steampulse_cluster.arn}",
-        "TaskDefinition": "${aws_ecs_task_definition.steampulse_dashboard_task_definition.arn}",
+        "TaskDefinition": "${aws_ecs_task_definition.steampulse_review_pipeline_task_definition.arn}",
         "NetworkConfiguration": {
           "AwsvpcConfiguration": {
-            "AssignPublicIp": "ENABLED",
             "SecurityGroups": [
-              "${aws_security_group.steampulse_pipeline_ecs_sg.id)}"
+              "${aws_security_group.steampulse_pipeline_ecs_sg.id}"
             ],
             "Subnets": [
               "subnet-03b1a3e1075174995",
