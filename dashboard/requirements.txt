@@ -3,6 +3,5 @@ ironpdf
 nltk
 psycopg2-binary
 python-dotenv
-re
 streamlit
 wordcloud
