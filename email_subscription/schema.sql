@@ -1,7 +1,0 @@
-DROP TABLE IF EXISTS user_email;
-
-
-CREATE TABLE user_email(
-    email_id SMALLINT GENERATED ALWAYS AS IDENTITY,
-    email TEXT NOT NULL UNIQUE
-);
