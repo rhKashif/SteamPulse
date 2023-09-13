@@ -1,8 +1,8 @@
 """Script for email subscription"""
 from os import environ
+from re import fullmatch
 from dotenv import load_dotenv
 import streamlit as st
-from re import fullmatch
 from psycopg2 import connect, Error
 from psycopg2.extensions import connection
 from psycopg2.extras import RealDictCursor
@@ -33,6 +33,7 @@ def add_email_to_database(conn: connection, email: str) -> None:
 
 
 def get_subscription_count(conn: connection) -> None:
+    """Function to retrieve number of subscribers from database"""
     with conn.cursor() as cur:
         cur.execute("""SELECT COUNT(*) FROM user_email""")
         number = cur.fetchone()['count']
