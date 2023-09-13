@@ -2,9 +2,9 @@ name: Pylint
 
 on:
   push:
-    branches: ["pylint-automation"]
+    branches: ["main"]
   pull_request:
-    branches: ["pylint-automation"]
+    branches: ["main"]
 
 jobs:
   build:

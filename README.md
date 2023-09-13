@@ -81,28 +81,30 @@ docker run --env-file .env name_of_file
 
 ## Games ETL Pipeline
 
-### File explained
+### Overview
 
-- extract_games.py -- script containing the code to scrape game metric data from both the Steam website and API.
-- transform_games.py -- script containing code transforming raw data into atomic rows.
-- load_games.py -- script containing code to load data into the database.
+This pipeline is used to extract data by web scraping both newly released games and game-specific data from Steam and further supplementing this with data from the Steam API. The raw data is then transformed to standardise each category and remove unnecessary or inaccurate data using the pandas library. Following this, the transformed data is uploaded using SQL to an AWS RDS database.
 
-- conftest.py -- contains a few pytest fixtures required for testing
-- test_extract_games.py -- testing script for the functions in extract_games
-- test_transform_games.py -- testing script for function in transform_games
-- test_load_games.py -- testing script for function in load_games
+### Files explained
+
+- `extract_games.py` -- script containing the code to scrape game metric data from both the Steam website and API.
+- `transform_games.py` -- script containing code transforming raw data into atomic rows.
+- `load_games.py` -- script containing code to load data into the database.
+
+- `conftest.py` -- contains pytest fixtures required for testing
+- `test_extract_games.py` -- testing script for the functions in `extract_games.py`
+- `test_transform_games.py` -- testing script for function in `transform_games.py`
+- `test_load_games.py` -- testing script for function in `load_games.py`
 
 #### Assumptions and design decisions
 
 We have chosen to supplement the initially scraped data from the Steam website with the Game API information to collect more data on each game which will be necessary for our pipeline.
 
-During transformation, we decided to create unique atomic rows for the data which would be in line with our normalised schema. We have chosen not to modify the game titles as we did not want to lose data on games that are in different languages and hence would have different characters to the English alphabet. We combined the genres (from API) and user_tags (from web scraping) information to have a complete list of all associated genres and created a separate column so we could see which ones were assigned by the user. If a tag was in both genres and user-tags this would be classified as not user-generated. Any duplicate rows are removed during the transformation process.
+During transformation, we decided to create unique atomic rows for the data which would be in line with our normalised schema. We have chosen not to modify the game titles as we did not want to lose data on games that are in different languages and hence would have different characters to the English alphabet. We combined the **genres** (from API) and **user_tags** (from web scraping) information to have a complete list of all associated genres and created a separate column so we could see which ones were assigned by the user. If a tag was in both genres and user-tags this would be classified as not **user-generated**. Any duplicate rows are removed during the transformation process.
 
 During loading, we chose to use a psycopg2 function called execute_batch which loaded data quickly into the database. In addition we have chosen to use our schema design of 'UNIQUE' categories to prevent duplication of existing data.
 
 ## Reviews ETL pipeline
-
-# TODO - talk about running nltk download
 
 ### Overview
 
@@ -114,9 +116,28 @@ This project focuses on the systematic collection and analysis of reviews for re
 - **Playtime Last 2 Weeks**: Hours, that the user spent playing the game in the past 2 weeks.
 - **Next Cursor**: A parameter used exclusively for the next retrieval of reviews, as specified in the API documentation.
 
+### Files explained
+
+- `extract.py` -- file containing API requests from Steam Review API to get the reviews for each game
+- `transform.py` -- file containing the script to correct any non-valid inputs in the review data-frame
+- `nltk_download.py` -- file containing downloads from nltk library (explained in `Important note` section)
+- `sentiment.py` -- file containing script which analyses the reviews and rates them 1-5 on (negative/positive) scale
+- `load.py` -- file containing script to load the reviews data into the database
+- `pipeline.py` -- file containing functions from all of the previous files above
+
+- `conftest.py` -- contains pytest fixtures required for testing
+- `test_extract.py` -- file containing uni tests for the functions in `extract.py`
+- `test_transform.py` -- file containing uni tests for the functions in `transform.py`
+- `test_sentiment.py` -- file containing uni tests for the functions in `sentiment.py`
+- `test_load.py` -- file containing uni tests for the functions in `load.py`
+
 ### Data Processing and Transformation
 
 Before integration into the project's database, the collected reviews undergo processing and transformation in alignment with predefined assumptions. To enhance their utility and relevance, we employ Natural Language Processing (NLP) techniques. Notably, sentiment analysis is conducted to assign a sentiment value to each review, expressed on a scale ranging from 1 to 5. A lower sentiment value suggests a more negative assessment by the automated analysis. This sentiment analysis data is used in calculations related to game popularity.
+
+#### Important note
+
+The review pipeline includes file `nltk_download.py` which has the installation of resources from nltk library. It is important to note that the file needs to be run before the `pipeline.py` file or before separately running `sentiment.py` file. The script is added to the Dockerfile which means this step osn't necessary if running the script with a Dockerfile.
 
 ### Database Integration
 
