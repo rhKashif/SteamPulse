@@ -1,19 +1,25 @@
-# Live_pipeline
+## Report
 
-This is for live_pipeline
+This is for email report
 
-## Configure environment
-
-```sh
-python3 -m venv venv
-source ./venv/bin/activate
-pip3 install -r requirements.txt
-```
 
 ## Configure environment variables
 
 The following environment variables must be supplied in a `.env` file.
 
+```sh
+AWS_ACCESS_KEY_ID     = XXXXXXXXXXX
+AWS_SECRET_ACCESS_KEY = XXXXXXXXXXX
+DATABASE_NAME     = steampulse
+DATABASE_USERNAME = steampulse_admin
+DATABASE_PASSWORD = XXXXXXXXXXX
+DATABASE_ENDPOINT = XXXXXXXXXXX
+DATABASE_PORT = XXXXXXXXXXX
+REPORT_FILE = XXXXXXXXXXX.pdf
+DASHBOARD_URL = XXXXXXXXXXX
+EMAIL_SENDER = XXXXXXXXXXX
+EMAIL_RECEIVER = XXXXXXXXXXX
+```
 ## Run the code
 
 ## Docker image
