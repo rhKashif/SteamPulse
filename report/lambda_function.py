@@ -551,6 +551,14 @@ def send_email(config: _Environ):
     )
 
 
+def get_list_of_emails_from_database(conn: connection) -> list[str]:
+    """List returning a list of emails from the database"""
+    with conn.cursor() as cur:
+        cur.execute("""SELECT email FROM user_email""")
+        emails = cur.fetchall()
+        print(emails)
+
+
 def handler(event, context) -> None:
     """
     AWS Lambda function to generate a report, send it via email using Amazon SES.
@@ -569,10 +577,12 @@ def handler(event, context) -> None:
     game_df = get_database(conn)
     game_df = format_database_columns(game_df)
 
-    create_report(game_df, config["DASHBOARD_URL"])
-    print("Report created.")
-    send_email(config)
-    print("Email sent.")
+    get_list_of_emails_from_database(conn)
+
+    # create_report(game_df, config["DASHBOARD_URL"])
+    # print("Report created.")
+    # send_email(config)
+    # print("Email sent.")
 
 
 if __name__ == "__main__":
