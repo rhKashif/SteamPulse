@@ -722,7 +722,7 @@ resource "aws_sfn_state_machine" "steampulse_state_machine" {
           "AwsvpcConfiguration": {
             "AssignPublicIp": "ENABLED",
             "SecurityGroups": [
-              "${PUT SG ID HERE (WHICH SECURITY GROUP?)}"
+              "${aws_security_group.steampulse_pipeline_ecs_sg.id)}"
             ],
             "Subnets": [
               "subnet-03b1a3e1075174995",
