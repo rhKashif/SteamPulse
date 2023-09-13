@@ -677,7 +677,7 @@ resource "aws_iam_role" "steampulse_sfn_role" {
           Resource = "*"
 
         }
-                # {
+        # {
         #   Action = "events:PutTargets",
         #   Effect = "Allow",
         #   Resource = "*"
@@ -694,7 +694,7 @@ resource "aws_iam_role" "steampulse_sfn_role" {
         #   Effect = "Allow",
         #   Resource = "*"
 
-        
+
       ]
       }
     )
@@ -717,7 +717,20 @@ resource "aws_sfn_state_machine" "steampulse_state_machine" {
       "Resource": "arn:aws:states:::ecs:runTask",
       "Parameters": {
         "Cluster": "${aws_ecs_cluster.steampulse_cluster.arn}",
-        "TaskDefinition": "${aws_ecs_task_definition.steampulse_dashboard_task_definition.arn}"
+        "TaskDefinition": "${aws_ecs_task_definition.steampulse_dashboard_task_definition.arn}",
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": {
+            "AssignPublicIp": "ENABLED",
+            "SecurityGroups": [
+              "${PUT SG ID HERE (WHICH SECURITY GROUP?)}"
+            ],
+            "Subnets": [
+              "subnet-03b1a3e1075174995",
+              "subnet-0cec5bdb9586ed3c4",
+              "subnet-0667517a2a13e2a6b"
+            ]
+          }
+        }
         },
       "Next": "ReportEmail"
       },
