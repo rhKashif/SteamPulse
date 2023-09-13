@@ -321,7 +321,22 @@ def filter_data(df_releases: DataFrame, titles: list[str], release_dates: list[d
 
 
 def calculate_sum_sentiment(sentiment: float, score: int) -> float:
-    """Returns summed sentiment score"""
+    """
+    Calculates total sentiment score by multiplying sentiment associated with
+    a review multiplied by the review_score (represents the number of users who
+    agree with this review)
+
+    Args:
+        sentiment (float): A value associated with how positive or negative the
+        review is considered to be
+
+        score (int): A value associated with the number of users who up-voted a 
+        review
+
+    Returns:
+        float: A sentiment value which takes into account the number of users
+        who agreed with a given review
+    """
     if score != 0:
         return sentiment * (score + 1)
     return sentiment
@@ -337,7 +352,7 @@ def aggregate_data(df_releases: DataFrame) -> DataFrame:
     """
 
     df_releases["weighted_sentiment"] = df_releases.apply(lambda row:
-        calculate_sum_sentiment(row["sentiment"], row["review_score"]), axis=1)
+                                                          calculate_sum_sentiment(row["sentiment"], row["review_score"]), axis=1)
 
     review_rows_count = df_releases.groupby(
         "game_id")["weighted_sentiment"].count()
@@ -350,7 +365,7 @@ def aggregate_data(df_releases: DataFrame) -> DataFrame:
     total_sentiment_scores = total_sum_scores / total_weights
 
     df_releases["avg_sentiment"] = df_releases["game_id"].apply(
-        lambda row: round(total_sentiment_scores.loc[row],1))
+        lambda row: round(total_sentiment_scores.loc[row], 1))
 
     review_per_title = df_releases.groupby('game_id')[
         'review_text'].count().sort_values(
