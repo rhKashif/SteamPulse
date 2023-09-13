@@ -314,6 +314,13 @@ def filter_data(df_releases: DataFrame, titles: list[str], release_dates: list[d
     return df_releases
 
 
+def calculate_sum_sentiment(sentiment: float, score: int) -> float:
+    """Returns summed sentiment score"""
+    if score != 0:
+        return sentiment * (score + 1)
+    return sentiment
+
+
 def aggregate_data(df_releases: DataFrame) -> DataFrame:
     """
     Transform data in releases DataFrame to find aggregated sentiment from individual reviews
@@ -322,32 +329,34 @@ def aggregate_data(df_releases: DataFrame) -> DataFrame:
     Returns:
         DataFrame: A DataFrame containing new release data with aggregated data for each release
     """
-    df_releases["weighted_sentiment"] = df_releases.sentiment * \
-        df_releases.review_score
-    total_weighted_scores = df_releases.groupby(
-        'game_id')['weighted_sentiment'].sum().reset_index()
-    total_weights = df_releases.groupby(
-        'game_id')['review_score'].sum().reset_index()
-    total_weighted_scores['user_weighted_sentiment'] = total_weighted_scores['weighted_sentiment'] / \
-        total_weights['review_score']
-    total_weighted_scores = total_weighted_scores.drop(
-        columns=["weighted_sentiment"])
 
-    average_sentiment_per_title = df_releases.groupby('game_id')[
-        'sentiment'].mean().sort_values(
-        ascending=False).dropna().reset_index()
-    average_sentiment_per_title.columns = ["game_id", "avg_sentiment"]
+    df_releases["weighted_sentiment"] = df_releases.apply(lambda row:
+        calculate_sum_sentiment(row["sentiment"], row["review_score"]), axis=1)
+
+    review_rows_count = df_releases.groupby(
+        "game_id")["weighted_sentiment"].count()
+    total_sum_scores = df_releases.groupby(
+        "game_id")["weighted_sentiment"].sum()
+    total_weights = df_releases.groupby("game_id")[
+        "review_score"].sum()
+
+    total_weights = total_weights + review_rows_count
+    total_sentiment_scores = total_sum_scores / total_weights
+
+    df_releases["avg_sentiment"] = df_releases["game_id"].apply(
+        lambda row: round(total_sentiment_scores.loc[row],1))
 
     review_per_title = df_releases.groupby('game_id')[
         'review_text'].count().sort_values(
         ascending=False).dropna().reset_index()
     review_per_title.columns = ["game_id", "num_of_reviews"]
 
-    data_frames = [df_releases, average_sentiment_per_title,
-                   review_per_title, total_weighted_scores]
+    data_frames = [df_releases, review_per_title]
 
     df_merged = reduce(lambda left, right: pd.merge(left, right, on=['game_id'],
                                                     how='outer'), data_frames)
+    df_merged.drop(["weighted_sentiment"], axis=1, inplace=True)
+
     return df_merged
 
 
