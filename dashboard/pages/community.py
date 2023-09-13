@@ -381,6 +381,18 @@ def aggregate_data(df_releases: DataFrame) -> DataFrame:
     return df_merged
 
 
+def format_sentiment_significant_figures(sentiment: float) -> DataFrame:
+    """
+    Normalize sentiment values to be strings and reduce to 3 significant figures
+
+    Args:
+        row (DataFrame): A DataFrame containing new release data
+    Returns:
+        DataFrame: A DataFrame containing new release data with aggregated data for each release
+    """
+    return str(sentiment)[:3]
+
+
 def format_data_for_table(df_releases: DataFrame) -> DataFrame:
     """
     Return key information related to a new release in a format ready for table plotting 
@@ -391,6 +403,7 @@ def format_data_for_table(df_releases: DataFrame) -> DataFrame:
         DataFrame: A DataFrame containing new release data with aggregated data for each release
     """
     df_releases = df_releases.drop_duplicates("title")
+    df_releases = df_releases.dropna(subset=["review_text"])
     desired_columns = ["title", "release_date",
                        "sale_price", "avg_sentiment", "num_of_reviews"]
     df_releases = df_releases[desired_columns]
@@ -398,6 +411,9 @@ def format_data_for_table(df_releases: DataFrame) -> DataFrame:
     table_columns = ["Title", "Release Date",
                      "Price", "Community Sentiment", "Number of Reviews"]
     df_releases.columns = table_columns
+
+    df_releases["Community Sentiment"] = df_releases["Community Sentiment"].apply(
+        format_sentiment_significant_figures)
 
     return df_releases
 
@@ -416,8 +432,8 @@ def format_columns(df_releases: DataFrame) -> DataFrame:
         lambda x: f"£{x:.2f}")
     df_releases['Release Date'] = df_releases['Release Date'].dt.strftime(
         '%d/%m/%Y')
-    df_releases['Community Sentiment'] = df_releases['Community Sentiment'].apply(
-        lambda x: round(x, 2))
+    # df_releases['Community Sentiment'] = df_releases['Community Sentiment'].apply(
+    #     lambda x: round(x, 2))
     df_releases['Community Sentiment'] = df_releases['Community Sentiment'].fillna(
         "No Sentiment")
 
