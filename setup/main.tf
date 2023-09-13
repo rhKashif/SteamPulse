@@ -676,7 +676,25 @@ resource "aws_iam_role" "steampulse_sfn_role" {
           Effect   = "Allow",
           Resource = "*"
 
-        },
+        }
+                # {
+        #   Action = "events:PutTargets",
+        #   Effect = "Allow",
+        #   Resource = "*"
+
+        # },
+        # {
+        #   Action = "events:PutRule",
+        #   Effect = "Allow",
+        #   Resource = "*"
+
+        # },
+        # {
+        #   Action = "events:DescribeRule",
+        #   Effect = "Allow",
+        #   Resource = "*"
+
+        
       ]
       }
     )
@@ -695,14 +713,14 @@ resource "aws_sfn_state_machine" "steampulse_state_machine" {
 
     "States" : {
       "ReviewGather": {
-     "Type": "Task",
-     "Resource": "arn:aws:states:::ecs:runTask.sync",
-     "Parameters": {
-                "Cluster": "${aws_ecs_cluster.steampulse_cluster.arn}",
-                "TaskDefinition": "${aws_ecs_task_definition.steampulse_dashboard_task_definition.arn}",
-      
-            },
-     "Next": "ReviewGather"
+      "Type": "Task",
+      "Resource": "arn:aws:states:::ecs:runTask",
+      "Parameters": {
+        "Cluster": "${aws_ecs_cluster.steampulse_cluster.arn}",
+        "TaskDefinition": "${aws_ecs_task_definition.steampulse_dashboard_task_definition.arn}"
+        },
+      "Next": "ReportEmail"
+      },
 
 
       "ReportEmail" : {
@@ -719,19 +737,20 @@ resource "aws_sfn_state_machine" "steampulse_state_machine" {
 # Review gather with container override
 
 
-    #   "ReviewGather": {
-    #  "Type": "Task",
-    #  "Resource": "arn:aws:states:::ecs:runTask.sync",
-    #  "Parameters": {
-    #             "Cluster": "${aws_ecs_cluster.steampulse_cluster.arn}",
-    #             "TaskDefinition": "job-id",
-    #             "Overrides": {
-    #                 "ContainerOverrides": [
-    #                     {
-    #                         "Name": "container-name",
-    #                         "Command.$": "$.commands" 
-    #                     }
-    #                 ]
-    #             }
-    #         },
-    #  "End": true
+#   "ReviewGather": {
+#  "Type": "Task",
+#  "Resource": "arn:aws:states:::ecs:runTask.sync",
+#  "Parameters": {
+#             "Cluster": "${aws_ecs_cluster.steampulse_cluster.arn}",
+#             "TaskDefinition": "job-id",
+#             "Overrides": {
+#                 "ContainerOverrides": [
+#                     {
+#                         "Name": "container-name",
+#                         "Command.$": "$.commands" 
+#                     }
+#                 ]
+#             }
+#         },
+#  "End": true
+
