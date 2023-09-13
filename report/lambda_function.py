@@ -510,10 +510,6 @@ def create_report(df_releases: DataFrame, dashboard_url: str) -> None:
     </body>    
     </html>
     '''
-
-    with open("/tmp/test.html", "w", encoding='utf-8') as file:
-        file.write(template)
-
     convert_html_to_pdf(template, environ.get("REPORT_FILE"))
 
 
