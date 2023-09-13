@@ -1,3 +1,4 @@
+"""Script for email subscription"""
 from os import environ
 from dotenv import load_dotenv
 import streamlit as st
@@ -32,7 +33,12 @@ def add_email_to_database(conn: connection, email: str) -> None:
 
 
 def get_subscription_count(conn: connection) -> None:
-    pass
+    with conn.cursor() as cur:
+        cur.execute("""SELECT COUNT(*) FROM user_email""")
+        number = cur.fetchone()['count']
+        if not number:
+            return "N/A"
+        return number
 
 
 def main():
