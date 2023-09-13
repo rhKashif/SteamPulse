@@ -588,18 +588,24 @@ resource "aws_iam_role" "steampulse_lambda_iam" {
 #   }
 # }
 
-resource "aws_sfn_state_machine" "sfn_state_machine" {
-  name     = "my-state-machine"
-  role_arn = aws_iam_role.iam_for_sfn.arn
+
+resource "aws_sfn_state_machine" "steampulse_state_machine" {
+  name     = "steampulse_state_machine"
+  role_arn = aws_iam_role.steampulse_lambda_iam.arn
 
   definition = <<EOF
 {
-  "Comment": "A Hello World example of the Amazon States Language using an AWS Lambda Function",
-  "StartAt": "HelloWorld",
+  "Comment": "",
+  "StartAt": "ReviewGather",
   "States": {
-    "HelloWorld": {
+    "ReviewGather": {
       "Type": "Task",
-      "Resource": "${aws_lambda_function.lambda.arn}",
+      "Resource": "${aws_iam_role.steampulse_pipeline_ecs_task_execution_role.arn}",
+      "Next": "ReportEmail"
+    },
+    "ReportEmail": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.steampulse_email_lambda.arn}",
       "End": true
     }
   }
