@@ -67,7 +67,7 @@ def get_all_reviews(game_ids: list[int]) -> DataFrame:
 
         if number_of_total_reviews:
             cursor_list = ["*"]
-            cursor = "fake_cursor"
+            cursor = ""
             while cursor not in cursor_list:
                 api_response = get_reviews_for_game(game, cursor_list[-1])
                 if "error" not in api_response:
