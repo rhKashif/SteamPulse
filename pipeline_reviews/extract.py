@@ -114,5 +114,4 @@ def get_game_ids(conn: connection) -> list[int] | None:
         game_ids = cur.fetchall()
     if game_ids:
         return [game_id["app_id"] for game_id in game_ids]
-    else:
-        raise GamesNotFound()
+    raise GamesNotFound()
