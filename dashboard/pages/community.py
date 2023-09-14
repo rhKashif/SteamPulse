@@ -55,7 +55,7 @@ def get_database(conn_postgres: connection) -> DataFrame:
     """
     query = f"SELECT\
             game.game_id, title, release_date, price, sale_price,\
-            sentiment, review_text, reviewed_at, review_score,\
+            review_id, sentiment, review_text, reviewed_at, review_score,\
             genre, user_generated,\
             developer_name,\
             publisher_name,\
@@ -567,7 +567,7 @@ def plot_trending_games_review_table(df_releases: DataFrame) -> dict:
 
     df_merged = df_merged.reset_index(drop=True)
 
-    return {"table_data": df_merged, "title": "Top Recommended Games by Sentiment"}
+    return {"table_data": df_merged, "title": "Top Recommended Games by Number of Reviews"}
 
 
 def tokenize_review_text(df_releases: DataFrame) -> DataFrame:
@@ -762,7 +762,7 @@ def headline_figures(df_releases: DataFrame) -> None:
         st.metric("Total Releases:", df_releases["title"].nunique())
     with cols[1]:
         st.metric("Total Reviews:",
-                  df_releases["review_text"].nunique())
+                  df_releases["review_id"].nunique())
     with cols[2]:
         st.metric("Average Sentiment:", round(
             df_releases["sentiment"].mean(), 2))
@@ -906,6 +906,7 @@ if __name__ == "__main__":
     conn = get_db_connection(config)
 
     game_df = get_database(conn)
+    print(game_df["review_id"].nunique())
     game_df = aggregate_data(game_df)
     game_df = format_database_columns(game_df)
     game_df = get_data_for_release_date_range(game_df, 14)
