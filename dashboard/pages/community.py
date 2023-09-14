@@ -561,13 +561,18 @@ def plot_genre_distribution(df_releases: DataFrame, rows: int) -> Chart:
     Returns:
         Chart: A chart displaying plotted data
     """
+    # df_releases = df_releases.groupby(
+    #     "genre").size().reset_index().sort_values(by=[0]).tail(rows)
+    # print(df_releases.columns)
+    df_releases = df_releases[["game_id", "title", "genre"]]
+
+    df_releases = df_releases.drop_duplicates()
+
     df_releases = df_releases.groupby(
         "genre").size().reset_index().sort_values(by=[0]).tail(rows)
 
-    df_releases.columns = ["genre", "releases_per_genres"]
-
     chart = alt.Chart(df_releases).mark_bar().encode(
-        x=alt.Y("releases_per_genres:Q",
+        x=alt.Y("0:Q",
                 title="No. of Releases"),
         y=alt.X("genre:N", title="Genre", sort="-x")
     ).properties(
