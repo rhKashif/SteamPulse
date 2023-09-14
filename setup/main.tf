@@ -443,26 +443,26 @@ resource "aws_scheduler_schedule" "steampulse_game_pipeline_schedule" {
 resource "aws_scheduler_schedule" "steampulse_review_pipeline_schedule" {
   name                = "steampulse_review_pipeline_schedule"
   description         = "Runs the steampulse review pipeline on a cron schedule"
-  schedule_expression = "cron(30 8 * * ? *)"
+  schedule_expression = "cron(10 * * * ? *)"
 
   flexible_time_window {
     mode = "OFF"
   }
 
   target {
-    arn      = aws_ecs_cluster.steampulse_cluster.arn
-    role_arn = aws_iam_role.steampulse_pipeline_ecs_task_execution_role.arn
+    arn      = aws_sfn_state_machine.steampulse_state_machine.arn
+    role_arn = aws_iam_role.steampulse_sfn_role.arn
 
-    ecs_parameters {
-      task_definition_arn = aws_ecs_task_definition.steampulse_review_pipeline_task_definition.arn
-      launch_type         = "FARGATE"
+    # ecs_parameters {
+    #   task_definition_arn = aws_ecs_task_definition.steampulse_review_pipeline_task_definition.arn
+    #   launch_type         = "FARGATE"
 
-      network_configuration {
-        assign_public_ip = true
-        security_groups  = [aws_security_group.steampulse_pipeline_ecs_sg.id]
-        subnets          = ["subnet-03b1a3e1075174995", "subnet-0667517a2a13e2a6b", "subnet-0cec5bdb9586ed3c4"]
-      }
-    }
+    # network_configuration {
+    #     assign_public_ip = true
+    #     security_groups  = [aws_security_group.steampulse_pipeline_ecs_sg.id]
+    #     subnets          = ["subnet-03b1a3e1075174995", "subnet-0667517a2a13e2a6b", "subnet-0cec5bdb9586ed3c4"]
+    #   }
+    # }
   }
 }
 
@@ -657,6 +657,28 @@ resource "aws_iam_role" "steampulse_sfn_role" {
           }
         },
         {
+                "Effect": "Allow",
+                "Action": [
+                    "logs:CreateLogDelivery",
+                    "logs:CreateLogStream",
+                    "logs:GetLogDelivery",
+                    "logs:UpdateLogDelivery",
+                    "logs:DeleteLogDelivery",
+                    "logs:ListLogDeliveries",
+                    "logs:PutLogEvents",
+                    "logs:PutResourcePolicy",
+                    "logs:DescribeResourcePolicies",
+                    "logs:DescribeLogGroups",
+                    "logs:GetLogEvents",
+                    "logs:PutLogEvents",
+                    "logs:CreateLogStream",
+                    "logs:DescribeLogStreams",
+                    "logs:PutRetentionPolicy",
+                    "logs:CreateLogGroup"
+                ],
+                "Resource": "*"
+            },
+        {
           Action   = "ecs:RunTask",
           Effect   = "Allow",
           Resource = "*",
@@ -701,11 +723,21 @@ resource "aws_iam_role" "steampulse_sfn_role" {
   }
 }
 
+resource "aws_cloudwatch_log_group" "steampulse_log_group_for_sfn" {
+  name = "steampulse_sfn_log"
+}
+
 
 
 resource "aws_sfn_state_machine" "steampulse_state_machine" {
   name       = "steampulse_state_machine"
   role_arn   = aws_iam_role.steampulse_sfn_role.arn
+
+  logging_configuration {
+    log_destination        = "${aws_cloudwatch_log_group.steampulse_log_group_for_sfn.arn}:*"
+    include_execution_data = true
+    level                  = "ERROR"
+  }
   definition = <<EOF
   {
     "Comment" : "SteamPulse step function",
