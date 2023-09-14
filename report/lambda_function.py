@@ -498,7 +498,7 @@ def create_report(df_releases: DataFrame, dashboard_url: str) -> None:
                     Most Reviewed Release ({date_range} - {date}): {most_reviewed_release}</p>
                 </div>
 
-        <h2>New Releases</h2>
+        <h2>Latest Releases</h2>
         <img src="{new_release_table_fig}" alt="Chart 1">
 
         <h2>Top Releases by Sentiment</h2>
