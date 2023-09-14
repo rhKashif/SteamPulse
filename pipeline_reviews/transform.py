@@ -33,7 +33,7 @@ def correct_playtime(reviews_df: DataFrame) -> DataFrame:
             lambda row: get_release_date(row, conn, release_date_cache))
         time_now = datetime.now().date()
         reviews_df_copy["maximum_playtime_since_release"] = reviews_df_copy["release_date"].apply(
-            lambda row: (time_now - row).total_seconds()/3600)
+            lambda row: (time_now - row).total_seconds()/60)
         reviews_df_copy = reviews_df_copy[
             reviews_df_copy["playtime_last_2_weeks"] <= reviews_df_copy["maximum_playtime_since_release"]]
         reviews_df_copy.drop(
