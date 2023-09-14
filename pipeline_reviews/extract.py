@@ -65,13 +65,13 @@ def get_game_reviews(game: int) -> list:
     if number_of_total_reviews:
         cursor_list = []
         cursor = "*"
+
         while cursor not in cursor_list:
             cursor_list.append(cursor)
             api_response = get_reviews_for_game(game, cursor)
             if "error" not in api_response:
                 cursor = api_response["next_cursor"]
                 page_reviews = api_response["reviews"]
-                # print(page_reviews)
                 if not page_reviews or cursor in cursor_list:
                     return all_reviews
                 all_reviews.append(page_reviews)
