@@ -2,6 +2,7 @@
 
 from pytest import fixture
 from pandas import DataFrame
+from unittest.mock import MagicMock
 
 
 @fixture
@@ -36,3 +37,14 @@ def fake_df_transform(time_string: str) -> DataFrame:
                        "last_timestamp": time_string, "game_id": 1},
                       {"playtime_last_2_weeks": 2, "review_score": 1,
                        "last_timestamp": time_string, "game_id": 2}])
+
+
+def mock_multiprocessing() -> MagicMock:
+    "Returns a magic mock to mock multiprocessing"
+    return MagicMock()
+
+
+def mock_get_game_reviews(game: int) -> list:
+    """Returns a mock game review"""
+    test_review = {"review": "test"}
+    return [[test_review]]
