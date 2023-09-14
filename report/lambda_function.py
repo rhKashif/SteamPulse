@@ -548,7 +548,8 @@ def send_email(config: _Environ, email: str):
             email,
         ],
         RawMessage={
-            'Data': message.as_string()
+            'Data': 'Subject: SteamPulse Daily Report \nMIME-Version: 1.0\nContent-type: Multipart/Mixed; boundary="NextPart"\n\n--NextPart\nContent-Type: text/plain\n\n\n\n--NextPart\nContent-Type: text/plain;\nContent-Disposition: attachment; filename="attachment.txt"\n\nThis is the text in the attachment.\n\n--NextPart--'
+            # 'Data': message.as_string()
         }
     )
 
