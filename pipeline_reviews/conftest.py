@@ -44,7 +44,7 @@ def mock_multiprocessing() -> MagicMock:
     return MagicMock()
 
 
-def mock_get_game_reviews(game: int) -> list:
+def mock_get_game_reviews(*args) -> list:
     """Returns a mock game review"""
     test_review = {"review": "test"}
     return [[test_review]]
