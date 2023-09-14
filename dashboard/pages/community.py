@@ -19,6 +19,20 @@ from psycopg2.extensions import connection
 import streamlit as st
 from wordcloud import WordCloud
 
+SELECTED_RELEASES = "selected_releases"
+SELECTED_RELEASE_DATES = "selected_release_dates"
+SELECTED_REVIEW_DATES = "selected_review_dates"
+SELECTED_GENRE = "selected_genre"
+SELECTED_DEVELOPER = "selected_developer"
+SELECTED_PUBLISHER = "selected_publisher"
+SELECTED_PLATFORM = "selected_platform"
+MIN_PRICE = "min_price"
+MAX_PRICE = "min_price"
+MIN_SENTIMENT = "min_sentiment"
+MAX_SENTIMENT = "max_sentiment"
+MIN_REVIEWS = "min_reviews"
+MAX_REVIEWS = "max_reviews"
+
 
 def get_db_connection(config_file: _Environ) -> connection:
     """
@@ -236,7 +250,9 @@ def build_sidebar_price(df_releases: DataFrame) -> tuple:
     max_price = df_releases["price"].max()
     min_price = df_releases["price"].min()
     price = st.sidebar.slider(
-        "Price (£):", min_value=min_price, max_value=max_price, value=(min_price, max_price), step=1.0)
+        "Price (£):", min_value=min_price, max_value=max_price,
+        value=(min_price, max_price), step=1.0)
+
     return price
 
 
@@ -254,13 +270,31 @@ def build_sidebar_sentiment(df_releases: DataFrame) -> tuple:
     min_sentiment = df_releases["sentiment"].min()
 
     sentiment = st.sidebar.slider(
-        "Sentiment:", min_value=min_sentiment, max_value=max_sentiment, value=(min_sentiment, max_sentiment), step=0.1)
+        "Sentiment:", min_value=min_sentiment, max_value=max_sentiment,
+        value=(min_sentiment, max_sentiment), step=0.1)
     return sentiment
 
 
-def filter_data(df_releases: DataFrame, titles: list[str], release_dates: list[datetime], review_dates: list[datetime],
-                genres: list[str], developers: list[str], publishers: list[str], platforms: list[str], minimum_price: float,
-                maximum_price: float, minimum_sentiment: float, maximum_sentiment: float) -> DataFrame:
+def build_sidebar_number_of_reviews(df_releases: DataFrame) -> tuple:
+    """
+    Build sidebar with slider option to select range for number of reviews
+
+    Args:
+        df_releases (DataFrame): A pandas DataFrame containing all relevant game data
+
+    Returns:
+        list: A tuple with minimum and maximum number of reviews that the user has selected
+    """
+    max_number_of_reviews = df_releases["review_id"].nunique()
+    min_number_of_reviews = 0
+
+    number_of_reviews = st.sidebar.slider(
+        "Sentiment:", min_value=min_number_of_reviews, max_value=max_number_of_reviews,
+        value=(min_number_of_reviews, max_number_of_reviews), step=1)
+    return number_of_reviews
+
+
+def filter_data(df_releases: DataFrame, filter: dict) -> DataFrame:
     """
     Apply live filtering according to sidebar filters to the data frame
 
@@ -281,41 +315,47 @@ def filter_data(df_releases: DataFrame, titles: list[str], release_dates: list[d
         DataFrame: A DataFrame containing filtered data related to new releases
 
     """
-    if titles:
-        df_releases = df_releases[df_releases["title"].isin(titles)]
+    if filter[SELECTED_RELEASES]:
+        df_releases = df_releases[df_releases["title"].isin(
+            filter[SELECTED_RELEASES])]
 
-    if release_dates:
+    if filter[SELECTED_RELEASE_DATES]:
         df_releases = df_releases[df_releases["release_date"].dt.floor(
-            "D").isin(release_dates)]
+            "D").isin(filter[SELECTED_RELEASE_DATES])]
 
-    if review_dates:
+    if filter[SELECTED_REVIEW_DATES]:
         df_releases = df_releases[df_releases["review_date"].dt.floor(
-            "D").isin(review_dates)]
+            "D").isin(filter[SELECTED_REVIEW_DATES])]
 
-    if genres:
-        df_releases = df_releases[df_releases["genre"].isin(genres)]
+    if filter[SELECTED_GENRE]:
+        df_releases = df_releases[df_releases["genre"].isin(
+            filter[SELECTED_GENRE])]
 
-    if developers:
+    if filter[SELECTED_DEVELOPER]:
         df_releases = df_releases[df_releases["developer_name"].isin(
-            developers)]
+            filter[SELECTED_DEVELOPER])]
 
-    if publishers:
+    if filter[SELECTED_PUBLISHER]:
         df_releases = df_releases[df_releases["publisher_name"].isin(
-            publishers)]
+            filter[SELECTED_PUBLISHER])]
 
-    df_releases = df_releases[df_releases[platforms].any(axis=1)]
+    df_releases = df_releases[df_releases[filter[SELECTED_PLATFORM]].any(
+        axis=1)]
 
-    df_releases = df_releases[(df_releases['price'] >= minimum_price) & (
-        df_releases['price'] <= maximum_price)]
+    df_releases = df_releases[(df_releases['price'] >= filter[MIN_PRICE]) & (
+        df_releases['price'] <= filter[MAX_PRICE])]
 
     average_sentiment_by_title = df_releases.groupby('title')[
         'sentiment'].mean()
     filtered_titles = average_sentiment_by_title[
-        ((average_sentiment_by_title >= minimum_sentiment) | average_sentiment_by_title.isna()) &
-        ((average_sentiment_by_title <= maximum_sentiment)
+        ((average_sentiment_by_title >= filter[MAX_SENTIMENT]) | average_sentiment_by_title.isna()) &
+        ((average_sentiment_by_title <= filter[MIN_SENTIMENT])
          | average_sentiment_by_title.isna())
     ].index
     df_releases = df_releases[df_releases['title'].isin(filtered_titles)]
+
+    df_releases = df_releases[(df_releases['num_of_reviews'] >= filter[MIN_PRICE]) & (
+        df_releases['price'] <= filter[MAX_PRICE])]
 
     return df_releases
 
@@ -539,7 +579,7 @@ def plot_trending_games_table(df_releases: DataFrame) -> dict:
         df_releases (DataFrame): A DataFrame containing filtered data related to new releases
 
     Returns:
-        dict: A Python dictionary containing a formatted Dataframe for table plot
+        dict: A Python dictionary containing a formatted DataFrame for table plot
         and an associated title for the table
     """
     df_merged = format_data_for_table(df_releases)
@@ -559,7 +599,7 @@ def plot_trending_games_review_table(df_releases: DataFrame) -> dict:
     Args:
         df_releases (DataFrame): A DataFrame containing filtered data related to new releases
     Returns:
-        dict: A Python dictionary containing a formatted Dataframe for table plot
+        dict: A Python dictionary containing a formatted DataFrame for table plot
         and an associated title for the table
     """
     df_merged = format_data_for_table(df_releases)
@@ -918,47 +958,63 @@ if __name__ == "__main__":
     dashboard_header()
     sidebar_header()
 
-    selected_releases = build_sidebar_title(game_df)
-    selected_release_dates = build_sidebar_release_date(game_df)
-    selected_review_dates = build_sidebar_review_date(game_df)
-    selected_genre = build_sidebar_genre(game_df)
-    selected_developer = build_sidebar_developer(game_df)
-    selected_publisher = build_sidebar_publisher(game_df)
-    selected_platform = build_sidebar_platforms()
-    min_price, max_price = build_sidebar_price(game_df)
-    min_sentiment, max_sentiment = build_sidebar_sentiment(game_df)
+    filter_dictionary = {
+        SELECTED_RELEASES: build_sidebar_title(game_df),
+        SELECTED_RELEASE_DATES: build_sidebar_release_date(game_df),
+        SELECTED_REVIEW_DATES: build_sidebar_review_date(game_df),
+        SELECTED_GENRE: build_sidebar_genre(game_df),
+        SELECTED_DEVELOPER: build_sidebar_developer(game_df),
+        SELECTED_PUBLISHER: build_sidebar_publisher(game_df),
+        SELECTED_PLATFORM: build_sidebar_platforms(),
+        MIN_PRICE: build_sidebar_price(game_df)[0],
+        MAX_PRICE: build_sidebar_price(game_df)[1],
+        MIN_SENTIMENT: build_sidebar_sentiment(game_df)[0],
+        MAX_SENTIMENT: build_sidebar_sentiment(game_df)[1],
+        MIN_REVIEWS: build_sidebar_number_of_reviews(game_df)[0],
+        MAX_REVIEWS: build_sidebar_number_of_reviews(game_df)[1]
+    }
 
-    filtered_df = filter_data(game_df, selected_releases, selected_release_dates, selected_review_dates,
-                              selected_genre, selected_developer, selected_publisher, selected_platform, min_price, max_price, min_sentiment, max_sentiment)
+    # selected_releases = build_sidebar_title(game_df)
+    # selected_release_dates = build_sidebar_release_date(game_df)
+    # selected_review_dates = build_sidebar_review_date(game_df)
+    # selected_genre = build_sidebar_genre(game_df)
+    # selected_developer = build_sidebar_developer(game_df)
+    # selected_publisher = build_sidebar_publisher(game_df)
+    # selected_platform = build_sidebar_platforms()
+    # min_price, max_price = build_sidebar_price(game_df)
+    # min_sentiment, max_sentiment = build_sidebar_sentiment(game_df)
+    # min_reviews, max_reviews = build_sidebar_number_of_reviews(game_df)
 
-    if filtered_df.empty:
-        st.markdown(
-            "### Invalid Filters\n There are no releases which fit your options")
-    else:
-        headline_figures(filtered_df)
+    # filtered_df = filter_data(game_df, filter_dictionary)
 
-        sub_headline_figures(filtered_df)
+    # if filtered_df.empty:
+    #     st.markdown(
+    #         "### Invalid Filters\n There are no releases which fit your options")
+    # else:
+    #     headline_figures(filtered_df)
 
-        trending_games_by_sentiment = plot_trending_games_table(filtered_df)
-        trending_game_by_reviews = plot_trending_games_review_table(
-            filtered_df)
+    #     sub_headline_figures(filtered_df)
 
-        trending_sentiment_per_developer_plot = plot_average_sentiment_per_developer(
-            filtered_df, 5)
-        trending_sentiment_per_publisher_plot = plot_average_sentiment_per_publisher(
-            filtered_df, 5)
-        games_genre_distribution_plot = plot_genre_distribution(filtered_df, 5)
+    #     trending_games_by_sentiment = plot_trending_games_table(filtered_df)
+    #     trending_game_by_reviews = plot_trending_games_review_table(
+    #         filtered_df)
 
-        table_rows(trending_games_by_sentiment,
-                   trending_game_by_reviews)
-        first_row_figures(trending_sentiment_per_developer_plot,
-                          trending_sentiment_per_publisher_plot, games_genre_distribution_plot)
+    #     trending_sentiment_per_developer_plot = plot_average_sentiment_per_developer(
+    #         filtered_df, 5)
+    #     trending_sentiment_per_publisher_plot = plot_average_sentiment_per_publisher(
+    #         filtered_df, 5)
+    #     games_genre_distribution_plot = plot_genre_distribution(filtered_df, 5)
 
-        if not filtered_df["review_text"].dropna().empty:
-            review_word_cloud_plot = plot_word_cloud_all_releases(filtered_df)
-            genre_word_cloud_plot = plot_word_cloud_all_releases_genre(
-                filtered_df)
+    #     table_rows(trending_games_by_sentiment,
+    #                trending_game_by_reviews)
+    #     first_row_figures(trending_sentiment_per_developer_plot,
+    #                       trending_sentiment_per_publisher_plot, games_genre_distribution_plot)
 
-            wordcloud_rows(review_word_cloud_plot, genre_word_cloud_plot)
-        else:
-            st.markdown("### Insufficient data for word cloud plots")
+    #     if not filtered_df["review_text"].dropna().empty:
+    #         review_word_cloud_plot = plot_word_cloud_all_releases(filtered_df)
+    #         genre_word_cloud_plot = plot_word_cloud_all_releases_genre(
+    #             filtered_df)
+
+    #         wordcloud_rows(review_word_cloud_plot, genre_word_cloud_plot)
+    #     else:
+    #         st.markdown("### Insufficient data for word cloud plots")
