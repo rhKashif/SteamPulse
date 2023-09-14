@@ -352,7 +352,7 @@ def aggregate_data(df_releases: DataFrame) -> DataFrame:
     """
 
     df_releases["weighted_sentiment"] = df_releases.apply(lambda row:
-            calculate_sum_sentiment(row["sentiment"], row["review_score"]), axis=1)
+                                                          calculate_sum_sentiment(row["sentiment"], row["review_score"]), axis=1)
 
     review_rows_count = df_releases.groupby(
         "game_id")["weighted_sentiment"].count()
@@ -368,14 +368,16 @@ def aggregate_data(df_releases: DataFrame) -> DataFrame:
         lambda row: round(total_sentiment_scores.loc[row], 1))
 
     review_per_title = df_releases.groupby('game_id')[
-        'review_text'].count().sort_values(
-        ascending=False).dropna().reset_index()
-    review_per_title.columns = ["game_id", "num_of_reviews"]
+        'review_id'].nunique()
+    review_per_title = review_per_title.to_frame()
+
+    review_per_title.columns = ["num_of_reviews"]
 
     data_frames = [df_releases, review_per_title]
 
     df_merged = reduce(lambda left, right: pd.merge(left, right, on=['game_id'],
                                                     how='outer'), data_frames)
+
     df_merged.drop(["weighted_sentiment"], axis=1, inplace=True)
 
     return df_merged
