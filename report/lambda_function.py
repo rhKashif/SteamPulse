@@ -529,8 +529,8 @@ def send_email(config: _Environ, email: str):
 
     BODY_TEXT = "Good morning!\r\n\nPlease see the attached file for your latest report on newly released games.\n\nBest regards,\nSteamPulse Team"
     CHARSET = "utf-8"
-    
-    date = datetime.now().strftime("%Y/%m/%d")
+
+    date = datetime.now().strftime("%d/%m/%Y")
 
     client = boto3.client("ses",
                           region_name="eu-west-2",
@@ -605,8 +605,8 @@ def email_subscribers(conn: connection, config: _Environ):
             else:
                 print(err)
 
-    # for address in verification_awaited:
-    #    verify_email(config, address)
+    for address in verification_awaited:
+        verify_email(config, address)
 
 
 def handler(event, context) -> None:
