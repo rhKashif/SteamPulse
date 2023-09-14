@@ -67,17 +67,15 @@ def get_all_reviews(game_ids: list[int]) -> DataFrame:
 
         if number_of_total_reviews:
             cursor_list = ["*"]
-
-            for page in range(int(number_of_total_reviews/100)+2):
-                api_response = get_reviews_for_game(game, cursor_list[page])
-
+            cursor = "fake_cursor"
+            while cursor not in cursor_list:
+                api_response = get_reviews_for_game(game, cursor_list[-1])
                 if "error" not in api_response:
                     cursor = api_response["next_cursor"]
                     page_reviews = api_response["reviews"]
                     if not page_reviews or cursor in cursor_list:
                         break
-                    if not cursor in cursor_list:
-                        cursor_list.append(cursor)
+                    cursor_list.append(cursor)
                     all_reviews.extend(page_reviews)
     return DataFrame(all_reviews)
 
