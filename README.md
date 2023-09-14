@@ -27,6 +27,7 @@ DATABASE_PASSWORD = XXXXXXXXXXX
 DATABASE_ENDPOINT = XXXXXXXXXXX
 DASHBOARD_URL     = XXXXXXXXXXX
 EMAIL_SENDER      = XXXXXXXXXXX
+REPORT_FILE       = XXXXXXX.pdf
 ```
 
 If hosting this service on AWS, you'll need to create your RDS to get the database endpoint and dashboard url. Email sender will be your email address which you will need to verify using SES to use the functions.
