@@ -4,9 +4,10 @@ from pandas import DataFrame
 from pytest import raises
 from requests.exceptions import Timeout
 
-
+from conftest import mock_multiprocessing, mock_get_game_reviews
 from extract import get_game_ids, GamesNotFound, get_db_connection
-from extract import get_number_of_reviews, get_all_reviews, get_reviews_for_game
+from extract import get_all_reviews, get_reviews_for_game
+from extract import get_number_of_reviews, get_game_reviews
 
 
 def test_get_game_ids_passes():
@@ -46,31 +47,27 @@ def test_get_number_of_reviews(monkeypatch):
     assert get_number_of_reviews(0) == "test"
 
 
-def test_get_all_reviews_errors(monkeypatch):
-    """Verifies that if error is found, an empty data-frame is returned"""
-    monkeypatch.setattr("extract.get_number_of_reviews", lambda *args: 0)
-    monkeypatch.setattr("extract.get_reviews_for_game",
-                        lambda *args: {"error": "test"})
-    assert get_all_reviews([0]).empty
+def test_get_game_reviews_errors(monkeypatch):
+    """Verifies that if error is found, an empty list is returned"""
+    monkeypatch.setattr("extract.get_number_of_reviews", lambda *args: 1)
+    monkeypatch.setattr("extract.get_reviews_for_game", lambda *args: {"error": "test"})
+    assert not get_game_reviews(0)
 
 
-def test_get_all_reviews_no_reviews(monkeypatch):
-    """Verifies that an empty data-frame is created from no reviews"""
+def test_get_game_reviews_no_reviews(monkeypatch):
+    """Verifies that no data is returned from no reviews"""
     monkeypatch.setattr("extract.get_number_of_reviews", lambda *args: 1)
     monkeypatch.setattr("extract.get_reviews_for_game", lambda *args: {
         "next_cursor": "test", "reviews": []})
-    assert get_all_reviews([0]).empty
+    assert not get_game_reviews(0)
 
 
-def test_get_all_reviews_one_review(monkeypatch):
-    """Verifies that data-frame is correctly formed from the data"""
+def test_get_game_reviews_one_review(monkeypatch):
+    """Verifies that reviews are correctly formed from the extraction"""
     monkeypatch.setattr("extract.get_number_of_reviews", lambda *args: 1)
-    fake_reviews = {"next_cursor": "test", "reviews": [
-        {"test": "0", "text": "fake review"}]}
-    monkeypatch.setattr("extract.get_reviews_for_game",
-                        lambda *args: fake_reviews)
-    expected_result = DataFrame(fake_reviews["reviews"])
-    assert get_all_reviews([0]).equals(expected_result)
+    monkeypatch.setattr("extract.get_reviews_for_game", lambda *args: {
+        "next_cursor": "test", "reviews": [{},{}]})
+    assert get_game_reviews(0) == [[{},{}]]
 
 
 def test_get_reviews_for_game_raises_error(monkeypatch):
@@ -91,3 +88,11 @@ def test_get_reviews_for_game_basic(monkeypatch):
     assert get_reviews_for_game(10, "") == {"next_cursor": "", "reviews": [
         {"game_id": 10, "last_timestamp": "2023-01-01 00:00:00",
          "playtime_last_2_weeks": 10, "review": 1, "review_score": 1}]}
+
+
+def test_get_all_reviews(monkeypatch):
+    """Verifies that values from multiprocessing are correctly unpacked"""
+    monkeypatch.setattr("multiprocessing.Pool", mock_multiprocessing)
+    monkeypatch.setattr("extract.get_game_reviews", mock_get_game_reviews)
+    returned_df = get_all_reviews([1])
+    assert returned_df.values == "test"
