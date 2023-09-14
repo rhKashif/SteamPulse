@@ -1,6 +1,7 @@
 """File with unit tests for extract.py"""
+
 from unittest.mock import MagicMock
-from pandas import DataFrame
+
 from pytest import raises
 from requests.exceptions import Timeout
 
