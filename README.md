@@ -113,7 +113,7 @@ This project focuses on the systematic collection and analysis of reviews for re
 - **Review**: The textual content of the review.
 - **Review Score**: An indication of the review's popularity, reflecting the number of up-votes received.
 - **Timestamp Created**: The timestamp indicating when the review was submitted.
-- **Playtime Last 2 Weeks**: Hours, that the user spent playing the game in the past 2 weeks.
+- **Playtime Last 2 Weeks**: Minutes, that the user spent playing the game in the past 2 weeks.
 - **Next Cursor**: A parameter used exclusively for the next retrieval of reviews, as specified in the API documentation.
 
 ### Files explained
