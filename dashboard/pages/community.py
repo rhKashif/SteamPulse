@@ -381,14 +381,17 @@ def aggregate_data(df_releases: DataFrame) -> DataFrame:
     return df_merged
 
 
-def format_sentiment_significant_figures(sentiment: float) -> DataFrame:
+def format_sentiment_significant_figures(sentiment: float) -> str:
     """
     Normalize sentiment values to be strings and reduce to 3 significant figures
 
     Args:
-        row (DataFrame): A DataFrame containing new release data
+        sentiment (float): A float representing the sentiment value 
+        associated with a review
+
     Returns:
-        DataFrame: A DataFrame containing new release data with aggregated data for each release
+        str: A string representing the sentiment value, 
+        formatted to one decimal place
     """
     return str(sentiment)[:3]
 
@@ -432,8 +435,6 @@ def format_columns(df_releases: DataFrame) -> DataFrame:
         lambda x: f"£{x:.2f}")
     df_releases['Release Date'] = df_releases['Release Date'].dt.strftime(
         '%d/%m/%Y')
-    # df_releases['Community Sentiment'] = df_releases['Community Sentiment'].apply(
-    #     lambda x: round(x, 2))
     df_releases['Community Sentiment'] = df_releases['Community Sentiment'].fillna(
         "No Sentiment")
 
@@ -906,7 +907,6 @@ if __name__ == "__main__":
     conn = get_db_connection(config)
 
     game_df = get_database(conn)
-    print(game_df["review_id"].nunique())
     game_df = aggregate_data(game_df)
     game_df = format_database_columns(game_df)
     game_df = get_data_for_release_date_range(game_df, 14)
