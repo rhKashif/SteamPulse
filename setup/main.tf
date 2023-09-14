@@ -745,25 +745,3 @@ resource "aws_sfn_state_machine" "steampulse_state_machine" {
   }
   EOF
 }
-
-
-# Review gather with container override
-
-
-#   "ReviewGather": {
-#  "Type": "Task",
-#  "Resource": "arn:aws:states:::ecs:runTask.sync",
-#  "Parameters": {
-#             "Cluster": "${aws_ecs_cluster.steampulse_cluster.arn}",
-#             "TaskDefinition": "job-id",
-#             "Overrides": {
-#                 "ContainerOverrides": [
-#                     {
-#                         "Name": "container-name",
-#                         "Command.$": "$.commands" 
-#                     }
-#                 ]
-#             }
-#         },
-#  "End": true
-
