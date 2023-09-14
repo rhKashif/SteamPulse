@@ -443,7 +443,7 @@ resource "aws_scheduler_schedule" "steampulse_game_pipeline_schedule" {
 resource "aws_scheduler_schedule" "steampulse_review_pipeline_schedule" {
   name                = "steampulse_review_pipeline_schedule"
   description         = "Runs the steampulse review pipeline on a cron schedule"
-  schedule_expression = "cron(10 * * * ? *)"
+  schedule_expression = "cron(33 * * * ? *)"
 
   flexible_time_window {
     mode = "OFF"
@@ -657,27 +657,27 @@ resource "aws_iam_role" "steampulse_sfn_role" {
           }
         },
         {
-                "Effect": "Allow",
-                "Action": [
-                    "logs:CreateLogDelivery",
-                    "logs:CreateLogStream",
-                    "logs:GetLogDelivery",
-                    "logs:UpdateLogDelivery",
-                    "logs:DeleteLogDelivery",
-                    "logs:ListLogDeliveries",
-                    "logs:PutLogEvents",
-                    "logs:PutResourcePolicy",
-                    "logs:DescribeResourcePolicies",
-                    "logs:DescribeLogGroups",
-                    "logs:GetLogEvents",
-                    "logs:PutLogEvents",
-                    "logs:CreateLogStream",
-                    "logs:DescribeLogStreams",
-                    "logs:PutRetentionPolicy",
-                    "logs:CreateLogGroup"
-                ],
-                "Resource": "*"
-            },
+          "Effect" : "Allow",
+          "Action" : [
+            "logs:CreateLogDelivery",
+            "logs:CreateLogStream",
+            "logs:GetLogDelivery",
+            "logs:UpdateLogDelivery",
+            "logs:DeleteLogDelivery",
+            "logs:ListLogDeliveries",
+            "logs:PutLogEvents",
+            "logs:PutResourcePolicy",
+            "logs:DescribeResourcePolicies",
+            "logs:DescribeLogGroups",
+            "logs:GetLogEvents",
+            "logs:PutLogEvents",
+            "logs:CreateLogStream",
+            "logs:DescribeLogStreams",
+            "logs:PutRetentionPolicy",
+            "logs:CreateLogGroup"
+          ],
+          "Resource" : "*"
+        },
         {
           Action   = "ecs:RunTask",
           Effect   = "Allow",
@@ -698,6 +698,11 @@ resource "aws_iam_role" "steampulse_sfn_role" {
           Effect   = "Allow",
           Resource = "*"
 
+        },
+        {
+          Action   = "states:StartExecution",
+          Effect   = "Allow",
+          Resource = "*"
         }
         # {
         #   Action = "events:PutTargets",
@@ -730,8 +735,8 @@ resource "aws_cloudwatch_log_group" "steampulse_log_group_for_sfn" {
 
 
 resource "aws_sfn_state_machine" "steampulse_state_machine" {
-  name       = "steampulse_state_machine"
-  role_arn   = aws_iam_role.steampulse_sfn_role.arn
+  name     = "steampulse_state_machine"
+  role_arn = aws_iam_role.steampulse_sfn_role.arn
 
   logging_configuration {
     log_destination        = "${aws_cloudwatch_log_group.steampulse_log_group_for_sfn.arn}:*"
