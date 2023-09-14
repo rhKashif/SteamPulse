@@ -590,15 +590,14 @@ def verify_email(config: _Environ, email: str):
         EmailAddress=email
     )
     if response['ResponseMetadata']['HTTPStatusCode'] == 200:
-        print('Verification Success.')
+        print('Verification Email Success.')
     else:
         print('Verification Error.')
 
 
 def email_subscribers(conn: connection, config: _Environ):
     """Emails all subscribers either the report or verification email"""
-    all_emails = ['trainee.gawsalya.mahasivam@sigmalabs.co.uk']
-    # get_list_of_emails_from_database(conn)
+    all_emails = get_list_of_emails_from_database(conn)
     verification_awaited = []
     for address in all_emails:
         try:
@@ -610,8 +609,8 @@ def email_subscribers(conn: connection, config: _Environ):
             else:
                 print(err)
 
-    # for address in verification_awaited:
-        # verify_email(config, address)
+    for address in verification_awaited:
+        verify_email(config, address)
 
 
 def handler(event, context) -> None:
