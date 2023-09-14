@@ -77,6 +77,7 @@ def get_database() -> DataFrame:
 
     return df_releases
 
+
 def aggregate_release_data(df_releases: DataFrame) -> DataFrame:
     """
     Return key information related to a new release
@@ -701,7 +702,7 @@ def sub_headline_figures(df_releases: DataFrame) -> None:
     st.markdown("---")
 
 
-def first_row_figures(plot_one: Chart, plot_two: Chart, plot_three: Chart, plot_four: Chart) -> None:
+def two_column_chart_figures(plot_one: Chart, plot_two: Chart) -> None:
     """
     Build figures relating to release and review frequency for dashboard
 
@@ -709,56 +710,12 @@ def first_row_figures(plot_one: Chart, plot_two: Chart, plot_three: Chart, plot_
         plot_one (Chart): A chart displaying plotted data
 
         plot_two (Chart): A chart displaying plotted data
-
-        plot_three (Chart): A chart displaying plotted data
     """
-    cols = st.columns(4)
+    cols = st.columns(2)
     with cols[0]:
         st.altair_chart(plot_one, use_container_width=True)
     with cols[1]:
         st.altair_chart(plot_two, use_container_width=True)
-    with cols[2]:
-        st.altair_chart(plot_three, use_container_width=True)
-    with cols[3]:
-        st.altair_chart(plot_four, use_container_width=True)
-    st.markdown("---")
-
-
-def second_row_figures(plot_one: Chart, plot_two: Chart) -> None:
-    """
-    Build figures relating to release and review frequency for dashboard
-
-    Args:
-        plot_one (Chart): A chart displaying plotted data
-
-        plot_two (Chart): A chart displaying plotted data
-    """
-    cols = st.columns(2)
-    with cols[0]:
-        st.altair_chart(plot_one, use_container_width=True)
-    with cols[1]:
-        st.altair_chart(plot_two,
-                        use_container_width=True)
-
-    st.markdown("---")
-
-
-def third_row_figures(plot_one: Chart, plot_two: Chart) -> None:
-    """
-    Build figures relating to release and review frequency for dashboard
-
-    Args:
-        plot_one (Chart): A chart displaying plotted data
-
-        plot_two (Chart): A chart displaying plotted data
-    """
-    cols = st.columns(2)
-    with cols[0]:
-        st.altair_chart(plot_one, use_container_width=True)
-    with cols[1]:
-        st.altair_chart(plot_two,
-                        use_container_width=True)
-
     st.markdown("---")
 
 
@@ -770,7 +727,6 @@ if __name__ == "__main__":
     game_df = get_database()
     game_df = format_database_columns(game_df)
     game_df = get_data_for_release_date_range(game_df, 14)
-
 
     dashboard_header()
     sidebar_header()
@@ -816,12 +772,14 @@ if __name__ == "__main__":
 
         games_genre_distribution_plot = plot_genre_distribution(filtered_df)
 
-        first_row_figures(games_release_frequency_plot,
-                          games_review_frequency_plot, games_platform_distribution_plot, games_price_distribution_plot)
-        second_row_figures(
+        two_column_chart_figures(games_release_frequency_plot,
+                                 games_review_frequency_plot)
+        two_column_chart_figures(
+            games_platform_distribution_plot, games_price_distribution_plot)
+        two_column_chart_figures(
             trending_sentiment_per_game_plot,  trending_reviews_per_game_plot)
-        third_row_figures(trending_sentiment_per_developer_plot,
-                          trending_sentiment_per_publisher_plot)
+        two_column_chart_figures(trending_sentiment_per_developer_plot,
+                                 trending_sentiment_per_publisher_plot)
 
         st.altair_chart(games_genre_distribution_plot,
                         use_container_width=True)
