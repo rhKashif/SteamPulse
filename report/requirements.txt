@@ -1,6 +1,5 @@
 altair
 boto3
-botocore
 kaleido
 plotly_express
 psycopg2-binary
