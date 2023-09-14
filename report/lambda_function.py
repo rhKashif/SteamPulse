@@ -570,6 +570,7 @@ def get_list_of_emails_from_database(conn: connection) -> list[str]:
         email_list = []
         cur.execute("""SELECT email FROM user_email""")
         emails = cur.fetchall()
+        cur.close()
         if emails:
             email_list = [item['email'] for item in emails]
         return email_list
@@ -620,17 +621,20 @@ def handler(event, context) -> None:
     Return:
         None
     """
-    load_dotenv()
-    config = environ
+    try:
+        load_dotenv()
+        config = environ
 
-    conn = get_db_connection(config)
-    game_df = get_database(conn)
-    game_df = format_database_columns(game_df)
+        conn = get_db_connection(config)
+        game_df = get_database(conn)
+        game_df = format_database_columns(game_df)
 
-    create_report(game_df, config["DASHBOARD_URL"])
-    print("Report created.")
+        create_report(game_df, config["DASHBOARD_URL"])
+        print("Report created.")
 
-    email_subscribers(conn, config)
+        email_subscribers(conn, config)
+    finally:
+        conn.close()
 
 
 if __name__ == "__main__":
