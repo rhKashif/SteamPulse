@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 from pandas import DataFrame
 from numpy import int64
 
-
 from transform import get_release_date, remove_empty_rows, validate_time_string
 from transform import remove_duplicate_reviews, remove_unnamed, correct_cell_values
 from transform import change_column_types, correct_playtime
