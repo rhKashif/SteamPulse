@@ -579,10 +579,8 @@ def plot_genre_distribution(df_releases: DataFrame) -> Chart:
     df_releases = df_releases.groupby(
         "genre").size().reset_index().sort_values(by=[0])
 
-    df_releases.columns = ["genre", "releases_per_genres"]
-
     chart = alt.Chart(df_releases.tail(10)).mark_bar().encode(
-        x=alt.Y("releases_per_genres:Q",
+        x=alt.Y("0:Q",
                 title="Number of Releases"),
         y=alt.X("genre:N", title="Genre", sort="-x")
     ).properties(
@@ -708,7 +706,7 @@ def sub_headline_figures(df_releases: DataFrame) -> None:
 
 def two_column_chart_figures(plot_one: Chart, plot_two: Chart) -> None:
     """
-    Build figures relating to release and review frequency for dashboard
+    Build two charts next to each other as columns
 
     Args:
         plot_one (Chart): A chart displaying plotted data

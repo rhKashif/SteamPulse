@@ -549,38 +549,6 @@ def plot_average_sentiment_per_publisher(df_releases: DataFrame, rows: int) -> C
     return chart
 
 
-def plot_genre_distribution(df_releases: DataFrame, rows: int) -> Chart:
-    """
-    Create a line chart for the number of games released per day
-
-    Args:
-        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
-
-        rows (int): An integer value representing the number of rows to be displayed
-
-    Returns:
-        Chart: A chart displaying plotted data
-    """
-
-    df_releases = df_releases[["game_id", "title", "genre"]]
-
-    df_releases = df_releases.drop_duplicates()
-
-    df_releases = df_releases.groupby(
-        "genre").size().reset_index().sort_values(by=[0]).tail(rows)
-
-    chart = alt.Chart(df_releases).mark_bar().encode(
-        x=alt.Y("0:Q",
-                title="No. of Releases"),
-        y=alt.X("genre:N", title="Genre", sort="-x")
-    ).properties(
-        title="Top Genres by No. of Releases",
-        height=250
-    )
-
-    return chart
-
-
 def plot_trending_games_table(df_releases: DataFrame) -> dict:
     """
     Create a table for the top recommended games
@@ -868,31 +836,9 @@ def sub_headline_figures(df_releases: DataFrame) -> None:
     st.markdown("---")
 
 
-def first_row_figures(plot_one: Chart, plot_two: Chart, plot_three: Chart) -> None:
+def two_column_chart_figures(plot_one: Chart, plot_two: Chart) -> None:
     """
-    Build figures relating to release and review frequency for dashboard
-
-    Args:
-        plot_one (Chart): A chart displaying plotted data
-
-        plot_two (Chart): A chart displaying plotted data
-
-        plot_three (Chart): A chart displaying plotted data
-    """
-    cols = st.columns(3)
-    with cols[0]:
-        st.altair_chart(plot_one, use_container_width=True)
-    with cols[1]:
-        st.altair_chart(plot_two, use_container_width=True)
-    with cols[2]:
-        st.altair_chart(plot_three, use_container_width=True)
-
-    st.markdown("---")
-
-
-def second_row_figures(plot_one: Chart, plot_two: Chart) -> None:
-    """
-    Build figures relating to release and review frequency for dashboard
+    Build two charts next to each other as columns
 
     Args:
         plot_one (Chart): A chart displaying plotted data
@@ -903,23 +849,7 @@ def second_row_figures(plot_one: Chart, plot_two: Chart) -> None:
     with cols[0]:
         st.altair_chart(plot_one, use_container_width=True)
     with cols[1]:
-        st.altair_chart(plot_two,
-                        use_container_width=True)
-
-    st.markdown("---")
-
-
-def plot_table(table_one: Chart) -> None:
-    """
-    Build figures relating to release and review frequency for dashboard
-
-    Args:
-        plot_one (Chart): A chart displaying plotted data
-    """
-    st.markdown(f"{table_one['title']}")
-    st.table(table_one["table_data"].head(5).style.set_properties(
-        **{'font-size': '16px'}))
-
+        st.altair_chart(plot_two, use_container_width=True)
     st.markdown("---")
 
 
@@ -1003,14 +933,13 @@ if __name__ == "__main__":
             filtered_df, 5)
         trending_sentiment_per_publisher_plot = plot_average_sentiment_per_publisher(
             filtered_df, 5)
-        games_genre_distribution_plot = plot_genre_distribution(filtered_df, 5)
 
         plot_table(trending_games_by_sentiment)
 
         plot_table(trending_game_by_reviews)
 
-        first_row_figures(trending_sentiment_per_developer_plot,
-                          trending_sentiment_per_publisher_plot, games_genre_distribution_plot)
+        two_column_chart_figures(trending_sentiment_per_developer_plot,
+                                 trending_sentiment_per_publisher_plot)
 
         if not filtered_df["review_text"].dropna().empty and filtered_df["title"].nunique() == 1:
             review_word_cloud_plot = plot_word_cloud_all_releases(filtered_df)
