@@ -382,6 +382,7 @@ if __name__ == "__main__":
             filtered_df)
         games_review_frequency_plot = plot_games_review_frequency(
             filtered_df)
+
         games_platform_distribution_plot = plot_platform_distribution(
             filtered_df)
         games_price_distribution_plot = plot_price_distribution(filtered_df)
