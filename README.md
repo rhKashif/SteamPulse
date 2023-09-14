@@ -87,7 +87,7 @@ docker run --env-file .env name_of_file
 
 ### Overview
 
-This pipeline is used to extract data by web scraping both newly released games and game-specific data from Steam and further supplementing this with data from the Steam API. The raw data is then transformed to standardise each category and remove unnecessary or inaccurate data using the pandas library. Following this, the transformed data is uploaded using SQL to an AWS RDS database.
+This pipeline is used to extract data by web scraping both newly released games and game-specific data from [Steam](https://store.steampowered.com/search/?sort_by=Released_DESC&category1=998&supportedlang=english&ndl=1) and further supplementing this with data from the [Steam API](https://store.steampowered.com/api/appdetails?appids=2521940). The raw data is then transformed to standardise each category and remove unnecessary or inaccurate data using the pandas library. Following this, the transformed data is uploaded using PostgreSQL to an AWS RDS database. This pipeline is run every 3 hours using ECS on AWS.
 
 ### Files explained
 
@@ -112,7 +112,7 @@ During loading, we chose to use a psycopg2 function called execute_batch which l
 
 ### Overview
 
-This project focuses on the systematic collection and analysis of reviews for recently released video games within a 2-week time-frame. The reviews are sourced from the Steam website and its associated APIs, primarily using the [Steam Reviews API](https://partner.steamgames.com/doc/store/getreviews) for data acquisition of the reviews. The collected data comprises essential information about each review, including:
+This pipeline focuses on the systematic collection and analysis of reviews for recently released video games within a 2-week time-frame. The reviews are sourced from the Steam website and its associated APIs, primarily using the [Steam Reviews API](https://partner.steamgames.com/doc/store/getreviews) for data acquisition of the reviews. The collected data comprises essential information about each review, including:
 
 - **Review**: The textual content of the review.
 - **Review Score**: An indication of the review's popularity, reflecting the number of up-votes received.
@@ -141,7 +141,7 @@ Before integration into the project's database, the collected reviews undergo pr
 
 #### Important note
 
-The review pipeline includes file `nltk_download.py` which has the installation of resources from nltk library. It is important to note that the file needs to be run before the `pipeline.py` file or before separately running `sentiment.py` file. The script is added to the Dockerfile which means this step osn't necessary if running the script with a Dockerfile.
+The review pipeline includes file `nltk_download.py` which has the installation of resources from nltk library. It is important to note that the file needs to be run before the `pipeline.py` file or before separately running `sentiment.py` file. The script is added to the Dockerfile which means this step isn't necessary if running the script with a Dockerfile.
 
 ### Database Integration
 
@@ -151,7 +151,7 @@ Following sentiment analysis and processing, the reviews are seamlessly integrat
 
 The project includes a Dockerfile which is uploaded on AWS Elastic Container Registry (ECR) and is used within a step function on AWS, activated daily with report created from the reviews and other data after the reviews gathering and transforming was completed. The script for review gathering also includes logs into the terminal of possible failures to retrieve/transform/load the data which are useful to see in AWS console to debug for later.
 
-## Assumptions
+#### Assumptions
 
 During the data extracting phase, certain assumptions were made of the data, specifically:
 
@@ -161,7 +161,7 @@ During the data extracting phase, certain assumptions were made of the data, spe
 - Since the reviews API does not include the name of the game, it is assumed that the API correctly picks up reviews for the game with the correct game ID as it could not be verified.
 - The project also assumes that the data presented in the overview above, will be present. This is assumed from various data gathering runs. Although not all of the API's promised keys were present, the ones included seemed to be.
 
-## Limitations
+#### Limitations
 
 Unfortunately, this project encountered certain limitations stemming from issues identified within the Steam Reviews API. For example, where the language for the endpoint was set to English - it would pick up some reviews in Spanish and other languages. Some ways were attempted to translate the reviews but proved to not work that well and since most received reviews were in English, this idea was moved to a potential future addition to the project.
 
@@ -213,8 +213,6 @@ Assumption that the necessary data is available, accurate, and up-to-date. This 
 
 - Returns an error message if connection to the database fails
 - If there is no data within the last two weeks the dashboard, a message will be displayed to relay this to the user
-
-#### Assumptions and design decisions
 
 ### Continuous Integration and Continuous Deployment
 
