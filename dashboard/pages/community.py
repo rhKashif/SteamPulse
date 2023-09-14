@@ -26,10 +26,13 @@ SELECTED_GENRE = "selected_genre"
 SELECTED_DEVELOPER = "selected_developer"
 SELECTED_PUBLISHER = "selected_publisher"
 SELECTED_PLATFORM = "selected_platform"
+PRICE = "price"
 MIN_PRICE = "min_price"
 MAX_PRICE = "min_price"
+SENTIMENT = "sentiment"
 MIN_SENTIMENT = "min_sentiment"
 MAX_SENTIMENT = "max_sentiment"
+REVIEWS = "review"
 MIN_REVIEWS = "min_reviews"
 MAX_REVIEWS = "max_reviews"
 
@@ -342,20 +345,20 @@ def filter_data(df_releases: DataFrame, filter: dict) -> DataFrame:
     df_releases = df_releases[df_releases[filter[SELECTED_PLATFORM]].any(
         axis=1)]
 
-    df_releases = df_releases[(df_releases['price'] >= filter[MIN_PRICE]) & (
-        df_releases['price'] <= filter[MAX_PRICE])]
+    df_releases = df_releases[(df_releases['price'] >= filter[PRICE][0]) & (
+        df_releases['price'] <= filter[PRICE][1])]
 
     average_sentiment_by_title = df_releases.groupby('title')[
         'sentiment'].mean()
     filtered_titles = average_sentiment_by_title[
-        ((average_sentiment_by_title >= filter[MAX_SENTIMENT]) | average_sentiment_by_title.isna()) &
-        ((average_sentiment_by_title <= filter[MIN_SENTIMENT])
+        ((average_sentiment_by_title >= filter[SENTIMENT][0]) | average_sentiment_by_title.isna()) &
+        ((average_sentiment_by_title <= filter[SENTIMENT][1])
          | average_sentiment_by_title.isna())
     ].index
     df_releases = df_releases[df_releases['title'].isin(filtered_titles)]
 
-    df_releases = df_releases[(df_releases['num_of_reviews'] >= filter[MIN_PRICE]) & (
-        df_releases['price'] <= filter[MAX_PRICE])]
+    df_releases = df_releases[(df_releases['num_of_reviews'] >= filter[REVIEWS][0]) & (
+        df_releases['num_of_reviews'] <= filter[REVIEWS][1])]
 
     return df_releases
 
@@ -966,13 +969,13 @@ if __name__ == "__main__":
         SELECTED_DEVELOPER: build_sidebar_developer(game_df),
         SELECTED_PUBLISHER: build_sidebar_publisher(game_df),
         SELECTED_PLATFORM: build_sidebar_platforms(),
-        MIN_PRICE: build_sidebar_price(game_df)[0],
-        MAX_PRICE: build_sidebar_price(game_df)[1],
-        MIN_SENTIMENT: build_sidebar_sentiment(game_df)[0],
-        MAX_SENTIMENT: build_sidebar_sentiment(game_df)[1],
-        MIN_REVIEWS: build_sidebar_number_of_reviews(game_df)[0],
-        MAX_REVIEWS: build_sidebar_number_of_reviews(game_df)[1]
+        PRICE: build_sidebar_price(game_df),
+        SENTIMENT: build_sidebar_sentiment(game_df),
+        REVIEWS: build_sidebar_number_of_reviews(game_df),
     }
+    print(filter_dictionary[PRICE])
+    print(filter_dictionary[SENTIMENT])
+    print(filter_dictionary[REVIEWS])
 
     # selected_releases = build_sidebar_title(game_df)
     # selected_release_dates = build_sidebar_release_date(game_df)
@@ -985,36 +988,36 @@ if __name__ == "__main__":
     # min_sentiment, max_sentiment = build_sidebar_sentiment(game_df)
     # min_reviews, max_reviews = build_sidebar_number_of_reviews(game_df)
 
-    # filtered_df = filter_data(game_df, filter_dictionary)
+    filtered_df = filter_data(game_df, filter_dictionary)
 
-    # if filtered_df.empty:
-    #     st.markdown(
-    #         "### Invalid Filters\n There are no releases which fit your options")
-    # else:
-    #     headline_figures(filtered_df)
+    if filtered_df.empty:
+        st.markdown(
+            "### Invalid Filters\n There are no releases which fit your options")
+    else:
+        headline_figures(filtered_df)
 
-    #     sub_headline_figures(filtered_df)
+        sub_headline_figures(filtered_df)
 
-    #     trending_games_by_sentiment = plot_trending_games_table(filtered_df)
-    #     trending_game_by_reviews = plot_trending_games_review_table(
-    #         filtered_df)
+        trending_games_by_sentiment = plot_trending_games_table(filtered_df)
+        trending_game_by_reviews = plot_trending_games_review_table(
+            filtered_df)
 
-    #     trending_sentiment_per_developer_plot = plot_average_sentiment_per_developer(
-    #         filtered_df, 5)
-    #     trending_sentiment_per_publisher_plot = plot_average_sentiment_per_publisher(
-    #         filtered_df, 5)
-    #     games_genre_distribution_plot = plot_genre_distribution(filtered_df, 5)
+        trending_sentiment_per_developer_plot = plot_average_sentiment_per_developer(
+            filtered_df, 5)
+        trending_sentiment_per_publisher_plot = plot_average_sentiment_per_publisher(
+            filtered_df, 5)
+        games_genre_distribution_plot = plot_genre_distribution(filtered_df, 5)
 
-    #     table_rows(trending_games_by_sentiment,
-    #                trending_game_by_reviews)
-    #     first_row_figures(trending_sentiment_per_developer_plot,
-    #                       trending_sentiment_per_publisher_plot, games_genre_distribution_plot)
+        table_rows(trending_games_by_sentiment,
+                   trending_game_by_reviews)
+        first_row_figures(trending_sentiment_per_developer_plot,
+                          trending_sentiment_per_publisher_plot, games_genre_distribution_plot)
 
-    #     if not filtered_df["review_text"].dropna().empty:
-    #         review_word_cloud_plot = plot_word_cloud_all_releases(filtered_df)
-    #         genre_word_cloud_plot = plot_word_cloud_all_releases_genre(
-    #             filtered_df)
+        if not filtered_df["review_text"].dropna().empty:
+            review_word_cloud_plot = plot_word_cloud_all_releases(filtered_df)
+            genre_word_cloud_plot = plot_word_cloud_all_releases_genre(
+                filtered_df)
 
-    #         wordcloud_rows(review_word_cloud_plot, genre_word_cloud_plot)
-    #     else:
-    #         st.markdown("### Insufficient data for word cloud plots")
+            wordcloud_rows(review_word_cloud_plot, genre_word_cloud_plot)
+        else:
+            st.markdown("### Insufficient data for word cloud plots")
