@@ -8,6 +8,7 @@ from email.mime.application import MIMEApplication
 import altair as alt
 from altair.vegalite.v5.api import Chart
 import boto3
+import botocore.exceptions
 from dotenv import load_dotenv
 import pandas as pd
 from pandas import DataFrame
@@ -530,8 +531,8 @@ def send_email(config: _Environ, email: str):
     """
     client = boto3.client("ses",
                           region_name="eu-west-2",
-                          aws_access_key_id=environ["ACCESS_KEY_ID"],
-                          aws_secret_access_key=environ["SECRET_ACCESS_KEY"])
+                          aws_access_key_id=config["ACCESS_KEY_ID"],
+                          aws_secret_access_key=config["SECRET_ACCESS_KEY"])
 
     message = MIMEMultipart()
     message["Subject"] = "Local Test"
@@ -567,8 +568,8 @@ def verify_email(config: _Environ, email: str):
     """Function to verify user email for subscription list"""
     client = boto3.client("ses",
                           region_name="eu-west-2",
-                          aws_access_key_id=environ["ACCESS_KEY_ID"],
-                          aws_secret_access_key=environ["SECRET_ACCESS_KEY"])
+                          aws_access_key_id=config["ACCESS_KEY_ID"],
+                          aws_secret_access_key=config["SECRET_ACCESS_KEY"])
 
     response = client.verify_email_identity(
         EmailAddress=email
@@ -577,6 +578,24 @@ def verify_email(config: _Environ, email: str):
         print('Verification Success.')
     else:
         print('Verification Error.')
+
+
+def email_subscribers(conn: connection, config: _Environ):
+    """Emails all subscribers either the report or verification email"""
+    all_emails = get_list_of_emails_from_database(conn)
+    verification_awaited = []
+    for address in all_emails:
+        try:
+            send_email(config, address)
+            print("Report email sent.")
+        except botocore.exceptions.ClientError as err:
+            if "MessageRejected" in str(err):
+                verification_awaited.append(address)
+            else:
+                print(err)
+
+    for address in verification_awaited:
+        verify_email(config, address)
 
 
 def handler(event, context) -> None:
@@ -597,19 +616,10 @@ def handler(event, context) -> None:
     game_df = get_database(conn)
     game_df = format_database_columns(game_df)
 
-    all_emails = get_list_of_emails_from_database(conn)
-
     create_report(game_df, config["DASHBOARD_URL"])
     print("Report created.")
-    verification_awaited = []
-    for address in all_emails:
-        try:
-            send_email(config, address)
-            print("Report email sent.")
-        except:
-            verification_awaited.append(address)
-    for address in verification_awaited:
-        verify_email(config, address)
+
+    email_subscribers(conn, config)
 
 
 if __name__ == "__main__":
