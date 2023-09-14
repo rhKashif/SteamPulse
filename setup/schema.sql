@@ -8,9 +8,15 @@ DROP TABLE IF EXISTS developer;
 DROP TABLE IF EXISTS publisher;
 DROP TABLE IF EXISTS game;
 DROP TABLE IF EXISTS platform;
+DROP TABLE IF EXISTS user_email;
 
 
 -- tables with no foreign keys: platform, genre, publisher, developer
+
+CREATE TABLE user_email(
+    email_id SMALLINT GENERATED ALWAYS AS IDENTITY,
+    email TEXT NOT NULL UNIQUE
+);
 
 
 CREATE TABLE platform(
