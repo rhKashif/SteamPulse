@@ -597,7 +597,7 @@ def plot_trending_games_table(df_releases: DataFrame) -> dict:
 
     df_merged = df_merged.reset_index(drop=True)
 
-    return {"table_data": df_merged, "title": "Top Recommended Games by Sentiment"}
+    return {"table_data": df_merged, "title": "Top Games by Sentiment"}
 
 
 def plot_trending_games_review_table(df_releases: DataFrame) -> dict:
@@ -617,7 +617,7 @@ def plot_trending_games_review_table(df_releases: DataFrame) -> dict:
 
     df_merged = df_merged.reset_index(drop=True)
 
-    return {"table_data": df_merged, "title": "Top Recommended Games by No. of Reviews"}
+    return {"table_data": df_merged, "title": "Top Games by Number of Reviews"}
 
 
 def tokenize_review_text(df_releases: DataFrame) -> DataFrame:
@@ -906,24 +906,30 @@ def second_row_figures(plot_one: Chart, plot_two: Chart) -> None:
     st.markdown("---")
 
 
-def table_rows(table_one: Chart, table_two: Chart) -> None:
+def plot_table(table_one: Chart) -> None:
     """
     Build figures relating to release and review frequency for dashboard
 
     Args:
         plot_one (Chart): A chart displaying plotted data
-
-        plot_two (Chart): A chart displaying plotted data
     """
-    cols = st.columns(2)
-    with cols[0]:
-        st.markdown(f"{table_one['title']}")
-        st.table(table_one["table_data"].head(5).style.set_properties(
-            **{'font-size': '16px'}))
-    with cols[1]:
-        st.markdown(f"{table_two['title']}")
-        st.table(table_two["table_data"].head(5).style.set_properties(
-            **{'font-size': '16px'}))
+    st.markdown(f"{table_one['title']}")
+    st.table(table_one["table_data"].head(5).style.set_properties(
+        **{'font-size': '16px'}))
+
+    st.markdown("---")
+
+
+def plot_table(table_one: Chart) -> None:
+    """
+    Build figures relating to release and review frequency for dashboard
+
+    Args:
+        plot_one (Chart): A chart displaying plotted data
+    """
+    st.markdown(f"{table_one['title']}")
+    st.table(table_one["table_data"].head(5).style.set_properties(
+        **{'font-size': '16px'}))
 
     st.markdown("---")
 
@@ -996,8 +1002,10 @@ if __name__ == "__main__":
             filtered_df, 5)
         games_genre_distribution_plot = plot_genre_distribution(filtered_df, 5)
 
-        table_rows(trending_games_by_sentiment,
-                   trending_game_by_reviews)
+        plot_table(trending_games_by_sentiment)
+
+        plot_table(trending_game_by_reviews)
+
         first_row_figures(trending_sentiment_per_developer_plot,
                           trending_sentiment_per_publisher_plot, games_genre_distribution_plot)
 
