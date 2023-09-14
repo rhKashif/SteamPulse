@@ -352,7 +352,7 @@ def aggregate_data(df_releases: DataFrame) -> DataFrame:
     """
 
     df_releases["weighted_sentiment"] = df_releases.apply(lambda row:
-                                                          calculate_sum_sentiment(row["sentiment"], row["review_score"]), axis=1)
+            calculate_sum_sentiment(row["sentiment"], row["review_score"]), axis=1)
 
     review_rows_count = df_releases.groupby(
         "game_id")["weighted_sentiment"].count()
