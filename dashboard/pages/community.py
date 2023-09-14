@@ -55,7 +55,7 @@ def get_database(conn_postgres: connection) -> DataFrame:
     """
     query = f"SELECT\
             game.game_id, title, release_date, price, sale_price,\
-            sentiment, review_text, reviewed_at, review_score,\
+            review_id, sentiment, review_text, reviewed_at, review_score,\
             genre, user_generated,\
             developer_name,\
             publisher_name,\
@@ -321,7 +321,22 @@ def filter_data(df_releases: DataFrame, titles: list[str], release_dates: list[d
 
 
 def calculate_sum_sentiment(sentiment: float, score: int) -> float:
-    """Returns summed sentiment score"""
+    """
+    Calculates total sentiment score by multiplying sentiment associated with
+    a review multiplied by the review_score (represents the number of users who
+    agree with this review)
+
+    Args:
+        sentiment (float): A value associated with how positive or negative the
+        review is considered to be
+
+        score (int): A value associated with the number of users who up-voted a 
+        review
+
+    Returns:
+        float: A sentiment value which takes into account the number of users
+        who agreed with a given review
+    """
     if score != 0:
         return sentiment * (score + 1)
     return sentiment
@@ -337,7 +352,7 @@ def aggregate_data(df_releases: DataFrame) -> DataFrame:
     """
 
     df_releases["weighted_sentiment"] = df_releases.apply(lambda row:
-        calculate_sum_sentiment(row["sentiment"], row["review_score"]), axis=1)
+            calculate_sum_sentiment(row["sentiment"], row["review_score"]), axis=1)
 
     review_rows_count = df_releases.groupby(
         "game_id")["weighted_sentiment"].count()
@@ -350,7 +365,7 @@ def aggregate_data(df_releases: DataFrame) -> DataFrame:
     total_sentiment_scores = total_sum_scores / total_weights
 
     df_releases["avg_sentiment"] = df_releases["game_id"].apply(
-        lambda row: round(total_sentiment_scores.loc[row],1))
+        lambda row: round(total_sentiment_scores.loc[row], 1))
 
     review_per_title = df_releases.groupby('game_id')[
         'review_text'].count().sort_values(
@@ -366,6 +381,21 @@ def aggregate_data(df_releases: DataFrame) -> DataFrame:
     return df_merged
 
 
+def format_sentiment_significant_figures(sentiment: float) -> str:
+    """
+    Normalize sentiment values to be strings and reduce to 3 significant figures
+
+    Args:
+        sentiment (float): A float representing the sentiment value 
+        associated with a review
+
+    Returns:
+        str: A string representing the sentiment value, 
+        formatted to one decimal place
+    """
+    return str(sentiment)[:3]
+
+
 def format_data_for_table(df_releases: DataFrame) -> DataFrame:
     """
     Return key information related to a new release in a format ready for table plotting 
@@ -376,13 +406,17 @@ def format_data_for_table(df_releases: DataFrame) -> DataFrame:
         DataFrame: A DataFrame containing new release data with aggregated data for each release
     """
     df_releases = df_releases.drop_duplicates("title")
+    df_releases = df_releases.dropna(subset=["review_text"])
     desired_columns = ["title", "release_date",
                        "sale_price", "avg_sentiment", "num_of_reviews"]
     df_releases = df_releases[desired_columns]
 
     table_columns = ["Title", "Release Date",
-                     "Price", "Community Sentiment", "Number of Reviews"]
+                     "Price", "Community Sentiment", "No. of Reviews"]
     df_releases.columns = table_columns
+
+    df_releases["Community Sentiment"] = df_releases["Community Sentiment"].apply(
+        format_sentiment_significant_figures)
 
     return df_releases
 
@@ -401,8 +435,6 @@ def format_columns(df_releases: DataFrame) -> DataFrame:
         lambda x: f"£{x:.2f}")
     df_releases['Release Date'] = df_releases['Release Date'].dt.strftime(
         '%d/%m/%Y')
-    df_releases['Community Sentiment'] = df_releases['Community Sentiment'].apply(
-        lambda x: round(x, 2))
     df_releases['Community Sentiment'] = df_releases['Community Sentiment'].fillna(
         "No Sentiment")
 
@@ -431,7 +463,7 @@ def plot_average_sentiment_per_developer(df_releases: DataFrame, rows: int) -> C
         x=alt.X("average_sentiment", title="Average Sentiment"),
         y=alt.Y("developer", title="Release Title", sort="-x")
     ).properties(
-        title="Top Developers: Highest Sentiment Score",
+        title="Top Developers by Sentiment",
         height=250
     )
 
@@ -460,7 +492,7 @@ def plot_average_sentiment_per_publisher(df_releases: DataFrame, rows: int) -> C
         x=alt.X("average_sentiment", title="Average Sentiment"),
         y=alt.Y("publisher", title="Release Title", sort="-x")
     ).properties(
-        title="Top Publishers: Highest Sentiment Score",
+        title="Top Publishers by Sentiment",
         height=250
 
     )
@@ -487,10 +519,10 @@ def plot_genre_distribution(df_releases: DataFrame, rows: int) -> Chart:
 
     chart = alt.Chart(df_releases).mark_bar().encode(
         x=alt.Y("releases_per_genres:Q",
-                title="Number of Releases"),
+                title="No. of Releases"),
         y=alt.X("genre:N", title="Genre", sort="-x")
     ).properties(
-        title="Top Genres: New Releases",
+        title="Top Genres by No. of Releases",
         height=250
     )
 
@@ -531,12 +563,12 @@ def plot_trending_games_review_table(df_releases: DataFrame) -> dict:
     df_merged = format_data_for_table(df_releases)
 
     df_merged = df_merged.sort_values(
-        by=["Number of Reviews"], ascending=False)
+        by=["No. of Reviews"], ascending=False)
     df_merged = format_columns(df_merged)
 
     df_merged = df_merged.reset_index(drop=True)
 
-    return {"table_data": df_merged, "title": "Top Recommended Games by Sentiment"}
+    return {"table_data": df_merged, "title": "Top Recommended Games by No. of Reviews"}
 
 
 def tokenize_review_text(df_releases: DataFrame) -> DataFrame:
@@ -731,7 +763,7 @@ def headline_figures(df_releases: DataFrame) -> None:
         st.metric("Total Releases:", df_releases["title"].nunique())
     with cols[1]:
         st.metric("Total Reviews:",
-                  df_releases["review_text"].nunique())
+                  df_releases["review_id"].nunique())
     with cols[2]:
         st.metric("Average Sentiment:", round(
             df_releases["sentiment"].mean(), 2))

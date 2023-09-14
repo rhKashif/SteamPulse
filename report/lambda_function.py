@@ -513,10 +513,6 @@ def create_report(df_releases: DataFrame, dashboard_url: str) -> None:
     </body>    
     </html>
     '''
-
-    with open("/tmp/test.html", "w", encoding='utf-8') as file:
-        file.write(template)
-
     convert_html_to_pdf(template, environ.get("REPORT_FILE"))
 
 
@@ -530,8 +526,11 @@ def send_email(config: _Environ, email: str):
     Returns:
         None
     """
+
     BODY_TEXT = "Good morning!\r\n\nPlease see the attached file for your latest report on newly released games.\n\nBest regards,\nSteamPulse Team"
     CHARSET = "utf-8"
+    
+    date = datetime.now().strftime("%Y/%m/%d")
 
     client = boto3.client("ses",
                           region_name="eu-west-2",
@@ -539,7 +538,7 @@ def send_email(config: _Environ, email: str):
                           aws_secret_access_key=config["SECRET_ACCESS_KEY"])
 
     message = MIMEMultipart('mixed')
-    message["Subject"] = "SteamPulse Daily Report"
+    message["Subject"] = f"SteamPulse: Latest Game Releases - {date}"
 
     message_body = MIMEMultipart('alternative')
 
@@ -548,9 +547,10 @@ def send_email(config: _Environ, email: str):
 
     attachment = MIMEApplication(open(environ.get("REPORT_FILE"), 'rb').read())
     attachment.add_header('Content-Disposition',
-                          'attachment', filename='report.pdf')
+                          'attachment', filename='SteamPulse_daily_report.pdf')
 
     message.attach(message_body)
+
     message.attach(attachment)
 
     client.send_raw_email(

@@ -8,9 +8,15 @@ DROP TABLE IF EXISTS developer;
 DROP TABLE IF EXISTS publisher;
 DROP TABLE IF EXISTS game;
 DROP TABLE IF EXISTS platform;
+DROP TABLE IF EXISTS user_email;
 
 
 -- tables with no foreign keys: platform, genre, publisher, developer
+
+CREATE TABLE user_email(
+    email_id SMALLINT GENERATED ALWAYS AS IDENTITY,
+    email TEXT NOT NULL UNIQUE
+);
 
 
 CREATE TABLE platform(
@@ -82,11 +88,11 @@ CREATE TABLE review(
     playtime_last_2_weeks INT NOT NULL,
     game_id INT NOT NULL,
     PRIMARY KEY (review_id),
-    UNIQUE(game_id, review_text, review_score, reviewed_at, sentiment),
     FOREIGN KEY (game_id) REFERENCES game(game_id) 
 
 );
 
+CREATE UNIQUE INDEX review_constraint ON review (game_id, md5(review_text), review_score, reviewed_at, sentiment);
 
 -- Linking tables for game with developer / publisher / genre
 

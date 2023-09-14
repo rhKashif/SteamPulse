@@ -116,7 +116,9 @@ resource "aws_iam_role" "steampulse_pipeline_ecs_task_execution_role" {
         },
         Effect = "Allow",
         Sid    = ""
-      }
+      },
+
+
     ]
   })
 
@@ -558,6 +560,210 @@ resource "aws_iam_role" "steampulse_lambda_iam" {
           Service = "lambda.amazonaws.com"
         }
       },
+      {
+        Action = "sts:AssumeRole",
+        Principal = {
+          Service = "scheduler.amazonaws.com"
+        },
+        Effect = "Allow",
+        Sid    = ""
+      }
     ]
   })
 }
+
+# resource "aws_scheduler_schedule" "steampulse_email_lambda_schedule" {
+#   name                = "steampulse_email_lambda_schedule"
+#   description         = "Runs the steampulse email lambda function cron schedule"
+#   schedule_expression = "cron(*/5 * * * ? *)"
+
+#   flexible_time_window {
+#     mode = "OFF"
+#   }
+
+#   target {
+#     arn      = aws_lambda_function.steampulse_email_lambda.arn
+#     role_arn = aws_iam_role.steampulse_lambda_iam.arn
+
+
+
+#   }
+# }
+
+
+resource "aws_iam_role" "steampulse_sfn_role" {
+  name = "steampulse_sfn_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+      },
+
+      {
+        Action = "sts:AssumeRole",
+        Principal = {
+          Service = "scheduler.amazonaws.com"
+        },
+        Effect = "Allow",
+        Sid    = ""
+      },
+
+      {
+        Action = "sts:AssumeRole",
+        Principal = {
+          Service = "states.amazonaws.com"
+        },
+        Effect = "Allow",
+        Sid    = ""
+      },
+
+
+
+    ]
+  })
+
+  inline_policy {
+    name = "sfn-task-inline-policy"
+
+    policy = jsonencode({
+      Version = "2012-10-17",
+
+      Statement = [
+        {
+          Action   = "ecs:DescribeTaskDefinition",
+          Effect   = "Allow",
+          Resource = "*",
+          Condition = {
+            "ArnLike" : {
+              "ecs:cluster" : aws_ecs_cluster.steampulse_cluster.arn
+            }
+          }
+        },
+        {
+          Action   = "ecs:DescribeTasks",
+          Effect   = "Allow",
+          Resource = "*",
+          Condition = {
+            "ArnLike" : {
+              "ecs:cluster" : aws_ecs_cluster.steampulse_cluster.arn
+            }
+          }
+        },
+        {
+          Action   = "ecs:RunTask",
+          Effect   = "Allow",
+          Resource = "*",
+          Condition = {
+            "ArnLike" : {
+              "ecs:cluster" : aws_ecs_cluster.steampulse_cluster.arn
+            }
+          }
+        },
+        {
+          Action   = "iam:PassRole",
+          Effect   = "Allow",
+          Resource = "*"
+        },
+        {
+          Action   = "lambda:InvokeFunction",
+          Effect   = "Allow",
+          Resource = "*"
+
+        }
+        # {
+        #   Action = "events:PutTargets",
+        #   Effect = "Allow",
+        #   Resource = "*"
+
+        # },
+        # {
+        #   Action = "events:PutRule",
+        #   Effect = "Allow",
+        #   Resource = "*"
+
+        # },
+        # {
+        #   Action = "events:DescribeRule",
+        #   Effect = "Allow",
+        #   Resource = "*"
+
+
+      ]
+      }
+    )
+  }
+}
+
+
+
+resource "aws_sfn_state_machine" "steampulse_state_machine" {
+  name       = "steampulse_state_machine"
+  role_arn   = aws_iam_role.steampulse_sfn_role.arn
+  definition = <<EOF
+  {
+    "Comment" : "SteamPulse step function",
+    "StartAt" : "ReviewGather",
+
+    "States" : {
+      "ReviewGather": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::ecs:runTask",
+      "Parameters": {
+        "LaunchType": "FARGATE",
+        "Cluster": "${aws_ecs_cluster.steampulse_cluster.arn}",
+        "TaskDefinition": "${aws_ecs_task_definition.steampulse_review_pipeline_task_definition.arn}",
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": {
+            "SecurityGroups": [
+              "${aws_security_group.steampulse_pipeline_ecs_sg.id}"
+            ],
+            "Subnets": [
+              "subnet-03b1a3e1075174995",
+              "subnet-0cec5bdb9586ed3c4",
+              "subnet-0667517a2a13e2a6b"
+            ]
+          }
+        }
+        },
+      "Next": "ReportEmail"
+      },
+
+
+      "ReportEmail" : {
+        "Type" : "Task",
+        "Resource" : "${aws_lambda_function.steampulse_email_lambda.arn}",
+        "End" : true
+      }
+    }
+  }
+  EOF
+}
+
+
+# Review gather with container override
+
+
+#   "ReviewGather": {
+#  "Type": "Task",
+#  "Resource": "arn:aws:states:::ecs:runTask.sync",
+#  "Parameters": {
+#             "Cluster": "${aws_ecs_cluster.steampulse_cluster.arn}",
+#             "TaskDefinition": "job-id",
+#             "Overrides": {
+#                 "ContainerOverrides": [
+#                     {
+#                         "Name": "container-name",
+#                         "Command.$": "$.commands" 
+#                     }
+#                 ]
+#             }
+#         },
+#  "End": true
+
