@@ -443,7 +443,7 @@ resource "aws_scheduler_schedule" "steampulse_game_pipeline_schedule" {
 resource "aws_scheduler_schedule" "steampulse_review_pipeline_schedule" {
   name                = "steampulse_review_pipeline_schedule"
   description         = "Runs the steampulse review pipeline on a cron schedule"
-  schedule_expression = "cron(33 * * * ? *)"
+  schedule_expression = "cron(30 8 * * ? *)"
 
   flexible_time_window {
     mode = "OFF"
