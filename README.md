@@ -4,9 +4,11 @@ An integrated dashboard displaying trend analysis for new releases on steam
 
 ## Overview
 
+This project takes new released games from Steam and their reviews. This information is processed to create an interactive dashboard and generate a daily report on what games are most popular/recommended to those who subscribe to SteamPulse.
+
 ## Setup
 
-This project is designed to be hosted on AWS, although it could be run fully locally with minimal modifications.
+SteamPuluse is designed to be hosted on AWS. With minimal modifications, it can be run locally.
 
 ### Initial setup
 
@@ -23,9 +25,11 @@ DATABASE_NAME     = steampulse
 DATABASE_USERNAME = steampulse_admin
 DATABASE_PASSWORD = XXXXXXXXXXX
 DATABASE_ENDPOINT = XXXXXXXXXXX
+DASHBOARD_URL     = XXXXXXXXXXX
+EMAIL_SENDER      = XXXXXXXXXXX
 ```
 
-If hosting this service on AWS, you'll need to create your RDS to get the database endpoint.
+If hosting this service on AWS, you'll need to create your RDS to get the database endpoint and dashboard url. Email sender will be your email address which you will need to verify using SES to use the functions.
 
 3. Configure environment
 
@@ -49,7 +53,7 @@ pip3 install -r requirements.txt
 
 3. `terraform apply` to construct AWS resources.
 
-4. You should receive the database endpoint as an output. This can now be passed to the `.env` files
+4. You should receive the database endpoint and dashboard url as an output. These can now be passed to the `.env` files
 
 5. Use `psql` to run `schema.sql` targetting your cloud database.
 
@@ -167,7 +171,48 @@ Even though it was assumed that the same cursor received from the endpoint with 
 
 ## Streamlit Dashboard
 
+### Folders
+
+pages - directory containing additional pages for streamlit dashboard
+
+### Files
+
+`home.py` - script containing streamlit dashboard home page
+`setup_nltk.py` - script containing installation for all nltk datasets
+
+pages/`community.py` - script containing streamlit dashboard "community" page with visualizations relevant for users
+
+pages/`developers.py` - script containing streamlit dashboard "developers" page with visualizations relevant for developers
+
+pages/`releases.py` - script containing streamlit dashboard "releases" page with a table displaying all releases powering the visualizations
+
+pages/`subscription.py` - script containing streamlit dashboard "subscription" page with a form for users to subscribe for pdf reports on the latest insights
+
+#### Assumptions and design decisions
+
+Assumption that the necessary data is available, accurate, and up-to-date. This includes assumptions about data format, structure, and quality:
+
+- Returns an error message if connection to the database fails
+- If there is no data within the last two weeks the dashboard, a message will be displayed to relay
+
+Assumption that the current word map will for review text will be useful and interesting for community members to see:
+
+- More comprehensive language processing is required to increase the relevancy of words on the word map but given time constraints, this has not been implemented
+
+Design decision - use of `format_sentiment_significant_figures` to format sentiment.
+
 ## Email Report
+
+### Files
+
+`lambda_function.py` - script containing code to make connection with database, extract all relevant data and build visualization plots, format them in html and convert to pdf. This pdf is emailed to users that have subscribed via our dashboard using the boto3 library and AWS SES.
+
+#### Assumptions and design decisions
+
+Assumption that the necessary data is available, accurate, and up-to-date. This includes assumptions about data format, structure, and quality:
+
+- Returns an error message if connection to the database fails
+- If there is no data within the last two weeks the dashboard, a message will be displayed to relay this to the user
 
 #### Assumptions and design decisions
 
