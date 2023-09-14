@@ -39,7 +39,8 @@ from utility_functions import (get_database,
                                headline_figures,
                                sub_headline_figures,
                                two_column_chart_figures,
-                               format_sentiment_significant_figures)
+                               format_sentiment_significant_figures,
+                               plot_table)
 
 SELECTED_RELEASES = "selected_releases"
 SELECTED_RELEASE_DATES = "selected_release_dates"
@@ -162,7 +163,7 @@ def plot_trending_games_table(df_releases: DataFrame) -> dict:
 
     df_merged = df_merged.reset_index(drop=True)
 
-    return {"table_data": df_merged, "title": "Top Games by Sentiment"}
+    return {"data": df_merged, "title": "Top Games by Sentiment"}
 
 
 def plot_trending_games_review_table(df_releases: DataFrame) -> dict:
@@ -182,7 +183,7 @@ def plot_trending_games_review_table(df_releases: DataFrame) -> dict:
 
     df_merged = df_merged.reset_index(drop=True)
 
-    return {"table_data": df_merged, "title": "Top Games by Number of Reviews"}
+    return {"data": df_merged, "title": "Top Games by Number of Reviews"}
 
 
 def tokenize_review_text(df_releases: DataFrame) -> DataFrame:
@@ -347,20 +348,6 @@ def dashboard_header() -> None:
     st.markdown("Community Insights for New Releases on Steam")
 
 
-def plot_table(table_one: Chart) -> None:
-    """
-    Build figures relating to release and review frequency for dashboard
-
-    Args:
-        plot_one (Chart): A chart displaying plotted data
-    """
-    st.markdown(f"{table_one['title']}")
-    st.table(table_one["table_data"].head(5).style.set_properties(
-        **{'font-size': '16px'}))
-
-    st.markdown("---")
-
-
 def wordcloud_rows(wordcloud_one: Chart, wordcloud_two: Chart) -> None:
     """
     Build figures relating to release and review frequency for dashboard
@@ -428,9 +415,9 @@ if __name__ == "__main__":
         trending_sentiment_per_publisher_plot = plot_average_sentiment_per_publisher(
             filtered_df, 5)
 
-        plot_table(trending_games_by_sentiment)
+        plot_table(trending_games_by_sentiment, 5)
 
-        plot_table(trending_game_by_reviews)
+        plot_table(trending_game_by_reviews, 5)
 
         two_column_chart_figures(trending_sentiment_per_developer_plot,
                                  trending_sentiment_per_publisher_plot)

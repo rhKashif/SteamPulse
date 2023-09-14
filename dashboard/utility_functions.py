@@ -544,15 +544,19 @@ def two_column_chart_figures(plot_one: Chart, plot_two: Chart) -> None:
     st.markdown("---")
 
 
-def plot_table(table_one: Chart) -> None:
+def plot_table(table_one: dict, rows: int) -> None:
     """
     Build figures relating to release and review frequency for dashboard
 
     Args:
-        plot_one (Chart): A chart displaying plotted data
+        table_one (dict): A Python dictionary containing a DataFrame to build a table 
+        and a title 
+
+        rows (int): A integer value corresponding to the number of rows to display in
+        the table
     """
     st.markdown(f"{table_one['title']}")
-    st.table(table_one["table_data"].head(5).style.set_properties(
+    st.table(table_one["data"].head(rows).style.set_properties(
         **{'font-size': '16px'}))
 
     st.markdown("---")

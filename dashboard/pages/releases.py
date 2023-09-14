@@ -1,13 +1,9 @@
 """Python Script: Build a dashboard for data visualization (releases page)"""
-from datetime import datetime, timedelta
-from os import environ, _Environ
+from os import environ
 
 from dotenv import load_dotenv
-from functools import reduce
-import pandas as pd
 from pandas import DataFrame
-from psycopg2 import connect
-from psycopg2.extensions import connection
+import pandas as pd
 import streamlit as st
 
 from utility_functions import (get_database,
@@ -29,7 +25,8 @@ from utility_functions import (get_database,
                                sidebar_header,
                                headline_figures,
                                sub_headline_figures,
-                               format_sentiment_significant_figures)
+                               format_sentiment_significant_figures,
+                               plot_table)
 
 SELECTED_RELEASES = "selected_releases"
 SELECTED_RELEASE_DATES = "selected_release_dates"
@@ -78,7 +75,7 @@ def plot_new_games_today_table(df_releases: DataFrame) -> None:
 
     df_releases = df_releases.reset_index(drop=True)
 
-    return {"table_data": df_releases, "title": "All New Releases"}
+    return {"data": df_releases, "title": "All New Releases"}
 
 
 def dashboard_header() -> None:
@@ -125,8 +122,7 @@ if __name__ == "__main__":
 
         sub_headline_figures(filtered_df)
 
-        game_table = plot_new_games_today_table(filtered_df)
+        all_release_table_df = plot_new_games_today_table(filtered_df)
+        number_of_releases = all_release_table_df["data"]["Title"].nunique()
 
-        st.markdown(f"{game_table['title']}")
-        st.table(game_table["table_data"].style.set_properties(
-            **{'font-size': '16px'}))
+        plot_table(all_release_table_df, number_of_releases)
