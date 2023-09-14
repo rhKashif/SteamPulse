@@ -34,7 +34,8 @@ def get_db_connection(config_file: _Environ) -> connection:
         raise err
 
 
-def get_database(conn_postgres: connection) -> DataFrame:
+@st.cache_data(ttl="300s")
+def get_database() -> DataFrame:
     """
     Returns redshift database transaction table as a DataFrame Object
 
@@ -44,9 +45,11 @@ def get_database(conn_postgres: connection) -> DataFrame:
     Returns:
         DataFrame:  A pandas DataFrame containing all relevant release data
     """
+    conn_postgres = get_db_connection(config)
+
     query = f"SELECT\
             game.game_id, title, release_date, price, sale_price,\
-            sentiment, review_text, reviewed_at, review_score,\
+            review_id, sentiment, review_text, reviewed_at, review_score,\
             genre, user_generated,\
             developer_name,\
             publisher_name,\
@@ -486,13 +489,9 @@ if __name__ == "__main__":
     load_dotenv()
     config = environ
 
-    conn = get_db_connection(config)
-
-    game_df = get_database(conn)
+    game_df = get_database()
     game_df = format_database_columns(game_df)
     game_df = get_data_for_release_date_range(game_df, 14)
-
-    st.set_page_config(layout="wide")
 
     dashboard_header()
     sidebar_header()

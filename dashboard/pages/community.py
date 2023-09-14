@@ -60,7 +60,8 @@ def get_db_connection(config_file: _Environ) -> connection:
         raise err
 
 
-def get_database(conn_postgres: connection) -> DataFrame:
+@st.cache_data(ttl="300s")
+def get_database() -> DataFrame:
     """
     Returns redshift database transaction table as a DataFrame Object
 
@@ -70,6 +71,8 @@ def get_database(conn_postgres: connection) -> DataFrame:
     Returns:
         DataFrame:  A pandas DataFrame containing all relevant release data
     """
+    conn_postgres = get_db_connection(config)
+
     query = f"SELECT\
             game.game_id, title, release_date, price, sale_price,\
             review_id, sentiment, review_text, reviewed_at, review_score,\
@@ -292,7 +295,7 @@ def build_sidebar_number_of_reviews(df_releases: DataFrame) -> tuple:
     min_number_of_reviews = 0
 
     number_of_reviews = st.sidebar.slider(
-        "Sentiment:", min_value=min_number_of_reviews, max_value=max_number_of_reviews,
+        "Number of Reviews:", min_value=min_number_of_reviews, max_value=max_number_of_reviews,
         value=(min_number_of_reviews, max_number_of_reviews), step=1)
     return number_of_reviews
 
@@ -949,14 +952,10 @@ if __name__ == "__main__":
     load_dotenv()
     config = environ
 
-    conn = get_db_connection(config)
-
-    game_df = get_database(conn)
+    game_df = get_database()
     game_df = aggregate_data(game_df)
     game_df = format_database_columns(game_df)
     game_df = get_data_for_release_date_range(game_df, 14)
-
-    st.set_page_config(layout="wide")
 
     dashboard_header()
     sidebar_header()
@@ -973,20 +972,6 @@ if __name__ == "__main__":
         SENTIMENT: build_sidebar_sentiment(game_df),
         REVIEWS: build_sidebar_number_of_reviews(game_df),
     }
-    print(filter_dictionary[PRICE])
-    print(filter_dictionary[SENTIMENT])
-    print(filter_dictionary[REVIEWS])
-
-    # selected_releases = build_sidebar_title(game_df)
-    # selected_release_dates = build_sidebar_release_date(game_df)
-    # selected_review_dates = build_sidebar_review_date(game_df)
-    # selected_genre = build_sidebar_genre(game_df)
-    # selected_developer = build_sidebar_developer(game_df)
-    # selected_publisher = build_sidebar_publisher(game_df)
-    # selected_platform = build_sidebar_platforms()
-    # min_price, max_price = build_sidebar_price(game_df)
-    # min_sentiment, max_sentiment = build_sidebar_sentiment(game_df)
-    # min_reviews, max_reviews = build_sidebar_number_of_reviews(game_df)
 
     filtered_df = filter_data(game_df, filter_dictionary)
 
