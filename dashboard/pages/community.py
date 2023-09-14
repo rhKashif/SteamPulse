@@ -409,7 +409,7 @@ def format_data_for_table(df_releases: DataFrame) -> DataFrame:
     df_releases = df_releases[desired_columns]
 
     table_columns = ["Title", "Release Date",
-                     "Price", "Community Sentiment", "Number of Reviews"]
+                     "Price", "Community Sentiment", "No. of Reviews"]
     df_releases.columns = table_columns
 
     df_releases["Community Sentiment"] = df_releases["Community Sentiment"].apply(
@@ -462,7 +462,7 @@ def plot_average_sentiment_per_developer(df_releases: DataFrame, rows: int) -> C
         x=alt.X("average_sentiment", title="Average Sentiment"),
         y=alt.Y("developer", title="Release Title", sort="-x")
     ).properties(
-        title="Top Developers: Highest Sentiment Score",
+        title="Top Developers by Sentiment",
         height=250
     )
 
@@ -491,7 +491,7 @@ def plot_average_sentiment_per_publisher(df_releases: DataFrame, rows: int) -> C
         x=alt.X("average_sentiment", title="Average Sentiment"),
         y=alt.Y("publisher", title="Release Title", sort="-x")
     ).properties(
-        title="Top Publishers: Highest Sentiment Score",
+        title="Top Publishers by Sentiment",
         height=250
 
     )
@@ -518,10 +518,10 @@ def plot_genre_distribution(df_releases: DataFrame, rows: int) -> Chart:
 
     chart = alt.Chart(df_releases).mark_bar().encode(
         x=alt.Y("releases_per_genres:Q",
-                title="Number of Releases"),
+                title="No. of Releases"),
         y=alt.X("genre:N", title="Genre", sort="-x")
     ).properties(
-        title="Top Genres: New Releases",
+        title="Top Genres by No. of Releases",
         height=250
     )
 
@@ -562,12 +562,12 @@ def plot_trending_games_review_table(df_releases: DataFrame) -> dict:
     df_merged = format_data_for_table(df_releases)
 
     df_merged = df_merged.sort_values(
-        by=["Number of Reviews"], ascending=False)
+        by=["No. of Reviews"], ascending=False)
     df_merged = format_columns(df_merged)
 
     df_merged = df_merged.reset_index(drop=True)
 
-    return {"table_data": df_merged, "title": "Top Recommended Games by Number of Reviews"}
+    return {"table_data": df_merged, "title": "Top Recommended Games by No. of Reviews"}
 
 
 def tokenize_review_text(df_releases: DataFrame) -> DataFrame:
