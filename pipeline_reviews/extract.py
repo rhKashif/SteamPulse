@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from os import environ
+from multiprocessing import Pool
 from urllib.parse import quote_plus
 
 from pandas import DataFrame
@@ -57,27 +58,43 @@ def get_reviews_for_game(game_id: int, cursor: str) -> dict:
     return {"next_cursor": next_cursor, "reviews": page_reviews}
 
 
+def get_game_reviews(game: int) -> list:
+    """"""
+    number_of_total_reviews = get_number_of_reviews(game)
+    all_reviews = []
+    if number_of_total_reviews:
+        cursor_list = []
+        cursor = "*"
+        while cursor not in cursor_list:
+            cursor_list.append(cursor)
+            api_response = get_reviews_for_game(game, cursor)
+            if "error" not in api_response:
+                cursor = api_response["next_cursor"]
+                page_reviews = api_response["reviews"]
+                # print(page_reviews)
+                if not page_reviews or cursor in cursor_list:
+                    return all_reviews
+                all_reviews.append(page_reviews)
+    return all_reviews
+
+
 def get_all_reviews(game_ids: list[int]) -> DataFrame:
     """Combines all reviews together and all review
-    information together to be set in a data-frame"""
-    all_reviews = []
+    information together to be set in a data-frame
+    with the use of multiprocessing"""
+    list_of_reviews = []
 
-    for game in game_ids:
-        number_of_total_reviews = get_number_of_reviews(game)
+    with Pool() as p:
+        reviews_data = p.map(get_game_reviews, game_ids)
 
-        if number_of_total_reviews:
-            cursor_list = []
-            cursor = "*"
-            while cursor not in cursor_list:
-                cursor_list.append(cursor)
-                api_response = get_reviews_for_game(game, cursor)
-                if "error" not in api_response:
-                    cursor = api_response["next_cursor"]
-                    page_reviews = api_response["reviews"]
-                    if not page_reviews or cursor in cursor_list:
-                        break
-                    all_reviews.extend(page_reviews)
-    return DataFrame(all_reviews)
+    for set_reviews in reviews_data:
+        list_of_reviews.extend(set_reviews)
+
+    returned_reviews = []
+    for reviews in list_of_reviews:
+        returned_reviews.extend(reviews)
+
+    return DataFrame(returned_reviews)
 
 
 def get_db_connection() -> connection:
