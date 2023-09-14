@@ -60,7 +60,7 @@ def get_db_connection(config_file: _Environ) -> connection:
         raise err
 
 
-@st.cache_data(ttl="300s")
+@st.cache_data(ttl="600s")
 def get_database() -> DataFrame:
     """
     Returns redshift database transaction table as a DataFrame Object
@@ -97,6 +97,7 @@ def get_database() -> DataFrame:
             game.game_id=publisher_link.game_id\
             LEFT JOIN publisher ON\
             publisher_link.publisher_id=publisher.publisher_id;"
+
     df_releases = pd.read_sql_query(query, conn_postgres)
 
     return df_releases
@@ -949,6 +950,8 @@ def wordcloud_rows(wordcloud_one: Chart, wordcloud_two: Chart) -> None:
 
 if __name__ == "__main__":
 
+    st.set_page_config(layout="wide")
+
     load_dotenv()
     config = environ
 
@@ -998,11 +1001,14 @@ if __name__ == "__main__":
         first_row_figures(trending_sentiment_per_developer_plot,
                           trending_sentiment_per_publisher_plot, games_genre_distribution_plot)
 
-        if not filtered_df["review_text"].dropna().empty:
+        if not filtered_df["review_text"].dropna().empty and filtered_df["title"].nunique() == 1:
             review_word_cloud_plot = plot_word_cloud_all_releases(filtered_df)
             genre_word_cloud_plot = plot_word_cloud_all_releases_genre(
                 filtered_df)
 
             wordcloud_rows(review_word_cloud_plot, genre_word_cloud_plot)
-        else:
+        elif filtered_df["review_text"].dropna().empty and filtered_df["title"].nunique() == 1:
             st.markdown("### Insufficient data for word cloud plots")
+        else:
+            st.markdown(
+                "#### Select Individual Title to Generate a WordCloud")

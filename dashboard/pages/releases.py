@@ -34,7 +34,7 @@ def get_db_connection(config_file: _Environ) -> connection:
         raise err
 
 
-@st.cache_data(ttl="300s")
+@st.cache_data(ttl="600s")
 def get_database() -> DataFrame:
     """
     Returns redshift database transaction table as a DataFrame Object
