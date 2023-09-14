@@ -5,6 +5,7 @@ from os import environ, _Environ
 from functools import reduce
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
+from email.mime.text import MIMEText
 import altair as alt
 from altair.vegalite.v5.api import Chart
 import boto3
@@ -529,17 +530,27 @@ def send_email(config: _Environ, email: str):
     Returns:
         None
     """
+    BODY_TEXT = "Good morning!\r\n\nPlease see the attached file for your latest report on newly released games.\n\nBest regards,\nSteamPulse Team"
+    CHARSET = "utf-8"
+
     client = boto3.client("ses",
                           region_name="eu-west-2",
                           aws_access_key_id=config["ACCESS_KEY_ID"],
                           aws_secret_access_key=config["SECRET_ACCESS_KEY"])
 
-    message = MIMEMultipart()
-    message["Subject"] = "Local Test"
+    message = MIMEMultipart('mixed')
+    message["Subject"] = "SteamPulse Daily Report"
+
+    message_body = MIMEMultipart('alternative')
+
+    textpart = MIMEText(BODY_TEXT.encode(CHARSET), 'plain', CHARSET)
+    message_body.attach(textpart)
 
     attachment = MIMEApplication(open(environ.get("REPORT_FILE"), 'rb').read())
     attachment.add_header('Content-Disposition',
                           'attachment', filename='report.pdf')
+
+    message.attach(message_body)
     message.attach(attachment)
 
     client.send_raw_email(
@@ -548,8 +559,7 @@ def send_email(config: _Environ, email: str):
             email,
         ],
         RawMessage={
-            'Data': 'Subject: SteamPulse Daily Report \nMIME-Version: 1.0\nContent-type: Multipart/Mixed; boundary="NextPart"\n\n--NextPart\nContent-Type: text/plain\n\n\n\n--NextPart\nContent-Type: text/plain;\nContent-Disposition: attachment; filename="attachment.txt"\n\nThis is the text in the attachment.\n\n--NextPart--'
-            # 'Data': message.as_string()
+            'Data': message.as_string()
         }
     )
 
@@ -595,8 +605,8 @@ def email_subscribers(conn: connection, config: _Environ):
             else:
                 print(err)
 
-    for address in verification_awaited:
-        verify_email(config, address)
+    # for address in verification_awaited:
+    #    verify_email(config, address)
 
 
 def handler(event, context) -> None:
