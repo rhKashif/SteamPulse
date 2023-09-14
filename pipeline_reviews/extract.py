@@ -59,7 +59,7 @@ def get_reviews_for_game(game_id: int, cursor: str) -> dict:
 
 
 def get_game_reviews(game: int) -> list:
-    """"""
+    """Retrieves game reviews to be combined into a list together"""
     number_of_total_reviews = get_number_of_reviews(game)
     all_reviews = []
     if number_of_total_reviews:
@@ -79,8 +79,7 @@ def get_game_reviews(game: int) -> list:
 
 
 def get_all_reviews(game_ids: list[int]) -> DataFrame:
-    """Combines all reviews together and all review
-    information together to be set in a data-frame
+    """Combines all reviews together
     with the use of multiprocessing"""
     list_of_reviews = []
 
