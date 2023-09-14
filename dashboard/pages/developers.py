@@ -78,40 +78,65 @@ def get_database() -> DataFrame:
     return df_releases
 
 
-def aggregate_release_data(df_releases: DataFrame) -> DataFrame:
+def calculate_sum_sentiment(sentiment: float, score: int) -> float:
     """
-    Return key information related to a new release
-    Transform data in releases DataFrame to find aggregated data from individual releases
+    Calculates total sentiment score by multiplying sentiment associated with
+    a review multiplied by the review_score (represents the number of users who
+    agree with this review)
+
+    Args:
+        sentiment (float): A value associated with how positive or negative the
+        review is considered to be
+
+        score (int): A value associated with the number of users who up-voted a 
+        review
+
+    Returns:
+        float: A sentiment value which takes into account the number of users
+        who agreed with a given review
+    """
+    if score != 0:
+        return sentiment * (score + 1)
+    return sentiment
+
+
+def aggregate_data(df_releases: DataFrame) -> DataFrame:
+    """
+    Transform data in releases DataFrame to find aggregated sentiment from individual reviews
     Args:
         df_release (DataFrame): A DataFrame containing new release data
-        index (int): A int associated with a number index within the trending game list
     Returns:
         DataFrame: A DataFrame containing new release data with aggregated data for each release
     """
-    average_sentiment_per_title = df_releases.groupby('title')[
-        'sentiment'].mean().sort_values(
-        ascending=False).dropna().reset_index()
-    average_sentiment_per_title.columns = ["title", "avg_sentiment"]
 
-    review_per_title = df_releases.groupby('title')[
-        'review_text'].count().sort_values(
-        ascending=False).dropna().reset_index()
-    review_per_title.columns = ["title", "num_of_reviews"]
+    df_releases["weighted_sentiment"] = df_releases.apply(lambda row:
+                                                          calculate_sum_sentiment(row["sentiment"], row["review_score"]), axis=1)
 
-    data_frames = [df_releases, average_sentiment_per_title, review_per_title]
+    review_rows_count = df_releases.groupby(
+        "game_id")["weighted_sentiment"].count()
+    total_sum_scores = df_releases.groupby(
+        "game_id")["weighted_sentiment"].sum()
+    total_weights = df_releases.groupby("game_id")[
+        "review_score"].sum()
 
-    df_merged = reduce(lambda left, right: pd.merge(left, right, on=['title'],
+    total_weights = total_weights + review_rows_count
+    total_sentiment_scores = total_sum_scores / total_weights
+
+    df_releases["avg_sentiment"] = df_releases["game_id"].apply(
+        lambda row: round(total_sentiment_scores.loc[row], 1))
+
+    review_per_title = df_releases.groupby('game_id')[
+        'review_id'].nunique()
+    review_per_title = review_per_title.to_frame()
+
+    review_per_title.columns = ["num_of_reviews"]
+
+    data_frames = [df_releases, review_per_title]
+
+    df_merged = reduce(lambda left, right: pd.merge(left, right, on=['game_id'],
                                                     how='outer'), data_frames)
 
-    df_merged = df_merged.drop_duplicates("title")
-
-    desired_columns = ["title", "release_date",
-                       "sale_price", "avg_sentiment", "num_of_reviews"]
-    df_merged = df_merged[desired_columns]
-
-    table_columns = ["Title", "Release Date",
-                     "Price", "Community Sentiment", "Number of Reviews"]
-    df_merged.columns = table_columns
+    df_merged.drop(["weighted_sentiment"], axis=1, inplace=True)
 
     return df_merged
 
@@ -562,7 +587,7 @@ def plot_platform_distribution(df_releases: DataFrame) -> Chart:
     return chart
 
 
-def plot_genre_distribution(df_releases: DataFrame) -> Chart:
+def plot_genre_by_release(df_releases: DataFrame) -> Chart:
     """
     Create a line chart for the number of games released per day
 
@@ -584,7 +609,36 @@ def plot_genre_distribution(df_releases: DataFrame) -> Chart:
                 title="Number of Releases"),
         y=alt.X("genre:N", title="Genre", sort="-x")
     ).properties(
-        title="Releases per Genre",
+        title="Genre Popularity by Number of Releases",
+    )
+
+    return chart
+
+
+def plot_genre_by_sentiment(df_releases: DataFrame) -> Chart:
+    """
+    Create a line chart for the number of games released per day
+
+    Args:
+        df_releases (DataFrame): A DataFrame containing filtered data related to new releases
+
+    Returns:
+        Chart: A chart displaying plotted data
+    """
+    df_releases = df_releases[["game_id", "title", "genre", "avg_sentiment"]]
+    df_releases = df_releases.drop_duplicates()
+
+    df_releases_sentiment_sum = df_releases.groupby(
+        "genre")["avg_sentiment"].mean().reset_index().sort_values(by=["avg_sentiment"]).dropna()
+
+    print(df_releases_sentiment_sum)
+
+    chart = alt.Chart(df_releases_sentiment_sum.tail(10)).mark_bar().encode(
+        x=alt.Y("avg_sentiment:Q",
+                title="Average Sentiment"),
+        y=alt.X("genre:N", title="Genre", sort="-x")
+    ).properties(
+        title="Genre Popularity by Community Sentiment",
     )
 
     return chart
@@ -651,7 +705,7 @@ def headline_figures(df_releases: DataFrame) -> None:
         st.metric("Total Releases:", df_releases["title"].nunique())
     with cols[1]:
         st.metric("Total Reviews:",
-                  df_releases["review_text"].nunique())
+                  df_releases["review_id"].nunique())
     with cols[2]:
         st.metric("Average Sentiment:", round(
             df_releases["sentiment"].mean(), 2))
@@ -727,6 +781,7 @@ if __name__ == "__main__":
     config = environ
 
     game_df = get_database()
+    game_df = aggregate_data(game_df)
     game_df = format_database_columns(game_df)
     game_df = get_data_for_release_date_range(game_df, 14)
 
@@ -772,16 +827,16 @@ if __name__ == "__main__":
         trending_sentiment_per_publisher_plot = plot_average_sentiment_per_publisher(
             filtered_df)
 
-        games_genre_distribution_plot = plot_genre_distribution(filtered_df)
+        games_genre_by_release_plot = plot_genre_by_release(filtered_df)
+        games_genre_by_sentiment_plot = plot_genre_by_sentiment(filtered_df)
 
         two_column_chart_figures(games_release_frequency_plot,
                                  games_review_frequency_plot)
-        two_column_chart_figures(
-            games_platform_distribution_plot, games_price_distribution_plot)
-        two_column_chart_figures(
-            trending_sentiment_per_game_plot,  trending_reviews_per_game_plot)
+        two_column_chart_figures(games_platform_distribution_plot,
+                                 games_price_distribution_plot)
+        two_column_chart_figures(trending_sentiment_per_game_plot,
+                                 trending_reviews_per_game_plot)
         two_column_chart_figures(trending_sentiment_per_developer_plot,
                                  trending_sentiment_per_publisher_plot)
-
-        st.altair_chart(games_genre_distribution_plot,
-                        use_container_width=True)
+        two_column_chart_figures(games_genre_by_release_plot,
+                                 games_genre_by_sentiment_plot)
