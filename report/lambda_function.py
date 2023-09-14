@@ -5,14 +5,17 @@ from os import environ, _Environ
 from functools import reduce
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
+from email.mime.text import MIMEText
 import altair as alt
 from altair.vegalite.v5.api import Chart
 import boto3
+import botocore.exceptions
 from dotenv import load_dotenv
 import pandas as pd
 from pandas import DataFrame
 from psycopg2 import connect
 from psycopg2.extensions import connection
+from psycopg2.extras import RealDictCursor
 from xhtml2pdf import pisa
 
 
@@ -513,7 +516,7 @@ def create_report(df_releases: DataFrame, dashboard_url: str) -> None:
     convert_html_to_pdf(template, environ.get("REPORT_FILE"))
 
 
-def send_email(config: _Environ):
+def send_email(config: _Environ, email: str):
     """
     Send an email with an attached PDF report using Amazon Simple Email Service (SES).
 
@@ -523,29 +526,88 @@ def send_email(config: _Environ):
     Returns:
         None
     """
-    date = datetime.now().strftime("%Y/%m/%d")
+
+    BODY_TEXT = "Good morning!\r\n\nPlease see the attached file for your latest report on newly released games.\n\nBest regards,\nSteamPulse Team"
+    CHARSET = "utf-8"
+
+    date = datetime.now().strftime("%d/%m/%Y")
+
     client = boto3.client("ses",
                           region_name="eu-west-2",
-                          aws_access_key_id=environ["ACCESS_KEY_ID"],
-                          aws_secret_access_key=environ["SECRET_ACCESS_KEY"])
+                          aws_access_key_id=config["ACCESS_KEY_ID"],
+                          aws_secret_access_key=config["SECRET_ACCESS_KEY"])
 
-    message = MIMEMultipart()
+    message = MIMEMultipart('mixed')
     message["Subject"] = f"SteamPulse: Latest Game Releases - {date}"
+
+    message_body = MIMEMultipart('alternative')
+
+    textpart = MIMEText(BODY_TEXT.encode(CHARSET), 'plain', CHARSET)
+    message_body.attach(textpart)
 
     attachment = MIMEApplication(open(environ.get("REPORT_FILE"), 'rb').read())
     attachment.add_header('Content-Disposition',
                           'attachment', filename='SteamPulse_daily_report.pdf')
+
+    message.attach(message_body)
+
     message.attach(attachment)
 
     client.send_raw_email(
         Source=config["EMAIL_SENDER"],
         Destinations=[
-            config["EMAIL_RECEIVER"],
+            email,
         ],
         RawMessage={
             'Data': message.as_string()
         }
     )
+
+
+def get_list_of_emails_from_database(conn: connection) -> list[str]:
+    """List returning a list of emails from the database"""
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        email_list = []
+        cur.execute("""SELECT email FROM user_email""")
+        emails = cur.fetchall()
+        cur.close()
+        if emails:
+            email_list = [item['email'] for item in emails]
+        return email_list
+
+
+def verify_email(config: _Environ, email: str):
+    """Function to verify user email for subscription list"""
+    client = boto3.client("ses",
+                          region_name="eu-west-2",
+                          aws_access_key_id=config["ACCESS_KEY_ID"],
+                          aws_secret_access_key=config["SECRET_ACCESS_KEY"])
+
+    response = client.verify_email_identity(
+        EmailAddress=email
+    )
+    if response['ResponseMetadata']['HTTPStatusCode'] == 200:
+        print('Verification Success.')
+    else:
+        print('Verification Error.')
+
+
+def email_subscribers(conn: connection, config: _Environ):
+    """Emails all subscribers either the report or verification email"""
+    all_emails = get_list_of_emails_from_database(conn)
+    verification_awaited = []
+    for address in all_emails:
+        try:
+            send_email(config, address)
+            print("Report email sent.")
+        except botocore.exceptions.ClientError as err:
+            if "MessageRejected" in str(err):
+                verification_awaited.append(address)
+            else:
+                print(err)
+
+    for address in verification_awaited:
+        verify_email(config, address)
 
 
 def handler(event, context) -> None:
@@ -559,17 +621,20 @@ def handler(event, context) -> None:
     Return:
         None
     """
-    load_dotenv()
-    config = environ
+    try:
+        load_dotenv()
+        config = environ
 
-    conn = get_db_connection(config)
-    game_df = get_database(conn)
-    game_df = format_database_columns(game_df)
+        conn = get_db_connection(config)
+        game_df = get_database(conn)
+        game_df = format_database_columns(game_df)
 
-    create_report(game_df, config["DASHBOARD_URL"])
-    print("Report created.")
-    send_email(config)
-    print("Email sent.")
+        create_report(game_df, config["DASHBOARD_URL"])
+        print("Report created.")
+
+        email_subscribers(conn, config)
+    finally:
+        conn.close()
 
 
 if __name__ == "__main__":
