@@ -88,11 +88,11 @@ CREATE TABLE review(
     playtime_last_2_weeks INT NOT NULL,
     game_id INT NOT NULL,
     PRIMARY KEY (review_id),
-    UNIQUE(game_id, review_text, review_score, reviewed_at, sentiment),
     FOREIGN KEY (game_id) REFERENCES game(game_id) 
 
 );
 
+CREATE UNIQUE INDEX review_constraint ON review (game_id, md5(review_text), review_score, reviewed_at, sentiment);
 
 -- Linking tables for game with developer / publisher / genre
 
