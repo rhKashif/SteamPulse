@@ -7,7 +7,7 @@ def dashboard_header() -> None:
     Build header for dashboard to give it title text
     """
     st.title("SteamPulse")
-    st.markdown("Community Insights for New Releases on Steam")
+    st.markdown("Insights for New Releases on Steam")
     st.markdown("---")
 
 
@@ -23,15 +23,17 @@ def dashboard_content() -> None:
     """
     Build content body for dashboard to help users navigate
     """
-    st.markdown("### Dashboard Overview")
+    st.markdown("### Overview")
     st.markdown(
-        "This dashboard is designed to cater to different audiences.You can navigate through the following sections:")
+        "You can navigate through the following sections:")
     st.markdown(
         "- Community: Explore data visualizations and insights that are relevant to steam community")
     st.markdown(
         "- Developer: Dive into technical data and analytics that developers will find valuable")
     st.markdown(
         "- New Releases: Explore all the latest game releases that power our visualizations")
+    st.markdown(
+        "- Subscription: Subscribe to SteamPulses emailing list to receive reports on new releases")
 
     st.markdown("#### Quick Tips:")
     st.markdown("- Use the filters to narrow down your search")
@@ -48,7 +50,7 @@ def dashboard_content() -> None:
                 unsafe_allow_html=True)
     st.markdown("##### About us: Developers")
     st.markdown(
-        "This Dashboard has been build as part of the Sigma Labs final project:")
+        "As well as being data engineers, each member of the team took on an additional role as follows:")
     st.markdown(
         "- [Daniel McCallion](https://github.com/DMcCallion) & [Angela Vilde](https://github.com/angelikavilde) - Project Managers")
     st.markdown("- [Kausi Mahasivam](%s) - Quality Assurance" % kausi_github)

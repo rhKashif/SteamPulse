@@ -344,7 +344,7 @@ def dashboard_header() -> None:
     Build header for dashboard to give it title text
     """
 
-    st.markdown("### Community Insights for New Releases on Steam")
+    st.markdown("## Community Insights")
 
 
 def wordcloud_rows(wordcloud_one: Chart, wordcloud_two: Chart) -> None:

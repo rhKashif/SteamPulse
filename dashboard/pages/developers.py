@@ -338,7 +338,7 @@ def dashboard_header() -> None:
     Build header for dashboard to give it title text
     """
 
-    st.markdown("### Developer Insights for New Releases on Steam")
+    st.markdown("## Developer Insights")
 
 
 if __name__ == "__main__":
