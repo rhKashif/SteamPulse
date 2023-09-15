@@ -176,7 +176,7 @@ Even though it was assumed that the same cursor received from the endpoint with 
 
 pages - directory containing additional pages for streamlit dashboard
 
-### Files
+### Files explained
 
 `home.py` - script containing streamlit dashboard home page
 `setup_nltk.py` - script containing installation for all nltk datasets
@@ -204,7 +204,7 @@ Design decision - use of `format_sentiment_significant_figures` to format sentim
 
 ## Email Report
 
-### Files
+### Files explained
 
 `lambda_function.py` - script containing code to make connection with database, extract all relevant data and build visualization plots, format them in html and convert to pdf. This pdf is emailed to users that have subscribed via our dashboard using the boto3 library and AWS SES.
 
