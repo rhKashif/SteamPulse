@@ -131,10 +131,10 @@ This pipeline focuses on the systematic collection and analysis of reviews for r
 - `pipeline.py` -- file containing functions from all of the previous files above
 
 - `conftest.py` -- contains pytest fixtures required for testing
-- `test_extract.py` -- file containing uni tests for the functions in `extract.py`
-- `test_transform.py` -- file containing uni tests for the functions in `transform.py`
-- `test_sentiment.py` -- file containing uni tests for the functions in `sentiment.py`
-- `test_load.py` -- file containing uni tests for the functions in `load.py`
+- `test_extract.py` -- file containing unit tests for the functions in `extract.py`
+- `test_transform.py` -- file containing unit tests for the functions in `transform.py`
+- `test_sentiment.py` -- file containing unit tests for the functions in `sentiment.py`
+- `test_load.py` -- file containing unit tests for the functions in `load.py`
 
 ### Data Processing and Transformation
 
