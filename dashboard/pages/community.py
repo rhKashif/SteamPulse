@@ -217,8 +217,7 @@ def get_wordnet_tags(tokens: list) -> list:
     """
     tag_map = defaultdict(lambda: "n")
     tag_map['J'] = "a"
-    # tag_map['V'] = "v"
-    # tag_map['R'] = "r"
+    tag_map['R'] = "r"
 
     tagged_tokens = pos_tag(tokens)
 
@@ -261,7 +260,9 @@ def get_filtered_tokens(tokens):
     stops = stopwords.words("english")
 
     stops.extend(["play", "get", "still", "game",
-                 "n't", "gen", "buy", "next", "player", "year", "even", "story"])
+                 "n't", "gen", "buy", "next", "player",
+                  "year", "even", "story", "like", "mycareer",
+                  "version", "time", "new", "one", "last", "make"])
 
     return [t for t in tokens
             if t not in stops

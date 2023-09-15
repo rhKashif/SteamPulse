@@ -49,20 +49,19 @@ def get_db_connection(config_file: _Environ) -> connection:
             host=config_file["DATABASE_ENDPOINT"]
         )
     except Exception as err:
-        print("Error connecting to database.")
-        raise err
+        print(f"Error connecting to database: {err}")
 
 
 @st.cache_data(ttl="600s")
 def get_database() -> DataFrame:
     """
-    Returns redshift database transaction table as a DataFrame Object
+    Returns release database as a DataFrame Object
 
     Args:
         _config (connection): A connection to a Postgres database
 
     Returns:
-        DataFrame:  A pandas DataFrame containing all relevant release data
+        DataFrame: A pandas DataFrame containing all relevant release data
     """
     load_dotenv()
     conn_postgres = get_db_connection(environ)
