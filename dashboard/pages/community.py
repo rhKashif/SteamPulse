@@ -420,6 +420,7 @@ if __name__ == "__main__":
 
         two_column_chart_figures(trending_sentiment_per_developer_plot,
                                  trending_sentiment_per_publisher_plot)
+        st.markdown("#### WordCloud:")
 
         if not filtered_df["review_text"].dropna().empty and filtered_df["title"].nunique() == 1:
             review_word_cloud_plot = plot_word_cloud_all_releases(filtered_df)
@@ -428,7 +429,7 @@ if __name__ == "__main__":
 
             wordcloud_rows(review_word_cloud_plot, genre_word_cloud_plot)
         elif filtered_df["review_text"].dropna().empty and filtered_df["title"].nunique() == 1:
-            st.markdown("### Insufficient data for word cloud plots")
+            st.markdown("No Reviews for Selected Title")
         else:
             st.markdown(
-                "#### Select Individual Title to Generate a WordCloud")
+                "Select Individual Title to Generate a WordCloud")

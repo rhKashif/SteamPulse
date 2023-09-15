@@ -555,7 +555,7 @@ def plot_table(table_one: dict, rows: int) -> None:
         rows (int): A integer value corresponding to the number of rows to display in
         the table
     """
-    st.markdown(f"{table_one['title']}")
+    st.markdown(f"###### {table_one['title']}")
     st.table(table_one["data"].head(rows).style.set_properties(
         **{'font-size': '16px'}))
 
