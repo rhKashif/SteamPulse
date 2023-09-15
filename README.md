@@ -8,7 +8,7 @@ This project takes new released games from Steam and their reviews. This informa
 
 ## Setup
 
-SteamPuluse is designed to be hosted on AWS. With minimal modifications, it can be run locally.
+SteamPulse is designed to be hosted on AWS. With minimal modifications, it can be run locally.
 
 ### Initial setup
 
@@ -84,6 +84,10 @@ Run the docker image locally
 docker run --env-file .env name_of_file
 ```
 
+## Continuous Integration and Continuous Deployment
+
+We have implemented continuous integration in our project by creating automated github workflows when code is pulled and pushed from the main branch. All code is maintained over a pylint score of 8 and has been tested with pytest.
+
 ## Games ETL Pipeline
 
 ### Overview
@@ -123,18 +127,18 @@ This pipeline focuses on the systematic collection and analysis of reviews for r
 
 ### Files explained
 
-- `extract.py` -- file containing API requests from Steam Review API to get the reviews for each game
-- `transform.py` -- file containing the script to correct any non-valid inputs in the review data-frame
-- `nltk_download.py` -- file containing downloads from nltk library (explained in `Important note` section)
-- `sentiment.py` -- file containing script which analyses the reviews and rates them 1-5 on (negative/positive) scale
-- `load.py` -- file containing script to load the reviews data into the database
-- `pipeline.py` -- file containing functions from all of the previous files above
+- `extract.py` -- python script containing API requests from Steam Review API to get the reviews for each game
+- `transform.py` -- python script which corrects any non-valid inputs in the review data-frame
+- `nltk_download.py` -- python script which downloads from nltk library (explained in `Important note` section)
+- `sentiment.py` -- python script which analyses the reviews and rates them 1-5 on (negative/positive) scale
+- `load.py` -- python script which loads the review data into the database
+- `pipeline.py` -- single script which runs each of the above scripts sequentially
 
 - `conftest.py` -- contains pytest fixtures required for testing
-- `test_extract.py` -- file containing uni tests for the functions in `extract.py`
-- `test_transform.py` -- file containing uni tests for the functions in `transform.py`
-- `test_sentiment.py` -- file containing uni tests for the functions in `sentiment.py`
-- `test_load.py` -- file containing uni tests for the functions in `load.py`
+- `test_extract.py` -- file containing unit tests for the functions in `extract.py`
+- `test_transform.py` -- file containing unit tests for the functions in `transform.py`
+- `test_sentiment.py` -- file containing unit tests for the functions in `sentiment.py`
+- `test_load.py` -- file containing unit tests for the functions in `load.py`
 
 ### Data Processing and Transformation
 
@@ -152,7 +156,7 @@ Following sentiment analysis and processing, the reviews are seamlessly integrat
 
 The project includes a Dockerfile which is uploaded on AWS Elastic Container Registry (ECR) and is used within a step function on AWS, activated daily with report created from the reviews and other data after the reviews gathering and transforming was completed. The script for review gathering also includes logs into the terminal of possible failures to retrieve/transform/load the data which are useful to see in AWS console to debug for later.
 
-#### Assumptions
+### Assumptions and design decisions
 
 During the data extracting phase, certain assumptions were made of the data, specifically:
 
@@ -162,11 +166,11 @@ During the data extracting phase, certain assumptions were made of the data, spe
 - Since the reviews API does not include the name of the game, it is assumed that the API correctly picks up reviews for the game with the correct game ID as it could not be verified.
 - The project also assumes that the data presented in the overview above, will be present. This is assumed from various data gathering runs. Although not all of the API's promised keys were present, the ones included seemed to be.
 
-#### Limitations
+### Limitations
 
 Unfortunately, this project encountered certain limitations stemming from issues identified within the Steam Reviews API. For example, where the language for the endpoint was set to English - it would pick up some reviews in Spanish and other languages. Some ways were attempted to translate the reviews but proved to not work that well and since most received reviews were in English, this idea was moved to a potential future addition to the project.
 
-Moreover, the API would not display 100 reviews per page when the endpoint was set to show 100 reviews per page. However, since the project focused on recent released games which would not have many reviews, this was deemed to not be a big disadvantage. It was also noticed that even though the reviews showed is under 100 count, the cursors continue for longer than assumed (assumed was total number of reviews/100 + 1). This has now been implimented to looping until the next cursor already has been ran.
+Moreover, the API would not display 100 reviews per page when the endpoint was set to show 100 reviews per page. However, since the project focused on recent released games which would not have many reviews, this was deemed to not be a big disadvantage. It was also noticed that even though the reviews showed is under 100 count, the cursors continue for longer than assumed (assumed was total number of reviews/100 + 1). This has now loops until the next cursor is already in the list of cursors.
 
 Even though it was assumed that the same cursor received from the endpoint with the same cursor would mean there are no more reviews for the game, it was noted that - it isn't always the case as when tested for old very popular games, only a small fraction of reviews could be gathered and most would not show up. It was also noticed that some cursors that could not be retrieved from a given game ID when looping through the pages of reviews, would show a page full of reviews when set to a random cursor in the endpoint: showing that there are more cursors available for a given game ID but were not accessible from the Steam API's endpoint. This anomaly implied the existence of undisclosed cursors associated with a given game ID within the Steam API, which were beyond the project's reach.
 
@@ -176,7 +180,7 @@ Even though it was assumed that the same cursor received from the endpoint with 
 
 pages - directory containing additional pages for streamlit dashboard
 
-### Files
+### Files explained
 
 `home.py` - script containing streamlit dashboard home page
 `setup_nltk.py` - script containing installation for all nltk datasets
@@ -189,7 +193,9 @@ pages/`releases.py` - script containing streamlit dashboard "releases" page with
 
 pages/`subscription.py` - script containing streamlit dashboard "subscription" page with a form for users to subscribe for pdf reports on the latest insights
 
-#### Assumptions and design decisions
+### Assumptions and design decisions
+
+#### Assumptions
 
 Assumption that the necessary data is available, accurate, and up-to-date. This includes assumptions about data format, structure, and quality:
 
@@ -200,21 +206,19 @@ Assumption that the current word map will for review text will be useful and int
 
 - More comprehensive language processing is required to increase the relevancy of words on the word map but given time constraints, this has not been implemented
 
-Design decision - use of `format_sentiment_significant_figures` to format sentiment.
+#### Design decision
+
+- use of `format_sentiment_significant_figures` to format sentiment.
 
 ## Email Report
 
-### Files
+### Files explained
 
-`lambda_function.py` - script containing code to make connection with database, extract all relevant data and build visualization plots, format them in html and convert to pdf. This pdf is emailed to users that have subscribed via our dashboard using the boto3 library and AWS SES.
+- `lambda_function.py` - script containing code to make connection with database, extract all relevant data and build visualization plots, format them in html and convert to pdf. This pdf is emailed to users that have subscribed via our dashboard using the boto3 library and AWS SES.
 
-#### Assumptions and design decisions
+### Assumptions and design decisions
 
 Assumption that the necessary data is available, accurate, and up-to-date. This includes assumptions about data format, structure, and quality:
 
 - Returns an error message if connection to the database fails
 - If there is no data within the last two weeks the dashboard, a message will be displayed to relay this to the user
-
-### Continuous Integration and Continuous Deployment
-
-We have implemented continuous integration in our project by creating automated github workflows when code is pulled and pushed from the main branch. All code is maintained over a pylint score of 8 and has been tested with pytest.
