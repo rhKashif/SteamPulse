@@ -111,7 +111,7 @@ We have chosen to supplement the initially scraped data from the Steam website w
 
 During transformation, we decided to create unique atomic rows for the data which would be in line with our normalised schema. We have chosen not to modify the game titles as we did not want to lose data on games that are in different languages and hence would have different characters to the English alphabet. We combined the **genres** (from API) and **user_tags** (from web scraping) information to have a complete list of all associated genres and created a separate column so we could see which ones were assigned by the user. If a tag was in both genres and user-tags this would be classified as not **user-generated**. Any duplicate rows are removed during the transformation process.
 
-During loading, we chose to use a psycopg2 function called execute_batch which loaded data quickly into the database. In addition we have chosen to use our schema design of 'UNIQUE' categories to prevent duplication of existing data.
+During loading, we chose to use a psycopg2 function called execute_batch which loaded data quickly into the database. In addition, we have chosen to use our schema design of 'UNIQUE' categories to prevent duplication of existing data.
 
 ## Reviews ETL pipeline
 
@@ -121,16 +121,16 @@ This pipeline focuses on the systematic collection and analysis of reviews for r
 
 - **Review**: The textual content of the review.
 - **Review Score**: An indication of the review's popularity, reflecting the number of up-votes received.
-- **Timestamp Created**: The timestamp indicating when the review was submitted.
+- **Timestamp Created**: The timestamp indicates when the review was submitted.
 - **Playtime Last 2 Weeks**: Minutes, that the user spent playing the game in the past 2 weeks.
 - **Next Cursor**: A parameter used exclusively for the next retrieval of reviews, as specified in the API documentation.
 
 ### Files explained
 
 - `extract.py` -- python script containing API requests from Steam Review API to get the reviews for each game
-- `transform.py` -- python script which corrects any non-valid inputs in the review data-frame
+- `transform.py` -- python script which corrects any non-valid inputs in the review DataFrame
 - `nltk_download.py` -- python script which downloads from nltk library (explained in `Important note` section)
-- `sentiment.py` -- python script which analyses the reviews and rates them 1-5 on (negative/positive) scale
+- `sentiment.py` -- python script which analyses the reviews and rates them 1-5 (negative/positive) on a scale
 - `load.py` -- python script which loads the review data into the database
 - `pipeline.py` -- single script which runs each of the above scripts sequentially
 
@@ -142,7 +142,7 @@ This pipeline focuses on the systematic collection and analysis of reviews for r
 
 ### Data Processing and Transformation
 
-Before integration into the project's database, the collected reviews undergo processing and transformation in alignment with predefined assumptions. To enhance their utility and relevance, we employ Natural Language Processing (NLP) techniques. Notably, sentiment analysis is conducted to assign a sentiment value to each review, expressed on a scale ranging from 1 to 5. A lower sentiment value suggests a more negative assessment by the automated analysis. This sentiment analysis data is used in calculations related to game popularity.
+Before integration into the project's database, the collected reviews undergo processing and transformation in alignment with predefined assumptions. We employ Natural Language Processing (NLP) techniques to enhance their utility and relevance. Notably, sentiment analysis is conducted to assign a sentiment value to each review, expressed on a scale ranging from 1 to 5. A lower sentiment value suggests a more negative assessment by the automated analysis. This sentiment analysis data is used in calculations related to game popularity.
 
 #### Important note
 
@@ -150,61 +150,48 @@ The review pipeline includes file `nltk_download.py` which has the installation 
 
 ### Database Integration
 
-Following sentiment analysis and processing, the reviews are seamlessly integrated into the project's database. This database serves as a repository for future utilisation within the project, providing a structured and accessible resource for ongoing analysis and assessment. The database to use was chosen to be PostgreSQL as it provided easy to use management tools and has strong security features.
+The reviews are seamlessly integrated into the project’s database following sentiment analysis and processing. This database serves as a repository for future utilisation within the project, providing a structured and accessible resource for ongoing analysis and assessment. The database to use was chosen to be PostgreSQL as it provides easy-to-use management tools and has strong security features.
 
 ### Cloud Integration and Automated Workflow
 
-The project includes a Dockerfile which is uploaded on AWS Elastic Container Registry (ECR) and is used within a step function on AWS, activated daily with report created from the reviews and other data after the reviews gathering and transforming was completed. The script for review gathering also includes logs into the terminal of possible failures to retrieve/transform/load the data which are useful to see in AWS console to debug for later.
+The project includes a Dockerfile which is uploaded on AWS Elastic Container Registry (ECR) and is used within a step function on AWS, activated daily with a report created from the reviews and other data after the reviews gathering and transforming was completed. The script for review gathering also includes logs into the terminal of possible failures to retrieve/transform/load the data which are useful to see in AWS console to debug for later.
 
 ### Assumptions and design decisions
 
-During the data extracting phase, certain assumptions were made of the data, specifically:
+During the data extraction phase, certain assumptions were made of the data, specifically:
 
 - **Timestamp created** will always be in UNIX time format and will always be correct.
 - **Review score** includes not both negative and positive votes (up + down) but only positive.
 - The schema for the table reviews has a unique constraint: `UNIQUE(game_id, review_text, review_score, reviewed_at, sentiment)`. The assumption is that there will not be a review for any recently reviewed games that have all of the same values; this is to ensure that the same review is not included twice when gathering more reviews for the games that are already present in the database.
 - Since the reviews API does not include the name of the game, it is assumed that the API correctly picks up reviews for the game with the correct game ID as it could not be verified.
-- The project also assumes that the data presented in the overview above, will be present. This is assumed from various data gathering runs. Although not all of the API's promised keys were present, the ones included seemed to be.
+- The project also assumes that the data presented in the overview above will be present. This is assumed from various data-gathering runs. Although not all of the API's promised keys were present, the ones included seemed to be.
 
 ### Limitations
 
 Unfortunately, this project encountered certain limitations stemming from issues identified within the Steam Reviews API. For example, where the language for the endpoint was set to English - it would pick up some reviews in Spanish and other languages. Some ways were attempted to translate the reviews but proved to not work that well and since most received reviews were in English, this idea was moved to a potential future addition to the project.
 
-Moreover, the API would not display 100 reviews per page when the endpoint was set to show 100 reviews per page. However, since the project focused on recent released games which would not have many reviews, this was deemed to not be a big disadvantage. It was also noticed that even though the reviews showed is under 100 count, the cursors continue for longer than assumed (assumed was total number of reviews/100 + 1). This has now loops until the next cursor is already in the list of cursors.
+Moreover, the API would not display 100 reviews per page when the endpoint was set to show 100 reviews per page. However, since the project focused on recently released games which would not have many reviews, this was deemed to not be a big disadvantage. It was also noticed that even though the reviews showed under 100 count, the cursors continue for longer than assumed (assumed was the total number of reviews/100 + 1). This now loops until the next cursor is already in the list of cursors.
 
-Even though it was assumed that the same cursor received from the endpoint with the same cursor would mean there are no more reviews for the game, it was noted that - it isn't always the case as when tested for old very popular games, only a small fraction of reviews could be gathered and most would not show up. It was also noticed that some cursors that could not be retrieved from a given game ID when looping through the pages of reviews, would show a page full of reviews when set to a random cursor in the endpoint: showing that there are more cursors available for a given game ID but were not accessible from the Steam API's endpoint. This anomaly implied the existence of undisclosed cursors associated with a given game ID within the Steam API, which were beyond the project's reach.
+Even though it was assumed that the same cursor received from the endpoint with the same cursor would mean there are no more reviews for the game, it was noted that - it isn't always the case as when tested for old very popular games, only a small fraction of reviews could be gathered and most would not show up. It was also noticed that some cursors that could not be retrieved from a given game ID when looping through the pages of reviews, would show a page full of reviews when set to a random cursor in the endpoint: showing that there are more cursors available for a given game ID but were not accessible from the Steam API's endpoint. This anomaly implied the existence of undisclosed cursors associated with a given game ID within the Steam API, which was beyond the project's reach.
 
 ## Streamlit Dashboard
 
 ### Folders
 
-pages - directory containing additional pages for streamlit dashboard
+pages - directory containing additional pages for Streamlit dashboard
 
 ### Files explained
 
-`home.py` - script containing streamlit dashboard home page
+`home.py` - script containing Streamlit dashboard home page
 `setup_nltk.py` - script containing installation for all nltk datasets
 
-pages/`community.py` - script containing streamlit dashboard "community" page with visualizations relevant for users
+pages/`community.py` - script containing Streamlit dashboard "community" page with visualizations relevant for users
 
-pages/`developers.py` - script containing streamlit dashboard "developers" page with visualizations relevant for developers
+pages/`developers.py` - script containing Streamlit dashboard "developers" page with visualizations relevant for developers
 
-pages/`releases.py` - script containing streamlit dashboard "releases" page with a table displaying all releases powering the visualizations
+pages/`releases.py` - script containing Streamlit dashboard "releases" page with a table displaying all releases powering the visualizations
 
-pages/`subscription.py` - script containing streamlit dashboard "subscription" page with a form for users to subscribe for pdf reports on the latest insights
-
-### Assumptions and design decisions
-
-#### Assumptions
-
-Assumption that the necessary data is available, accurate, and up-to-date. This includes assumptions about data format, structure, and quality:
-
-- Returns an error message if connection to the database fails
-- If there is no data within the last two weeks the dashboard, a message will be displayed to relay
-
-Assumption that the current word map will for review text will be useful and interesting for community members to see:
-
-- More comprehensive language processing is required to increase the relevancy of words on the word map but given time constraints, this has not been implemented
+pages/`subscription.py` - script containing Streamlit dashboard "subscription" page with a form for users to subscribe for pdf reports on the latest insights
 
 #### Design decision
 
@@ -214,11 +201,15 @@ Assumption that the current word map will for review text will be useful and int
 
 ### Files explained
 
-- `lambda_function.py` - script containing code to make connection with database, extract all relevant data and build visualization plots, format them in html and convert to pdf. This pdf is emailed to users that have subscribed via our dashboard using the boto3 library and AWS SES.
+- `lambda_function.py` - script containing code to make a connection with the database, extract all relevant data and build visualization plots, format them in HTML and convert to pdf. This pdf is emailed to users who have subscribed via our dashboard using the boto3 library and AWS SES.
 
-### Assumptions and design decisions
+### Assumptions and design decisions (Dashboard and Report)
 
-Assumption that the necessary data is available, accurate, and up-to-date. This includes assumptions about data format, structure, and quality:
+The assumption is that the necessary data is available, accurate, and up-to-date. This includes assumptions about data format, structure, and quality:
 
-- Returns an error message if connection to the database fails
-- If there is no data within the last two weeks the dashboard, a message will be displayed to relay this to the user
+- Returns an error message if the connection to the database fails
+- If there is no data within the last two weeks on the dashboard, a message will be displayed to relay this to the user
+
+Assumption that the current word map for review text will be useful and interesting for community members to see:
+
+- More comprehensive language processing is required to increase the relevancy of words on the word map but given time constraints, this has not been implemented
