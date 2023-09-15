@@ -84,6 +84,10 @@ Run the docker image locally
 docker run --env-file .env name_of_file
 ```
 
+## Continuous Integration and Continuous Deployment
+
+We have implemented continuous integration in our project by creating automated github workflows when code is pulled and pushed from the main branch. All code is maintained over a pylint score of 8 and has been tested with pytest.
+
 ## Games ETL Pipeline
 
 ### Overview
@@ -214,7 +218,3 @@ Assumption that the necessary data is available, accurate, and up-to-date. This 
 
 - Returns an error message if connection to the database fails
 - If there is no data within the last two weeks the dashboard, a message will be displayed to relay this to the user
-
-### Continuous Integration and Continuous Deployment
-
-We have implemented continuous integration in our project by creating automated github workflows when code is pulled and pushed from the main branch. All code is maintained over a pylint score of 8 and has been tested with pytest.
