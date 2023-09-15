@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from functools import reduce
 import pandas as pd
 from pandas import DataFrame
-from psycopg2 import connect
+from psycopg2 import connect, Error
 from psycopg2.extensions import connection
 import streamlit as st
 
@@ -48,7 +48,7 @@ def get_db_connection(config_file: _Environ) -> connection:
             port=config_file["DATABASE_PORT"],
             host=config_file["DATABASE_ENDPOINT"]
         )
-    except Exception as err:
+    except Error as err:
         print(f"Error connecting to database: {err}")
 
 
