@@ -70,7 +70,6 @@ def format_data_for_table(df_releases: DataFrame) -> DataFrame:
         DataFrame: A DataFrame containing new release data with aggregated data for each release
     """
     df_releases = df_releases.drop_duplicates("title")
-    df_releases = df_releases.dropna(subset=["review_text"])
     desired_columns = ["title", "release_date",
                        "sale_price", "avg_sentiment", "num_of_reviews"]
     df_releases = df_releases[desired_columns]
@@ -155,11 +154,13 @@ def plot_trending_games_table(df_releases: DataFrame) -> dict:
         dict: A Python dictionary containing a formatted DataFrame for table plot
         and an associated title for the table
     """
+    df_releases = df_releases.dropna(subset=["review_text"])
     df_merged = format_data_for_table(df_releases)
 
     df_merged = df_merged.sort_values(
         by=["Community Sentiment"], ascending=False)
     df_merged = format_columns(df_merged)
+    print(df_merged)
 
     df_merged = df_merged.reset_index(drop=True)
 
@@ -217,8 +218,8 @@ def get_wordnet_tags(tokens: list) -> list:
     """
     tag_map = defaultdict(lambda: "n")
     tag_map['J'] = "a"
-    tag_map['V'] = "v"
-    tag_map['R'] = "r"
+    # tag_map['V'] = "v"
+    # tag_map['R'] = "r"
 
     tagged_tokens = pos_tag(tokens)
 
@@ -260,7 +261,8 @@ def get_filtered_tokens(tokens):
     """
     stops = stopwords.words("english")
 
-    stops.extend(["play", "get", "still", "game"])
+    stops.extend(["play", "get", "still", "game",
+                 "n't", "gen", "buy", "next", "player", "year", "even", "story"])
 
     return [t for t in tokens
             if t not in stops
@@ -403,7 +405,9 @@ if __name__ == "__main__":
     else:
         headline_figures(filtered_df)
 
-        sub_headline_figures(filtered_df)
+        if not filtered_df["title"].nunique() == 1:
+            sub_headline_figures(filtered_df)
+        st.markdown("---")
 
         trending_games_by_sentiment = plot_trending_games_table(filtered_df)
         trending_game_by_reviews = plot_trending_games_review_table(

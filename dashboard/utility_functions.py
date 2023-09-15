@@ -438,8 +438,8 @@ def format_columns(df_releases: DataFrame) -> DataFrame:
         lambda x: f"£{x:.2f}")
     df_releases['Release Date'] = df_releases['Release Date'].dt.strftime(
         '%d/%m/%Y')
-    df_releases['Community Sentiment'] = df_releases['Community Sentiment'].fillna(
-        "No Sentiment")
+    df_releases['Community Sentiment'] = df_releases['Community Sentiment'].replace("nan",
+                                                                                    "No Sentiment")
 
     return df_releases
 
@@ -477,7 +477,7 @@ def headline_figures(df_releases: DataFrame) -> None:
                   df_releases["review_id"].nunique())
     with cols[2]:
         st.metric("Average Sentiment:", round(
-            df_releases["sentiment"].mean(), 2))
+            df_releases["avg_sentiment"].mean(), 2))
 
 
 def sub_headline_figures(df_releases: DataFrame) -> None:
@@ -523,8 +523,6 @@ def sub_headline_figures(df_releases: DataFrame) -> None:
     with cols[2]:
         st.metric("Most Compatible Platform",
                   compatibility_df["platform"].max().capitalize())
-
-    st.markdown("---")
 
 
 def two_column_chart_figures(plot_one: Chart, plot_two: Chart) -> None:
