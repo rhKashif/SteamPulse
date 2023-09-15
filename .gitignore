@@ -22,7 +22,6 @@ terraform.*
 
 # Data File
 *.html
-*.png
 *.pdf
 
 # MacOS related
