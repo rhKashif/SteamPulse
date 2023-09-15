@@ -156,7 +156,7 @@ Following sentiment analysis and processing, the reviews are seamlessly integrat
 
 The project includes a Dockerfile which is uploaded on AWS Elastic Container Registry (ECR) and is used within a step function on AWS, activated daily with report created from the reviews and other data after the reviews gathering and transforming was completed. The script for review gathering also includes logs into the terminal of possible failures to retrieve/transform/load the data which are useful to see in AWS console to debug for later.
 
-#### Assumptions
+### Assumptions and design decisions
 
 During the data extracting phase, certain assumptions were made of the data, specifically:
 
@@ -166,7 +166,7 @@ During the data extracting phase, certain assumptions were made of the data, spe
 - Since the reviews API does not include the name of the game, it is assumed that the API correctly picks up reviews for the game with the correct game ID as it could not be verified.
 - The project also assumes that the data presented in the overview above, will be present. This is assumed from various data gathering runs. Although not all of the API's promised keys were present, the ones included seemed to be.
 
-#### Limitations
+### Limitations
 
 Unfortunately, this project encountered certain limitations stemming from issues identified within the Steam Reviews API. For example, where the language for the endpoint was set to English - it would pick up some reviews in Spanish and other languages. Some ways were attempted to translate the reviews but proved to not work that well and since most received reviews were in English, this idea was moved to a potential future addition to the project.
 
@@ -193,7 +193,7 @@ pages/`releases.py` - script containing streamlit dashboard "releases" page with
 
 pages/`subscription.py` - script containing streamlit dashboard "subscription" page with a form for users to subscribe for pdf reports on the latest insights
 
-#### Assumptions and design decisions
+### Assumptions and design decisions
 
 Assumption that the necessary data is available, accurate, and up-to-date. This includes assumptions about data format, structure, and quality:
 
@@ -210,9 +210,9 @@ Design decision - use of `format_sentiment_significant_figures` to format sentim
 
 ### Files explained
 
-`lambda_function.py` - script containing code to make connection with database, extract all relevant data and build visualization plots, format them in html and convert to pdf. This pdf is emailed to users that have subscribed via our dashboard using the boto3 library and AWS SES.
+- `lambda_function.py` - script containing code to make connection with database, extract all relevant data and build visualization plots, format them in html and convert to pdf. This pdf is emailed to users that have subscribed via our dashboard using the boto3 library and AWS SES.
 
-#### Assumptions and design decisions
+### Assumptions and design decisions
 
 Assumption that the necessary data is available, accurate, and up-to-date. This includes assumptions about data format, structure, and quality:
 
