@@ -123,12 +123,12 @@ This pipeline focuses on the systematic collection and analysis of reviews for r
 
 ### Files explained
 
-- `extract.py` -- file containing API requests from Steam Review API to get the reviews for each game
-- `transform.py` -- file containing the script to correct any non-valid inputs in the review data-frame
-- `nltk_download.py` -- file containing downloads from nltk library (explained in `Important note` section)
-- `sentiment.py` -- file containing script which analyses the reviews and rates them 1-5 on (negative/positive) scale
-- `load.py` -- file containing script to load the reviews data into the database
-- `pipeline.py` -- file containing functions from all of the previous files above
+- `extract.py` -- python script containing API requests from Steam Review API to get the reviews for each game
+- `transform.py` -- python script which corrects any non-valid inputs in the review data-frame
+- `nltk_download.py` -- python script which downloads from nltk library (explained in `Important note` section)
+- `sentiment.py` -- python script which analyses the reviews and rates them 1-5 on (negative/positive) scale
+- `load.py` -- python script which loads the review data into the database
+- `pipeline.py` -- single script which runs each of the above scripts sequentially
 
 - `conftest.py` -- contains pytest fixtures required for testing
 - `test_extract.py` -- file containing unit tests for the functions in `extract.py`
