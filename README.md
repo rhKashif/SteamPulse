@@ -6,6 +6,8 @@ An integrated dashboard displaying trend analysis for new releases on steam
 
 This project takes new released games from Steam and their reviews. This information is processed to create an interactive dashboard and generate a daily report on what games are most popular/recommended to those who subscribe to SteamPulse.
 
+![Architecture](architecture.png)
+
 ## Setup
 
 SteamPulse is designed to be hosted on AWS. With minimal modifications, it can be run locally.
