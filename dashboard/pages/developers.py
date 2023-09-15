@@ -271,7 +271,7 @@ def plot_genre_by_release(df_releases: DataFrame) -> Chart:
     df_releases = df_releases.groupby(
         "genre").size().reset_index().sort_values(by=[0])
 
-    chart = alt.Chart(df_releases.tail(10)).mark_bar().encode(
+    chart = alt.Chart(df_releases).mark_bar().encode(
         x=alt.Y("0:Q",
                 title="Number of Releases"),
         y=alt.X("genre:N", title="Genre", sort="-x")
@@ -300,7 +300,7 @@ def plot_genre_by_sentiment(df_releases: DataFrame) -> Chart:
 
     print(df_releases_sentiment_sum)
 
-    chart = alt.Chart(df_releases_sentiment_sum.tail(10)).mark_bar().encode(
+    chart = alt.Chart(df_releases_sentiment_sum).mark_bar().encode(
         x=alt.Y("avg_sentiment:Q",
                 title="Average Sentiment"),
         y=alt.X("genre:N", title="Genre", sort="-x")
