@@ -6,6 +6,9 @@ on:
     paths:
       - "pipeline_games/**"
       - "pipeline_reviews/**"
+  pull_request:
+    branches: ["main"]
+    
 jobs:
   test:
     name: Run Pytest
