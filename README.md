@@ -8,7 +8,7 @@ This project takes new released games from Steam and their reviews. This informa
 
 ## Setup
 
-SteamPuluse is designed to be hosted on AWS. With minimal modifications, it can be run locally.
+SteamPulse is designed to be hosted on AWS. With minimal modifications, it can be run locally.
 
 ### Initial setup
 
