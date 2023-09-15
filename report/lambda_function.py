@@ -301,7 +301,7 @@ def plot_table(df_releases: DataFrame, rows: int) -> Chart:
         alt.Y("index", type="ordinal", axis=None),
         alt.Text("value", type="nominal"),
     ).properties(
-        width=1000,
+        width=1300,
     )
     return chart
 
@@ -371,6 +371,7 @@ def plot_new_games_today_table(df_releases: DataFrame) -> None:
     df_releases = format_columns(df_releases)
 
     df_releases = df_releases.reset_index(drop=True)
+    df_releases = df_releases.head(32)
 
     chart = plot_table(df_releases, num_new_releases)
     return chart
@@ -417,6 +418,7 @@ def create_report(df_releases: DataFrame, dashboard_url: str) -> None:
 
     new_release_table_fig = build_figure_from_plot(
         new_release_table_plot, "table_one")
+
     trending_release_sentiment_fig = build_figure_from_plot(
         trending_release_sentiment_table_plot, "table_two")
     trending_release_review_fig = build_figure_from_plot(
@@ -436,10 +438,10 @@ def create_report(df_releases: DataFrame, dashboard_url: str) -> None:
                 size: letter portrait;
                 @frame header_frame {{           /* Static frame */
                     -pdf-frame-content: header_content;
-                    left: 50pt; width: 512pt; top: 50; height: 288pt;
+                    left: 50pt; width: 512pt; top: 50; height: 160pt;
                 }}
                 @frame col1_frame {{             /* Content frame 1 */
-                    left: 50pt; width: 512pt; top: 228pt; height: 365pt;
+                    left: 50pt; width: 512pt; top: 160pt; height: 365pt;
                 }}
                 @frame footer_frame {{           /* Static frame */
                     -pdf-frame-content: footer_content;
@@ -488,14 +490,15 @@ def create_report(df_releases: DataFrame, dashboard_url: str) -> None:
     <body>
         <div id="header_content">
             <h1>New Release Report</h1>
-                <div class = "myDiv2">
+        </div>
+
+        <div class = "myDiv2">
                     <p>Number of New Releases ({date}): {new_releases}<br>
                     Top Rated Release ({date_range} - {date}): {top_rated_release}<br>
                     Most Reviewed Release ({date_range} - {date}): {most_reviewed_release}</p>
                 </div>
-        </div>
 
-        <h2>New Releases</h2>
+        <h2>Latest Releases</h2>
         <img src="{new_release_table_fig}" alt="Chart 1">
 
         <h2>Top Releases by Sentiment</h2>
@@ -587,7 +590,7 @@ def verify_email(config: _Environ, email: str):
         EmailAddress=email
     )
     if response['ResponseMetadata']['HTTPStatusCode'] == 200:
-        print('Verification Success.')
+        print('Verification Email Success.')
     else:
         print('Verification Error.')
 
