@@ -286,9 +286,8 @@ def build_sidebar_number_of_reviews(df_releases: DataFrame) -> tuple:
     Returns:
         list: A tuple with minimum and maximum number of reviews that the user has selected
     """
-    max_number_of_reviews = df_releases["review_id"].nunique()
+    max_number_of_reviews = df_releases["num_of_reviews"].max()
     min_number_of_reviews = 0
-
     number_of_reviews = st.sidebar.slider(
         "Number of Reviews:", min_value=min_number_of_reviews, max_value=max_number_of_reviews,
         value=(min_number_of_reviews, max_number_of_reviews), step=1)

@@ -160,7 +160,6 @@ def plot_trending_games_table(df_releases: DataFrame) -> dict:
     df_merged = df_merged.sort_values(
         by=["Community Sentiment"], ascending=False)
     df_merged = format_columns(df_merged)
-    print(df_merged)
 
     df_merged = df_merged.reset_index(drop=True)
 
