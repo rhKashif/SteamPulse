@@ -1,6 +1,5 @@
 """Python Script: Build a dashboard for data visualization (community page)"""
-from datetime import datetime, timedelta
-from os import environ, _Environ
+from os import environ
 
 import altair as alt
 from altair.vegalite.v5.api import Chart
