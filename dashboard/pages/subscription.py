@@ -1,6 +1,7 @@
 """Script for email subscription"""
 from os import environ
 from re import fullmatch
+
 from dotenv import load_dotenv
 import streamlit as st
 from psycopg2 import connect, Error
