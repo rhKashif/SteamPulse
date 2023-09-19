@@ -16,7 +16,7 @@ def sidebar_header() -> None:
     Add text to the dashboard side bar
     """
     with st.sidebar:
-        st.image("logo_one.png")
+        st.image("steampulse_logo.png")
 
 
 def dashboard_content() -> None:

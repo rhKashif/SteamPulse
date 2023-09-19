@@ -10,7 +10,7 @@ COPY setup_nltk.py .
 COPY requirements.txt .
 COPY utility_functions.py .
 RUN pip install -r requirements.txt
-COPY logo_one.png . 
+COPY steampulse_logo.png . 
 RUN python setup_nltk.py
 COPY Home.py .
 
