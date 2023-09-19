@@ -6,7 +6,6 @@ import altair as alt
 from altair.vegalite.v5.api import Chart
 from collections import defaultdict
 from dotenv import load_dotenv
-from functools import reduce
 from nltk import pos_tag
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
@@ -14,8 +13,6 @@ from nltk.tokenize import word_tokenize
 import pandas as pd
 from pandas import DataFrame
 from pandas.core.common import flatten
-from psycopg2 import connect
-from psycopg2.extensions import connection
 import streamlit as st
 from wordcloud import WordCloud
 
