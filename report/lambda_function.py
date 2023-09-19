@@ -209,6 +209,35 @@ def get_most_reviewed_release(df_releases: DataFrame) -> str:
     return df_ratings.head(1)["title"][0]
 
 
+def aggregate_release_data_table_one(df_releases: DataFrame) -> DataFrame:
+    """
+    Transform data in releases DataFrame to find aggregated data from individual releases
+
+    Args:
+        df_release (DataFrame): A DataFrame containing new release data
+
+    Returns:
+        DataFrame: A DataFrame containing new release data with aggregated data for each release
+    """
+
+    data_frames = [df_releases]
+
+    df_merged = reduce(lambda left, right: pd.merge(left, right, on=['title'],
+                                                    how='outer'), data_frames)
+
+    df_merged = df_merged.drop_duplicates("title")
+
+    desired_columns = ["title", "release_date",
+                       "sale_price"]
+    df_merged = df_merged[desired_columns]
+
+    table_columns = ["Title", "Release Date",
+                     "Price"]
+    df_merged.columns = table_columns
+
+    return df_merged
+
+
 def aggregate_release_data(df_releases: DataFrame) -> DataFrame:
     """
     Transform data in releases DataFrame to find aggregated data from individual releases
@@ -261,10 +290,11 @@ def format_columns(df_releases: DataFrame) -> DataFrame:
         lambda x: f"£{x:.2f}")
     df_releases['Release Date'] = df_releases['Release Date'].dt.strftime(
         '%d/%m/%Y')
-    df_releases['Community Sentiment'] = df_releases['Community Sentiment'].apply(
-        lambda x: round(x, 2))
-    df_releases['Community Sentiment'] = df_releases['Community Sentiment'].fillna(
-        "No Sentiment")
+    if 'Community Sentiment' in df_releases.columns:
+        df_releases['Community Sentiment'] = df_releases['Community Sentiment'].apply(
+            lambda x: round(x, 2))
+        df_releases['Community Sentiment'] = df_releases['Community Sentiment'].fillna(
+            "No Sentiment")
 
     return df_releases
 
@@ -303,6 +333,7 @@ def plot_table(df_releases: DataFrame, rows: int) -> Chart:
     ).properties(
         width=1300,
     )
+    chart.save("chart.png")
     return chart
 
 
@@ -364,7 +395,7 @@ def plot_new_games_today_table(df_releases: DataFrame) -> None:
     """
     df_releases = get_data_for_release_date(df_releases, 1)
     num_new_releases = get_number_of_new_releases(df_releases)
-    df_merged = aggregate_release_data(df_releases)
+    df_merged = aggregate_release_data_table_one(df_releases)
 
     df_releases = df_merged.sort_values(
         by=["Release Date"], ascending=False)
@@ -635,7 +666,7 @@ def handler(event, context) -> None:
         create_report(game_df, config["DASHBOARD_URL"])
         print("Report created.")
 
-        email_subscribers(conn, config)
+        # email_subscribers(conn, config)
     finally:
         conn.close()
 
