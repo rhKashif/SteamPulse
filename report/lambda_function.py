@@ -313,7 +313,7 @@ def plot_table(df_releases: DataFrame, rows: int) -> Chart:
     """
     chart = alt.Chart(
         df_releases.reset_index().head(rows)
-    ).mark_text().transform_fold(
+    ).mark_text(fontSize=18).transform_fold(
         df_releases.columns.tolist()
     ).encode(
         alt.X(
@@ -323,7 +323,9 @@ def plot_table(df_releases: DataFrame, rows: int) -> Chart:
                 orient="top",
                 labelAngle=0,
                 title=None,
-                ticks=False
+                ticks=False,
+                labelFontSize=21,
+                labelLimit=400
             ),
             scale=alt.Scale(padding=10),
             sort=None,
@@ -666,7 +668,7 @@ def handler(event, context) -> None:
         create_report(game_df, config["DASHBOARD_URL"])
         print("Report created.")
 
-        # email_subscribers(conn, config)
+        email_subscribers(conn, config)
     finally:
         conn.close()
 
