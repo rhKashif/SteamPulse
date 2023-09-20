@@ -324,7 +324,7 @@ def plot_table(df_releases: DataFrame, rows: int) -> Chart:
                 labelAngle=0,
                 title=None,
                 ticks=False,
-                labelFontSize=24,
+                labelFontSize=26,
                 labelLimit=400
             ),
             scale=alt.Scale(padding=10),
@@ -333,7 +333,7 @@ def plot_table(df_releases: DataFrame, rows: int) -> Chart:
         alt.Y("index", type="ordinal", axis=None),
         alt.Text("value", type="nominal"),
     ).properties(
-        height=1200,
+        height=1000,
         width=1300
     )
     chart.save("chart.png")
@@ -354,7 +354,7 @@ def plot_table_small(df_releases: DataFrame, rows: int) -> Chart:
     """
     chart = alt.Chart(
         df_releases.reset_index().head(rows)
-    ).mark_text(fontSize=20).transform_fold(
+    ).mark_text(fontSize=21).transform_fold(
         df_releases.columns.tolist()
     ).encode(
         alt.X(
@@ -446,7 +446,7 @@ def plot_new_games_today_table(df_releases: DataFrame) -> None:
     df_releases = format_columns(df_releases)
 
     df_releases = df_releases.reset_index(drop=True)
-    df_releases = df_releases.head(32)
+    df_releases = df_releases.head(27)
 
     chart = plot_table(df_releases, num_new_releases)
     return chart
@@ -517,7 +517,7 @@ def create_report(df_releases: DataFrame, dashboard_url: str) -> None:
                     left: 50pt; width: 512pt; top: 50; height: 160pt;
                 }}
                 @frame col1_frame {{             /* Content frame 1 */
-                    left: 50pt; width: 512pt; top: 160pt; height: 365pt;
+                    left: 50pt; width: 512pt; top: 160pt; height: 505pt;
                 }}
                 @frame footer_frame {{           /* Static frame */
                     -pdf-frame-content: footer_content;
@@ -711,7 +711,7 @@ def handler(event, context) -> None:
         create_report(game_df, config["DASHBOARD_URL"])
         print("Report created.")
 
-        # email_subscribers(conn, config)
+        email_subscribers(conn, config)
     finally:
         conn.close()
 
