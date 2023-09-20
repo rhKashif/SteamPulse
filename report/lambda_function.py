@@ -209,9 +209,10 @@ def get_most_reviewed_release(df_releases: DataFrame) -> str:
     return df_ratings.head(1)["title"][0]
 
 
-def aggregate_release_data_table_one(df_releases: DataFrame) -> DataFrame:
+def aggregate_release_data_new_releases(df_releases: DataFrame) -> DataFrame:
     """
-    Transform data in releases DataFrame to find aggregated data from individual releases
+    Transform data in releases DataFrame to find aggregated data from individual releases.
+    Does not contain the average sentiment or number of reviews. 
 
     Args:
         df_release (DataFrame): A DataFrame containing new release data
@@ -341,7 +342,7 @@ def plot_table(df_releases: DataFrame, rows: int) -> Chart:
 
 def plot_table_small(df_releases: DataFrame, rows: int) -> Chart:
     """
-    Create a table from a given DataFrame
+    Create a table for a DataFrame looking at the top 5 games.
 
     Args:
         df_releases (DataFrame): A DataFrame containing filtered data for a chart
@@ -376,7 +377,6 @@ def plot_table_small(df_releases: DataFrame, rows: int) -> Chart:
         width=1300,
         height=200
     )
-    chart.save("chart.png")
     return chart
 
 
@@ -438,7 +438,7 @@ def plot_new_games_today_table(df_releases: DataFrame) -> None:
     """
     df_releases = get_data_for_release_date(df_releases, 1)
     num_new_releases = get_number_of_new_releases(df_releases)
-    df_merged = aggregate_release_data_table_one(df_releases)
+    df_merged = aggregate_release_data_new_releases(df_releases)
 
     df_releases = df_merged.sort_values(
         by=["Release Date"], ascending=False)
