@@ -244,7 +244,7 @@ def plot_platform_distribution(df_releases: DataFrame) -> Chart:
     except KeyError:
         linux_compatibility = 0
 
-    compatibility_df = pd.DataFrame({"platform": ['mac', 'windows', "linux"],
+    compatibility_df = pd.DataFrame({"platform": ['Mac', 'Windows', "Linux"],
                                      "compatibility": [mac_compatibility, windows_compatibility, linux_compatibility]})
 
     chart = alt.Chart(compatibility_df).mark_bar().encode(
