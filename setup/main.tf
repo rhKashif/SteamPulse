@@ -443,7 +443,7 @@ resource "aws_scheduler_schedule" "steampulse_game_pipeline_schedule" {
 resource "aws_scheduler_schedule" "steampulse_review_pipeline_schedule" {
   name                = "steampulse_review_pipeline_schedule"
   description         = "Runs the steampulse review pipeline on a cron schedule"
-  schedule_expression = "cron(22 * * * ? *)"
+  schedule_expression = "cron(47 * * * ? *)"
 
   flexible_time_window {
     mode = "OFF"
@@ -703,24 +703,24 @@ resource "aws_iam_role" "steampulse_sfn_role" {
           Action   = "states:StartExecution",
           Effect   = "Allow",
           Resource = "*"
+        },
+        {
+          Action = "events:PutTargets",
+          Effect = "Allow",
+          Resource = "*"
+
+        },
+        {
+          Action = "events:PutRule",
+          Effect = "Allow",
+          Resource = "*"
+
+        },
+        {
+          Action = "events:DescribeRule",
+          Effect = "Allow",
+          Resource = "*"
         }
-        # {
-        #   Action = "events:PutTargets",
-        #   Effect = "Allow",
-        #   Resource = "*"
-
-        # },
-        # {
-        #   Action = "events:PutRule",
-        #   Effect = "Allow",
-        #   Resource = "*"
-
-        # },
-        # {
-        #   Action = "events:DescribeRule",
-        #   Effect = "Allow",
-        #   Resource = "*"
-
 
       ]
       }
@@ -765,7 +765,8 @@ resource "aws_sfn_state_machine" "steampulse_state_machine" {
               "subnet-03b1a3e1075174995",
               "subnet-0cec5bdb9586ed3c4",
               "subnet-0667517a2a13e2a6b"
-            ]
+            ],
+            "AssignPublicIp": "ENABLED"
           }
         }
         },
