@@ -54,7 +54,7 @@ def get_database(conn_postgres: connection) -> DataFrame:
     """
     query = "SELECT\
             game.game_id, title, release_date, price, sale_price,\
-            sentiment, review_text, reviewed_at, review_score,\
+            review_id, sentiment, review_text, reviewed_at, review_score,\
             genre, user_generated,\
             developer_name,\
             publisher_name,\
@@ -209,6 +209,28 @@ def get_most_reviewed_release(df_releases: DataFrame) -> str:
     return df_ratings.head(1)["title"][0]
 
 
+def calculate_sum_sentiment(sentiment: float, score: int) -> float:
+    """
+    Calculates total sentiment score by multiplying sentiment associated with
+    a review multiplied by the review_score (represents the number of users who
+    agree with this review)
+
+    Args:
+        sentiment (float): A value associated with how positive or negative the
+        review is considered to be
+
+        score (int): A value associated with the number of users who up-voted a 
+        review
+
+    Returns:
+        float: A sentiment value which takes into account the number of users
+        who agreed with a given review
+    """
+    if score != 0:
+        return sentiment * (score + 1)
+    return sentiment
+
+
 def aggregate_release_data_new_releases(df_releases: DataFrame) -> DataFrame:
     """
     Transform data in releases DataFrame to find aggregated data from individual releases.
@@ -239,30 +261,43 @@ def aggregate_release_data_new_releases(df_releases: DataFrame) -> DataFrame:
     return df_merged
 
 
-def aggregate_release_data(df_releases: DataFrame) -> DataFrame:
+def aggregate_data(df_releases: DataFrame) -> DataFrame:
     """
-    Transform data in releases DataFrame to find aggregated data from individual releases
-
+    Transform data in releases DataFrame to find aggregated sentiment from individual reviews
     Args:
         df_release (DataFrame): A DataFrame containing new release data
-
     Returns:
         DataFrame: A DataFrame containing new release data with aggregated data for each release
     """
-    average_sentiment_per_title = df_releases.groupby('title')[
-        'sentiment'].mean().sort_values(
-        ascending=False).dropna().reset_index()
-    average_sentiment_per_title.columns = ["title", "avg_sentiment"]
 
-    review_per_title = df_releases.groupby('title')[
-        'review_text'].count().sort_values(
-        ascending=False).dropna().reset_index()
-    review_per_title.columns = ["title", "num_of_reviews"]
+    df_releases["weighted_sentiment"] = df_releases.apply(lambda row:
+                                                          calculate_sum_sentiment(row["sentiment"], row["review_score"]), axis=1)
 
-    data_frames = [df_releases, average_sentiment_per_title, review_per_title]
+    review_rows_count = df_releases.groupby(
+        "game_id")["weighted_sentiment"].count()
+    total_sum_scores = df_releases.groupby(
+        "game_id")["weighted_sentiment"].sum()
+    total_weights = df_releases.groupby("game_id")[
+        "review_score"].sum()
 
-    df_merged = reduce(lambda left, right: pd.merge(left, right, on=['title'],
+    total_weights = total_weights + review_rows_count
+    total_sentiment_scores = total_sum_scores / total_weights
+
+    df_releases["avg_sentiment"] = df_releases["game_id"].apply(
+        lambda row: round(total_sentiment_scores.loc[row], 1))
+
+    review_per_title = df_releases.groupby('game_id')[
+        'review_id'].nunique()
+    review_per_title = review_per_title.to_frame()
+
+    review_per_title.columns = ["num_of_reviews"]
+
+    data_frames = [df_releases, review_per_title]
+
+    df_merged = reduce(lambda left, right: pd.merge(left, right, on=['game_id'],
                                                     how='outer'), data_frames)
+
+    df_merged.drop(["weighted_sentiment"], axis=1, inplace=True)
 
     df_merged = df_merged.drop_duplicates("title")
 
@@ -287,6 +322,7 @@ def format_columns(df_releases: DataFrame) -> DataFrame:
     Returns:
         DataFrame: A DataFrame containing data with formatted columns
     """
+
     df_releases['Price'] = df_releases['Price'].apply(
         lambda x: f"£{x:.2f}")
     df_releases['Release Date'] = df_releases['Release Date'].dt.strftime(
@@ -391,13 +427,15 @@ def plot_trending_games_sentiment_table(df_releases: DataFrame) -> None:
         Chart: A chart displaying plotted table
     """
     df_releases = get_data_for_release_date_range(df_releases, 8)
-    df_merged = aggregate_release_data(df_releases)
+    df_merged = aggregate_data(df_releases)
 
     df_releases = df_merged.sort_values(
         by=["Community Sentiment"], ascending=False)
     df_releases = format_columns(df_releases)
 
     df_releases = df_releases.reset_index(drop=True)
+
+    df_releases = df_releases[df_releases["Number of Reviews"] > 10]
 
     chart = plot_table_small(df_releases, 5)
     return chart
@@ -414,8 +452,7 @@ def plot_trending_games_review_table(df_releases: DataFrame) -> None:
         Chart: A chart displaying plotted table
     """
     df_releases = get_data_for_release_date_range(df_releases, 8)
-    df_merged = aggregate_release_data(df_releases)
-
+    df_merged = aggregate_data(df_releases)
     df_releases = df_merged.sort_values(
         by=["Number of Reviews"], ascending=False)
     df_releases = format_columns(df_releases)
@@ -438,6 +475,7 @@ def plot_new_games_today_table(df_releases: DataFrame) -> None:
     """
     df_releases = get_data_for_release_date(df_releases, 1)
     num_new_releases = get_number_of_new_releases(df_releases)
+
     df_merged = aggregate_release_data_new_releases(df_releases)
 
     df_releases = df_merged.sort_values(
@@ -463,7 +501,6 @@ def build_figure_from_plot(plot: Chart, figure_name: str) -> str:
     Return:
         str: A string representing the path of a .png file
     """
-    plot.save(f'{figure_name}.png')
     plot.save(f"/tmp/{figure_name}.png")
     return f"/tmp/{figure_name}.png"
 
@@ -485,11 +522,11 @@ def create_report(df_releases: DataFrame, dashboard_url: str) -> None:
     top_rated_release = get_top_rated_release(df_releases)
     most_reviewed_release = get_most_reviewed_release(df_releases)
 
+    new_release_table_plot = plot_new_games_today_table(df_releases)
     trending_release_sentiment_table_plot = plot_trending_games_sentiment_table(
         df_releases)
     trending_release_review_table_plot = plot_trending_games_review_table(
         df_releases)
-    new_release_table_plot = plot_new_games_today_table(df_releases)
 
     new_release_table_fig = build_figure_from_plot(
         new_release_table_plot, "table_one")
