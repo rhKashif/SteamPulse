@@ -670,9 +670,9 @@ def handler(event, context) -> None:
         game_df = format_database_columns(game_df)
 
         create_report(game_df, config["DASHBOARD_URL"])
-        # print("Report created.")
+        print("Report created.")
 
-        # email_subscribers(conn, config)
+        email_subscribers(conn, config)
     finally:
         conn.close()
 
