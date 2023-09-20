@@ -298,8 +298,6 @@ def plot_genre_by_sentiment(df_releases: DataFrame) -> Chart:
     df_releases_sentiment_sum = df_releases.groupby(
         "genre")["avg_sentiment"].mean().reset_index().sort_values(by=["avg_sentiment"]).dropna()
 
-    print(df_releases_sentiment_sum)
-
     chart = alt.Chart(df_releases_sentiment_sum).mark_bar().encode(
         x=alt.Y("avg_sentiment:Q",
                 title="Average Sentiment"),

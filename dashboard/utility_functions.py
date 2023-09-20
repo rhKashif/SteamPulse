@@ -63,36 +63,41 @@ def get_database() -> DataFrame:
     Returns:
         DataFrame: A pandas DataFrame containing all relevant release data
     """
-    load_dotenv()
-    conn_postgres = get_db_connection(environ)
+    time_now = datetime.now()
+    last_recorded_time = st.session_state.get("last_fetch_time", time_now - timedelta(seconds=600))
+    if last_recorded_time <= time_now - timedelta(seconds=600):
+        load_dotenv()
+        conn_postgres = get_db_connection(environ)
 
-    query = f"SELECT\
-            game.game_id, title, release_date, price, sale_price,\
-            review_id, sentiment, review_text, reviewed_at, review_score,\
-            genre, user_generated,\
-            developer_name,\
-            publisher_name,\
-            mac, windows, linux\
-            FROM game\
-            LEFT JOIN review ON\
-            review.game_id=game.game_id\
-            LEFT JOIN platform ON\
-            game.platform_id=platform.platform_id\
-            LEFT JOIN game_developer_link as developer_link ON\
-            game.game_id=developer_link.game_id\
-            LEFT JOIN developer ON\
-            developer_link.developer_id=developer.developer_id\
-            LEFT JOIN game_genre_link as genre_link ON\
-            game.game_id=genre_link.game_id\
-            LEFT JOIN genre ON\
-            genre_link.genre_id=genre.genre_id\
-            LEFT JOIN game_publisher_link as publisher_link ON\
-            game.game_id=publisher_link.game_id\
-            LEFT JOIN publisher ON\
-            publisher_link.publisher_id=publisher.publisher_id;"
-
-    df_releases = pd.read_sql_query(query, conn_postgres)
-
+        query = f"SELECT\
+                game.game_id, title, release_date, price, sale_price,\
+                review_id, sentiment, review_text, reviewed_at, review_score,\
+                genre, user_generated,\
+                developer_name,\
+                publisher_name,\
+                mac, windows, linux\
+                FROM game\
+                LEFT JOIN review ON\
+                review.game_id=game.game_id\
+                LEFT JOIN platform ON\
+                game.platform_id=platform.platform_id\
+                LEFT JOIN game_developer_link as developer_link ON\
+                game.game_id=developer_link.game_id\
+                LEFT JOIN developer ON\
+                developer_link.developer_id=developer.developer_id\
+                LEFT JOIN game_genre_link as genre_link ON\
+                game.game_id=genre_link.game_id\
+                LEFT JOIN genre ON\
+                genre_link.genre_id=genre.genre_id\
+                LEFT JOIN game_publisher_link as publisher_link ON\
+                game.game_id=publisher_link.game_id\
+                LEFT JOIN publisher ON\
+                publisher_link.publisher_id=publisher.publisher_id;"
+        st.session_state["last_fetch_time"] = time_now
+        df_releases = pd.read_sql_query(query, conn_postgres)
+        st.session_state["data"] = df_releases
+    else:
+        df_releases = st.session_state["data"]
     return df_releases
 
 
