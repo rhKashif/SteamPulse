@@ -208,9 +208,9 @@ def get_most_reviewed_release(df_releases: DataFrame) -> str:
 
     return df_ratings.head(1)["title"][0]
 
-  
+
 def calculate_sum_sentiment(sentiment: float, score: int) -> float:
-      """
+    """
     Calculates total sentiment score by multiplying sentiment associated with
     a review multiplied by the review_score (represents the number of users who
     agree with this review)
@@ -229,7 +229,7 @@ def calculate_sum_sentiment(sentiment: float, score: int) -> float:
     if score != 0:
         return sentiment * (score + 1)
     return sentiment
-  
+
 
 def aggregate_release_data_new_releases(df_releases: DataFrame) -> DataFrame:
     """
@@ -259,7 +259,7 @@ def aggregate_release_data_new_releases(df_releases: DataFrame) -> DataFrame:
     df_merged.columns = table_columns
 
     return df_merged
-  
+
 
 def aggregate_data(df_releases: DataFrame) -> DataFrame:
     """
@@ -434,7 +434,6 @@ def plot_trending_games_sentiment_table(df_releases: DataFrame) -> None:
     df_releases = format_columns(df_releases)
 
     df_releases = df_releases.reset_index(drop=True)
-
 
     df_releases = df_releases[df_releases["Number of Reviews"] > 10]
 
