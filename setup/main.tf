@@ -753,3 +753,33 @@ resource "aws_sfn_state_machine" "steampulse_state_machine" {
   }
   EOF
 }
+
+
+
+# resource "aws_lb" "steampulse-load-balancer" {
+#   name               = "steampulse-load-balancer"
+#   internal           = false
+#   load_balancer_type = "application"
+
+#   subnets = ["subnet-03b1a3e1075174995", "subnet-0667517a2a13e2a6b", "subnet-0cec5bdb9586ed3c4"]
+#   security_groups = [aws_security_group.steampulse_dashboard_sg.id]
+
+#   tags = {
+#     Environment = "production"
+#   }
+# }
+
+# resource "aws_lb_target_group" "steampulse-lb-target-group" {
+#   name        = "steampulse-lb-target-group"
+#   port        = 80
+#   protocol    = "HTTP"
+#   target_type = "ip"
+#   vpc_id      = "vpc-0e0f897ec7ddc230d"
+# }
+
+
+
+
+# resource "aws_eip" "steampulse_lb_elastic_ip" {
+#   domain = "vpc"
+# }
