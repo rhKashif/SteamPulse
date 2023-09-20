@@ -336,7 +336,6 @@ def plot_table(df_releases: DataFrame, rows: int) -> Chart:
         height=1000,
         width=1300
     )
-    chart.save("chart.png")
     return chart
 
 
