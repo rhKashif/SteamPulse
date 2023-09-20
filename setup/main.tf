@@ -89,7 +89,6 @@ resource "aws_security_group" "steampulse_pipeline_ecs_sg" {
     ipv6_cidr_blocks = ["::/0"]
   }
 
-
   tags = {
     Name = "steampulse_pipeline_ecs_sg"
   }
@@ -340,7 +339,7 @@ resource "aws_ecs_task_definition" "steampulse_dashboard_task_definition" {
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   cpu                      = 1024
-  memory                   = 4096
+  memory                   = 2048
   task_role_arn            = aws_iam_role.steampulse_pipeline_ecs_task_role_policy.arn
   execution_role_arn       = aws_iam_role.steampulse_pipeline_ecs_task_execution_role.arn
 
@@ -349,7 +348,7 @@ resource "aws_ecs_task_definition" "steampulse_dashboard_task_definition" {
       name   = "steampulse_dashboard_ecr"
       image  = "${aws_ecr_repository.steampulse_dashboard_ecr.repository_url}:latest"
       cpu    = 10
-      memory = 1024
+      memory = 512
 
       portMappings = [
         {
@@ -441,10 +440,10 @@ resource "aws_scheduler_schedule" "steampulse_game_pipeline_schedule" {
   }
 }
 
-resource "aws_scheduler_schedule" "steampulse_review_report_schedule" {
-  name                = "steampulse_review_report_schedule"
-  description         = "Runs the steampulse step function, which runs review pipeline then email report on a cron schedule"
-  schedule_expression = "cron(30 8 * * ? *)"
+resource "aws_scheduler_schedule" "steampulse_review_pipeline_schedule" {
+  name                = "steampulse_review_pipeline_schedule"
+  description         = "Runs the steampulse review pipeline on a cron schedule"
+  schedule_expression = "cron(22 * * * ? *)"
 
   flexible_time_window {
     mode = "OFF"
@@ -453,6 +452,17 @@ resource "aws_scheduler_schedule" "steampulse_review_report_schedule" {
   target {
     arn      = aws_sfn_state_machine.steampulse_state_machine.arn
     role_arn = aws_iam_role.steampulse_sfn_role.arn
+
+    # ecs_parameters {
+    #   task_definition_arn = aws_ecs_task_definition.steampulse_review_pipeline_task_definition.arn
+    #   launch_type         = "FARGATE"
+
+    # network_configuration {
+    #     assign_public_ip = true
+    #     security_groups  = [aws_security_group.steampulse_pipeline_ecs_sg.id]
+    #     subnets          = ["subnet-03b1a3e1075174995", "subnet-0667517a2a13e2a6b", "subnet-0cec5bdb9586ed3c4"]
+    #   }
+    # }
   }
 }
 
@@ -487,12 +497,6 @@ resource "aws_ecs_service" "steampulse_streamlit_service" {
   task_definition = aws_ecs_task_definition.steampulse_dashboard_task_definition.arn
   desired_count   = 1
   launch_type     = "FARGATE"
-
-  # load_balancer {
-  #   target_group_arn = aws_lb_target_group.steampulse-lb-target-group.arn
-  #   container_name = "steampulse_dashboard_ecr"
-  #   container_port   = 8501
-  # }
 
   network_configuration {
     subnets          = ["subnet-03b1a3e1075174995", "subnet-0cec5bdb9586ed3c4", "subnet-0667517a2a13e2a6b"]
@@ -568,6 +572,23 @@ resource "aws_iam_role" "steampulse_lambda_iam" {
   })
 }
 
+# resource "aws_scheduler_schedule" "steampulse_email_lambda_schedule" {
+#   name                = "steampulse_email_lambda_schedule"
+#   description         = "Runs the steampulse email lambda function cron schedule"
+#   schedule_expression = "cron(*/5 * * * ? *)"
+
+#   flexible_time_window {
+#     mode = "OFF"
+#   }
+
+#   target {
+#     arn      = aws_lambda_function.steampulse_email_lambda.arn
+#     role_arn = aws_iam_role.steampulse_lambda_iam.arn
+
+
+
+#   }
+# }
 
 
 resource "aws_iam_role" "steampulse_sfn_role" {
@@ -683,6 +704,24 @@ resource "aws_iam_role" "steampulse_sfn_role" {
           Effect   = "Allow",
           Resource = "*"
         }
+        # {
+        #   Action = "events:PutTargets",
+        #   Effect = "Allow",
+        #   Resource = "*"
+
+        # },
+        # {
+        #   Action = "events:PutRule",
+        #   Effect = "Allow",
+        #   Resource = "*"
+
+        # },
+        # {
+        #   Action = "events:DescribeRule",
+        #   Effect = "Allow",
+        #   Resource = "*"
+
+
       ]
       }
     )
@@ -743,31 +782,3 @@ resource "aws_sfn_state_machine" "steampulse_state_machine" {
   }
   EOF
 }
-
-# resource "aws_lb" "steampulse-load-balancer" {
-#   name               = "steampulse-load-balancer"
-#   internal           = false
-#   load_balancer_type = "application"
-
-#   subnets = ["subnet-03b1a3e1075174995", "subnet-0667517a2a13e2a6b", "subnet-0cec5bdb9586ed3c4"]
-#   security_groups = [aws_security_group.steampulse_dashboard_sg.id]
-
-#   tags = {
-#     Environment = "production"
-#   }
-# }
-
-# resource "aws_lb_target_group" "steampulse-lb-target-group" {
-#   name        = "steampulse-lb-target-group"
-#   port        = 80
-#   protocol    = "HTTP"
-#   target_type = "ip"
-#   vpc_id      = "vpc-0e0f897ec7ddc230d"
-# }
-
-
-
-
-# resource "aws_eip" "steampulse_lb_elastic_ip" {
-#   domain = "vpc"
-# }
