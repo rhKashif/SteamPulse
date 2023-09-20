@@ -443,7 +443,7 @@ resource "aws_scheduler_schedule" "steampulse_game_pipeline_schedule" {
 resource "aws_scheduler_schedule" "steampulse_review_pipeline_schedule" {
   name                = "steampulse_review_pipeline_schedule"
   description         = "Runs the steampulse review pipeline on a cron schedule"
-  schedule_expression = "cron(47 * * * ? *)"
+  schedule_expression = "cron(30 8 * * ? *)"
 
   flexible_time_window {
     mode = "OFF"
@@ -675,20 +675,20 @@ resource "aws_iam_role" "steampulse_sfn_role" {
           Resource = "*"
         },
         {
-          Action = "events:PutTargets",
-          Effect = "Allow",
+          Action   = "events:PutTargets",
+          Effect   = "Allow",
           Resource = "*"
 
         },
         {
-          Action = "events:PutRule",
-          Effect = "Allow",
+          Action   = "events:PutRule",
+          Effect   = "Allow",
           Resource = "*"
 
         },
         {
-          Action = "events:DescribeRule",
-          Effect = "Allow",
+          Action   = "events:DescribeRule",
+          Effect   = "Allow",
           Resource = "*"
         }
 
