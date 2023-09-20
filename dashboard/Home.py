@@ -16,7 +16,7 @@ def sidebar_header() -> None:
     Add text to the dashboard side bar
     """
     with st.sidebar:
-        st.image("logo_one.png")
+        st.image("steampulse_logo.png")
 
 
 def dashboard_content() -> None:
@@ -29,9 +29,9 @@ def dashboard_content() -> None:
     st.markdown(
         "- Community: Explore data visualizations and insights that are relevant to steam community")
     st.markdown(
-        "- Developer: Dive into technical data and analytics that developers will find valuable")
+        "- Developers: Dive into technical data and analytics that developers will find valuable")
     st.markdown(
-        "- New Releases: Explore all the latest game releases that power our visualizations")
+        "- Releases: Explore all the latest game releases that power our visualizations")
     st.markdown(
         "- Subscription: Subscribe to SteamPulses emailing list to receive reports on new releases")
 

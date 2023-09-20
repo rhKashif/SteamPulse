@@ -236,10 +236,10 @@ def build_sidebar_platforms() -> list:
     Returns:
         list: A list with selected platforms
     """
-    platforms = ["mac", "windows", "linux"]
+    platforms = ["Mac", "Windows", "Linux"]
     selected_platforms = st.sidebar.multiselect(
         "Compatible Platforms:", options=platforms, default=platforms)
-    return selected_platforms
+    return [platform.lower() for platform in selected_platforms]
 
 
 def build_sidebar_price(df_releases: DataFrame) -> tuple:

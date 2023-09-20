@@ -93,14 +93,13 @@ def plot_average_sentiment_per_developer(df_releases: DataFrame, rows: int) -> C
         Chart: A chart displaying plotted data
     """
     df_releases = df_releases.groupby(
-        "developer_name")["sentiment"].mean().reset_index().dropna().sort_values(by=["sentiment"]).tail(rows)
-
-    df_releases.columns = ["developer", "average_sentiment"]
+        "developer_name")["avg_sentiment"].mean().reset_index().dropna().sort_values(by=["avg_sentiment"]).tail(rows)
+    print(df_releases)
 
     chart = alt.Chart(df_releases).mark_bar(
     ).encode(
-        x=alt.X("average_sentiment", title="Average Sentiment"),
-        y=alt.Y("developer", title="Release Title", sort="-x")
+        x=alt.X("avg_sentiment", title="Average Sentiment"),
+        y=alt.Y("developer_name", title="Release Title", sort="-x")
     ).properties(
         title="Top Developers by Sentiment",
         height=250
@@ -122,14 +121,12 @@ def plot_average_sentiment_per_publisher(df_releases: DataFrame, rows: int) -> C
         Chart: A chart displaying plotted data
     """
     df_releases = df_releases.groupby(
-        "publisher_name")["sentiment"].mean().reset_index().dropna().sort_values(by=["sentiment"]).tail(rows)
-
-    df_releases.columns = ["publisher", "average_sentiment"]
+        "publisher_name")["avg_sentiment"].mean().reset_index().dropna().sort_values(by=["avg_sentiment"]).tail(rows)
 
     chart = alt.Chart(df_releases).mark_bar(
     ).encode(
-        x=alt.X("average_sentiment", title="Average Sentiment"),
-        y=alt.Y("publisher", title="Release Title", sort="-x")
+        x=alt.X("avg_sentiment", title="Average Sentiment"),
+        y=alt.Y("publisher_name", title="Release Title", sort="-x")
     ).properties(
         title="Top Publishers by Sentiment",
         height=250
@@ -157,6 +154,7 @@ def plot_trending_games_table(df_releases: DataFrame) -> dict:
         by=["Community Sentiment"], ascending=False)
     df_merged = format_columns(df_merged)
 
+    df_merged = df_merged[df_merged["No. of Reviews"] > 10]
     df_merged = df_merged.reset_index(drop=True)
 
     return {"data": df_merged, "title": "Top Games by Sentiment"}

@@ -87,6 +87,8 @@ def plot_games_review_frequency(df_releases: DataFrame) -> Chart:
         "review_date")["review_text"].nunique().reset_index()
 
     df_releases.columns = ["review_date", "num_of_reviews"]
+    df_releases = df_releases[df_releases["review_date"]
+                              >= pd.to_datetime("2023-09-07")]
 
     chart = alt.Chart(df_releases).mark_line(
         color="#44bd4f"
@@ -96,6 +98,9 @@ def plot_games_review_frequency(df_releases: DataFrame) -> Chart:
         y=alt.Y("num_of_reviews:Q", title="Number of Reviews"),
     ).properties(
         title="New Reviews per Day",
+    )
+    chart = chart.configure_axisX(
+        labelAngle=0
     )
 
     return chart
@@ -239,7 +244,7 @@ def plot_platform_distribution(df_releases: DataFrame) -> Chart:
     except KeyError:
         linux_compatibility = 0
 
-    compatibility_df = pd.DataFrame({"platform": ['mac', 'windows', "linux"],
+    compatibility_df = pd.DataFrame({"platform": ['Mac', 'Windows', "Linux"],
                                      "compatibility": [mac_compatibility, windows_compatibility, linux_compatibility]})
 
     chart = alt.Chart(compatibility_df).mark_bar().encode(
