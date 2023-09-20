@@ -313,7 +313,7 @@ def plot_table(df_releases: DataFrame, rows: int) -> Chart:
     """
     chart = alt.Chart(
         df_releases.reset_index().head(rows)
-    ).mark_text(fontSize=18).transform_fold(
+    ).mark_text(fontSize=23).transform_fold(
         df_releases.columns.tolist()
     ).encode(
         alt.X(
@@ -324,7 +324,48 @@ def plot_table(df_releases: DataFrame, rows: int) -> Chart:
                 labelAngle=0,
                 title=None,
                 ticks=False,
-                labelFontSize=21,
+                labelFontSize=24,
+                labelLimit=400
+            ),
+            scale=alt.Scale(padding=10),
+            sort=None,
+        ),
+        alt.Y("index", type="ordinal", axis=None),
+        alt.Text("value", type="nominal"),
+    ).properties(
+        height=1200,
+        width=1300
+    )
+    chart.save("chart.png")
+    return chart
+
+
+def plot_table_small(df_releases: DataFrame, rows: int) -> Chart:
+    """
+    Create a table from a given DataFrame
+
+    Args:
+        df_releases (DataFrame): A DataFrame containing filtered data for a chart
+
+        rows (int): An integer value representing the number of rows to be displayed
+
+    Returns:
+        Chart: A chart displaying plotted table
+    """
+    chart = alt.Chart(
+        df_releases.reset_index().head(rows)
+    ).mark_text(fontSize=20).transform_fold(
+        df_releases.columns.tolist()
+    ).encode(
+        alt.X(
+            "key",
+            type="nominal",
+            axis=alt.Axis(
+                orient="top",
+                labelAngle=0,
+                title=None,
+                ticks=False,
+                labelFontSize=22,
                 labelLimit=400
             ),
             scale=alt.Scale(padding=10),
@@ -334,6 +375,7 @@ def plot_table(df_releases: DataFrame, rows: int) -> Chart:
         alt.Text("value", type="nominal"),
     ).properties(
         width=1300,
+        height=200
     )
     chart.save("chart.png")
     return chart
@@ -358,7 +400,7 @@ def plot_trending_games_sentiment_table(df_releases: DataFrame) -> None:
 
     df_releases = df_releases.reset_index(drop=True)
 
-    chart = plot_table(df_releases, 5)
+    chart = plot_table_small(df_releases, 5)
     return chart
 
 
@@ -381,7 +423,7 @@ def plot_trending_games_review_table(df_releases: DataFrame) -> None:
 
     df_releases = df_releases.reset_index(drop=True)
 
-    chart = plot_table(df_releases, 5)
+    chart = plot_table_small(df_releases, 5)
     return chart
 
 
@@ -422,6 +464,7 @@ def build_figure_from_plot(plot: Chart, figure_name: str) -> str:
     Return:
         str: A string representing the path of a .png file
     """
+    plot.save(f'{figure_name}.png')
     plot.save(f"/tmp/{figure_name}.png")
     return f"/tmp/{figure_name}.png"
 
@@ -668,7 +711,7 @@ def handler(event, context) -> None:
         create_report(game_df, config["DASHBOARD_URL"])
         print("Report created.")
 
-        email_subscribers(conn, config)
+        # email_subscribers(conn, config)
     finally:
         conn.close()
 
