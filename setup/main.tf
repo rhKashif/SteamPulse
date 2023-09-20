@@ -452,17 +452,6 @@ resource "aws_scheduler_schedule" "steampulse_review_pipeline_schedule" {
   target {
     arn      = aws_sfn_state_machine.steampulse_state_machine.arn
     role_arn = aws_iam_role.steampulse_sfn_role.arn
-
-    # ecs_parameters {
-    #   task_definition_arn = aws_ecs_task_definition.steampulse_review_pipeline_task_definition.arn
-    #   launch_type         = "FARGATE"
-
-    # network_configuration {
-    #     assign_public_ip = true
-    #     security_groups  = [aws_security_group.steampulse_pipeline_ecs_sg.id]
-    #     subnets          = ["subnet-03b1a3e1075174995", "subnet-0667517a2a13e2a6b", "subnet-0cec5bdb9586ed3c4"]
-    #   }
-    # }
   }
 }
 
@@ -571,25 +560,6 @@ resource "aws_iam_role" "steampulse_lambda_iam" {
     ]
   })
 }
-
-# resource "aws_scheduler_schedule" "steampulse_email_lambda_schedule" {
-#   name                = "steampulse_email_lambda_schedule"
-#   description         = "Runs the steampulse email lambda function cron schedule"
-#   schedule_expression = "cron(*/5 * * * ? *)"
-
-#   flexible_time_window {
-#     mode = "OFF"
-#   }
-
-#   target {
-#     arn      = aws_lambda_function.steampulse_email_lambda.arn
-#     role_arn = aws_iam_role.steampulse_lambda_iam.arn
-
-
-
-#   }
-# }
-
 
 resource "aws_iam_role" "steampulse_sfn_role" {
   name = "steampulse_sfn_role"
