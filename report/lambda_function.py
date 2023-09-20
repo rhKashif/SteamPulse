@@ -501,7 +501,6 @@ def build_figure_from_plot(plot: Chart, figure_name: str) -> str:
     Return:
         str: A string representing the path of a .png file
     """
-    plot.save(f'{figure_name}.png')
     plot.save(f"/tmp/{figure_name}.png")
     return f"/tmp/{figure_name}.png"
 
