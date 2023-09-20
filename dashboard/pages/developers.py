@@ -87,6 +87,8 @@ def plot_games_review_frequency(df_releases: DataFrame) -> Chart:
         "review_date")["review_text"].nunique().reset_index()
 
     df_releases.columns = ["review_date", "num_of_reviews"]
+    df_releases = df_releases[df_releases["review_date"]
+                              >= pd.to_datetime("2023-09-07")]
 
     chart = alt.Chart(df_releases).mark_line(
         color="#44bd4f"
@@ -96,6 +98,9 @@ def plot_games_review_frequency(df_releases: DataFrame) -> Chart:
         y=alt.Y("num_of_reviews:Q", title="Number of Reviews"),
     ).properties(
         title="New Reviews per Day",
+    )
+    chart = chart.configure_axisX(
+        labelAngle=0
     )
 
     return chart
@@ -297,8 +302,6 @@ def plot_genre_by_sentiment(df_releases: DataFrame) -> Chart:
 
     df_releases_sentiment_sum = df_releases.groupby(
         "genre")["avg_sentiment"].mean().reset_index().sort_values(by=["avg_sentiment"]).dropna()
-
-    print(df_releases_sentiment_sum)
 
     chart = alt.Chart(df_releases_sentiment_sum).mark_bar().encode(
         x=alt.Y("avg_sentiment:Q",
