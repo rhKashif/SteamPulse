@@ -208,9 +208,9 @@ def get_most_reviewed_release(df_releases: DataFrame) -> str:
 
     return df_ratings.head(1)["title"][0]
 
-
+  
 def calculate_sum_sentiment(sentiment: float, score: int) -> float:
-    """
+      """
     Calculates total sentiment score by multiplying sentiment associated with
     a review multiplied by the review_score (represents the number of users who
     agree with this review)
@@ -229,7 +229,37 @@ def calculate_sum_sentiment(sentiment: float, score: int) -> float:
     if score != 0:
         return sentiment * (score + 1)
     return sentiment
+  
 
+def aggregate_release_data_new_releases(df_releases: DataFrame) -> DataFrame:
+    """
+    Transform data in releases DataFrame to find aggregated data from individual releases.
+    Does not contain the average sentiment or number of reviews. 
+
+    Args:
+        df_release (DataFrame): A DataFrame containing new release data
+
+    Returns:
+        DataFrame: A DataFrame containing new release data with aggregated data for each release
+    """
+
+    data_frames = [df_releases]
+
+    df_merged = reduce(lambda left, right: pd.merge(left, right, on=['title'],
+                                                    how='outer'), data_frames)
+
+    df_merged = df_merged.drop_duplicates("title")
+
+    desired_columns = ["title", "release_date",
+                       "sale_price"]
+    df_merged = df_merged[desired_columns]
+
+    table_columns = ["Title", "Release Date",
+                     "Price"]
+    df_merged.columns = table_columns
+
+    return df_merged
+  
 
 def aggregate_data(df_releases: DataFrame) -> DataFrame:
     """
@@ -297,10 +327,11 @@ def format_columns(df_releases: DataFrame) -> DataFrame:
         lambda x: f"£{x:.2f}")
     df_releases['Release Date'] = df_releases['Release Date'].dt.strftime(
         '%d/%m/%Y')
-    df_releases['Community Sentiment'] = df_releases['Community Sentiment'].apply(
-        lambda x: round(x, 2))
-    df_releases['Community Sentiment'] = df_releases['Community Sentiment'].fillna(
-        "No Sentiment")
+    if 'Community Sentiment' in df_releases.columns:
+        df_releases['Community Sentiment'] = df_releases['Community Sentiment'].apply(
+            lambda x: round(x, 2))
+        df_releases['Community Sentiment'] = df_releases['Community Sentiment'].fillna(
+            "No Sentiment")
 
     return df_releases
 
@@ -319,7 +350,7 @@ def plot_table(df_releases: DataFrame, rows: int) -> Chart:
     """
     chart = alt.Chart(
         df_releases.reset_index().head(rows)
-    ).mark_text().transform_fold(
+    ).mark_text(fontSize=23).transform_fold(
         df_releases.columns.tolist()
     ).encode(
         alt.X(
@@ -329,7 +360,49 @@ def plot_table(df_releases: DataFrame, rows: int) -> Chart:
                 orient="top",
                 labelAngle=0,
                 title=None,
-                ticks=False
+                ticks=False,
+                labelFontSize=26,
+                labelLimit=400
+            ),
+            scale=alt.Scale(padding=10),
+            sort=None,
+        ),
+        alt.Y("index", type="ordinal", axis=None),
+        alt.Text("value", type="nominal"),
+    ).properties(
+        height=1000,
+        width=1300
+    )
+    return chart
+
+
+def plot_table_small(df_releases: DataFrame, rows: int) -> Chart:
+    """
+    Create a table for a DataFrame looking at the top 5 games.
+
+    Args:
+        df_releases (DataFrame): A DataFrame containing filtered data for a chart
+
+        rows (int): An integer value representing the number of rows to be displayed
+
+    Returns:
+        Chart: A chart displaying plotted table
+    """
+    chart = alt.Chart(
+        df_releases.reset_index().head(rows)
+    ).mark_text(fontSize=21).transform_fold(
+        df_releases.columns.tolist()
+    ).encode(
+        alt.X(
+            "key",
+            type="nominal",
+            axis=alt.Axis(
+                orient="top",
+                labelAngle=0,
+                title=None,
+                ticks=False,
+                labelFontSize=22,
+                labelLimit=400
             ),
             scale=alt.Scale(padding=10),
             sort=None,
@@ -338,6 +411,7 @@ def plot_table(df_releases: DataFrame, rows: int) -> Chart:
         alt.Text("value", type="nominal"),
     ).properties(
         width=1300,
+        height=200
     )
     return chart
 
@@ -361,9 +435,10 @@ def plot_trending_games_sentiment_table(df_releases: DataFrame) -> None:
 
     df_releases = df_releases.reset_index(drop=True)
 
+
     df_releases = df_releases[df_releases["Number of Reviews"] > 10]
 
-    chart = plot_table(df_releases, 5)
+    chart = plot_table_small(df_releases, 5)
     return chart
 
 
@@ -385,7 +460,7 @@ def plot_trending_games_review_table(df_releases: DataFrame) -> None:
 
     df_releases = df_releases.reset_index(drop=True)
 
-    chart = plot_table(df_releases, 5)
+    chart = plot_table_small(df_releases, 5)
     return chart
 
 
@@ -401,14 +476,15 @@ def plot_new_games_today_table(df_releases: DataFrame) -> None:
     """
     df_releases = get_data_for_release_date(df_releases, 1)
     num_new_releases = get_number_of_new_releases(df_releases)
-    df_merged = aggregate_data(df_releases)
+
+    df_merged = aggregate_release_data_new_releases(df_releases)
 
     df_releases = df_merged.sort_values(
         by=["Release Date"], ascending=False)
     df_releases = format_columns(df_releases)
 
     df_releases = df_releases.reset_index(drop=True)
-    df_releases = df_releases.head(32)
+    df_releases = df_releases.head(27)
 
     chart = plot_table(df_releases, num_new_releases)
     return chart
@@ -426,6 +502,7 @@ def build_figure_from_plot(plot: Chart, figure_name: str) -> str:
     Return:
         str: A string representing the path of a .png file
     """
+    plot.save(f'{figure_name}.png')
     plot.save(f"/tmp/{figure_name}.png")
     return f"/tmp/{figure_name}.png"
 
@@ -478,7 +555,7 @@ def create_report(df_releases: DataFrame, dashboard_url: str) -> None:
                     left: 50pt; width: 512pt; top: 50; height: 160pt;
                 }}
                 @frame col1_frame {{             /* Content frame 1 */
-                    left: 50pt; width: 512pt; top: 160pt; height: 365pt;
+                    left: 50pt; width: 512pt; top: 160pt; height: 505pt;
                 }}
                 @frame footer_frame {{           /* Static frame */
                     -pdf-frame-content: footer_content;

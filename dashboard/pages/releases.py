@@ -3,7 +3,6 @@ from os import environ
 
 from dotenv import load_dotenv
 from pandas import DataFrame
-import pandas as pd
 import streamlit as st
 
 from utility_functions import (get_database,
