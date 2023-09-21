@@ -350,7 +350,7 @@ def plot_table(df_releases: DataFrame, rows: int) -> Chart:
     """
     chart = alt.Chart(
         df_releases.reset_index().head(rows)
-    ).mark_text(fontSize=23).transform_fold(
+    ).mark_text(fontSize=23, limit=450).transform_fold(
         df_releases.columns.tolist()
     ).encode(
         alt.X(
@@ -390,7 +390,7 @@ def plot_table_small(df_releases: DataFrame, rows: int) -> Chart:
     """
     chart = alt.Chart(
         df_releases.reset_index().head(rows)
-    ).mark_text(fontSize=21).transform_fold(
+    ).mark_text(fontSize=21, limit=450).transform_fold(
         df_releases.columns.tolist()
     ).encode(
         alt.X(
