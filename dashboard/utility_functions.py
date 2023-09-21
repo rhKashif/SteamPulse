@@ -524,7 +524,7 @@ def sub_headline_figures(df_releases: DataFrame) -> None:
         st.metric("Most Released Genre:", df_releases["genre"].mode()[0])
     with cols[1]:
         st.metric("Most Reviewed Release:", df_releases.drop_duplicates(
-            subset="review_id", inplace=False)["title"].mode()[0])
+            subset="review_id")["title"].mode()[0])
     with cols[2]:
         st.metric("Most Compatible Platform",
                   compatibility_df["platform"].max().capitalize())
