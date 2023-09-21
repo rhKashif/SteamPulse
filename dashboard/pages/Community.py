@@ -94,7 +94,6 @@ def plot_average_sentiment_per_developer(df_releases: DataFrame, rows: int) -> C
     """
     df_releases = df_releases.groupby(
         "developer_name")["avg_sentiment"].mean().reset_index().dropna().sort_values(by=["avg_sentiment"]).tail(rows)
-    print(df_releases)
 
     chart = alt.Chart(df_releases).mark_bar(
     ).encode(
