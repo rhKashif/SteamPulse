@@ -272,8 +272,8 @@ def build_sidebar_sentiment(df_releases: DataFrame) -> tuple:
     Returns:
         list: A tuple with minimum and maximum sentiment that the user has selected
     """
-    max_sentiment = df_releases["sentiment"].max()
-    min_sentiment = df_releases["sentiment"].min()
+    max_sentiment = df_releases["avg_sentiment"].max()
+    min_sentiment = df_releases["avg_sentiment"].min()
 
     sentiment = st.sidebar.slider(
         "Sentiment:", min_value=min_sentiment, max_value=max_sentiment,
@@ -351,7 +351,7 @@ def filter_data(df_releases: DataFrame, filter: dict) -> DataFrame:
         df_releases['price'] <= filter[PRICE][1])]
 
     average_sentiment_by_title = df_releases.groupby('title')[
-        'sentiment'].mean()
+        'avg_sentiment'].mean()
     filtered_titles = average_sentiment_by_title[
         ((average_sentiment_by_title >= filter[SENTIMENT][0]) | average_sentiment_by_title.isna()) &
         ((average_sentiment_by_title <= filter[SENTIMENT][1])
