@@ -529,8 +529,6 @@ def sub_headline_figures(df_releases: DataFrame) -> None:
         st.metric("Most Compatible Platform",
                   compatibility_df["platform"].max().capitalize())
 
-    print()
-
 
 def two_column_chart_figures(plot_one: Chart, plot_two: Chart) -> None:
     """
