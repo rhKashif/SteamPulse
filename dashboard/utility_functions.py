@@ -64,7 +64,8 @@ def get_database() -> DataFrame:
         DataFrame: A pandas DataFrame containing all relevant release data
     """
     time_now = datetime.now()
-    last_recorded_time = st.session_state.get("last_fetch_time", time_now - timedelta(seconds=600))
+    last_recorded_time = st.session_state.get(
+        "last_fetch_time", time_now - timedelta(seconds=600))
     if last_recorded_time <= time_now - timedelta(seconds=600):
         load_dotenv()
         conn_postgres = get_db_connection(environ)
@@ -522,10 +523,13 @@ def sub_headline_figures(df_releases: DataFrame) -> None:
     with cols[0]:
         st.metric("Most Released Genre:", df_releases["genre"].mode()[0])
     with cols[1]:
-        st.metric("Most Reviewed Release:", df_releases["title"].mode()[0])
+        st.metric("Most Reviewed Release:", df_releases.drop_duplicates(
+            subset="review_id", inplace=False)["title"].mode()[0])
     with cols[2]:
         st.metric("Most Compatible Platform",
                   compatibility_df["platform"].max().capitalize())
+
+    print()
 
 
 def two_column_chart_figures(plot_one: Chart, plot_two: Chart) -> None:
