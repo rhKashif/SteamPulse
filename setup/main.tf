@@ -347,7 +347,7 @@ resource "aws_ecs_task_definition" "steampulse_dashboard_task_definition" {
     {
       name   = "steampulse_dashboard_ecr"
       image  = "${aws_ecr_repository.steampulse_dashboard_ecr.repository_url}:latest"
-      cpu    = 10
+      cpu    = 64
       memory = 512
 
       portMappings = [
@@ -511,8 +511,8 @@ resource "aws_lambda_function" "steampulse_email_lambda" {
   package_type  = "Image"
   function_name = "steampulse_email_lambda"
   role          = aws_iam_role.steampulse_lambda_iam.arn
-  timeout       = 300
-  memory_size   = 256
+  timeout       = 480
+  memory_size   = 512
 
   environment {
     variables = {
@@ -756,30 +756,30 @@ resource "aws_sfn_state_machine" "steampulse_state_machine" {
 
 
 
-# resource "aws_lb" "steampulse-load-balancer" {
-#   name               = "steampulse-load-balancer"
-#   internal           = false
-#   load_balancer_type = "application"
+resource "aws_lb" "steampulse-load-balancer" {
+  name               = "steampulse-load-balancer"
+  internal           = false
+  load_balancer_type = "application"
 
-#   subnets = ["subnet-03b1a3e1075174995", "subnet-0667517a2a13e2a6b", "subnet-0cec5bdb9586ed3c4"]
-#   security_groups = [aws_security_group.steampulse_dashboard_sg.id]
+  subnets = ["subnet-03b1a3e1075174995", "subnet-0667517a2a13e2a6b", "subnet-0cec5bdb9586ed3c4"]
+  security_groups = [aws_security_group.steampulse_dashboard_sg.id]
 
-#   tags = {
-#     Environment = "production"
-#   }
-# }
+  tags = {
+    Environment = "production"
+  }
+}
 
-# resource "aws_lb_target_group" "steampulse-lb-target-group" {
-#   name        = "steampulse-lb-target-group"
-#   port        = 80
-#   protocol    = "HTTP"
-#   target_type = "ip"
-#   vpc_id      = "vpc-0e0f897ec7ddc230d"
-# }
-
-
+resource "aws_lb_target_group" "steampulse-lb-target-group" {
+  name        = "steampulse-lb-target-group"
+  port        = 80
+  protocol    = "HTTP"
+  target_type = "ip"
+  vpc_id      = "vpc-0e0f897ec7ddc230d"
+}
 
 
-# resource "aws_eip" "steampulse_lb_elastic_ip" {
-#   domain = "vpc"
-# }
+
+
+resource "aws_eip" "steampulse_lb_elastic_ip" {
+  domain = "vpc"
+}
